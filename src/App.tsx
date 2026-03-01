@@ -3679,15 +3679,16 @@ export default function App(){
           <div>
             <h1 className="font-black text-emerald-800 text-base leading-none">Sapot Lokal</h1>
             <button onClick={()=>locationHook.status!=='requesting'&&locationHook.request()}
-            className="text-left">
-            <p className="text-slate-400 text-[10px] font-bold">
-              {(function(){
-                 if(locationHook.status==='requesting') return '📍 Locating...';
-                 if(locationHook.loc && locationHook.loc.area) return '📍 '+locationHook.loc.area;
-                 return '📍 Set location';
-               })()}
-            </p>
-          </button>
+              className="text-left">
+              <p className="text-slate-400 text-[10px] font-bold">
+                {(function(){
+                   if(locationHook.status==='requesting') return '📍 Locating...';
+                   if(locationHook.loc && locationHook.loc.area) return '📍 '+locationHook.loc.area;
+                   return '📍 Set location';
+                 })()}
+              </p>
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-1.5">
           <button onClick={()=>setShowOrders(true)}
