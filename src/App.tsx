@@ -3671,22 +3671,19 @@ export default function App(){
         {showHalalDisclaimer&&<HalalDisclaimer t={t} onAccept={handleHalalAccept}/>}
       </AnimatePresence>
 
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src="/icon-512.png" className="h-16 w-auto object-contain" alt="Sapot Lokal"/>
-          <div>
-            <h1 onClick={handleLogoTap} className="font-black text-emerald-800 text-base leading-none cursor-pointer select-none">Sapot Lokal</h1>
-            <button onClick={()=>locationHook.status!=='requesting'&&locationHook.request()}
-              className="text-left">
-              <p className="text-slate-400 text-[9px] font-bold">
-                {(function(){
-                   if(locationHook.status==='requesting') return '📍 Locating...';
-                   if(locationHook.loc && locationHook.loc.area) return '📍 '+locationHook.loc.area;
-                   return '📍 Set location';
-                 })()}
-              </p>
-            </button>
-          </div>
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img src="/icon-512.png" onClick={handleLogoTap} className="h-14 w-auto object-contain cursor-pointer select-none" alt="Sapot Lokal"/>
+          <button onClick={()=>locationHook.status!=='requesting'&&locationHook.request()}
+            className="text-left">
+            <p className="text-slate-400 text-[10px] font-bold">
+              {(function(){
+                 if(locationHook.status==='requesting') return '📍 Locating...';
+                 if(locationHook.loc && locationHook.loc.area) return '📍 '+locationHook.loc.area;
+                 return '📍 Set location';
+               })()}
+            </p>
+          </button>
         </div>
         <div className="flex items-center gap-1.5">
           <button onClick={()=>setShowOrders(true)}
