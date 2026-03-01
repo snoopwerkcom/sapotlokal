@@ -3420,8 +3420,7 @@ export default function App(){
 
       <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center"><span className="text-base">🛒</span></div>
-          <div>
+          <img src="/icon-192.png" className="w-8 h-8 rounded-xl object-cover" alt="Sapot Lokal"/>
             <h1 className="font-black text-emerald-800 text-base leading-none">Sapot Lokal</h1>
             <button onClick={()=>locationHook.status!=='requesting'&&locationHook.request()}
               className="text-left">
