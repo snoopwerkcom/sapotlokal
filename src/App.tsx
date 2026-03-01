@@ -3673,9 +3673,7 @@ export default function App(){
 
       <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center overflow-hidden flex-shrink-0">
-            <img src="/icon-512.png" className="w-11 h-11 object-contain" alt="Sapot Lokal"/>
-          </div>
+          <img src="/icon-512.png" className="h-16 w-auto object-contain" alt="Sapot Lokal"/>
           <div>
             <h1 onClick={handleLogoTap} className="font-black text-emerald-800 text-base leading-none cursor-pointer select-none">Sapot Lokal</h1>
             <button onClick={()=>locationHook.status!=='requesting'&&locationHook.request()}
