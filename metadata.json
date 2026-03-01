@@ -1,0 +1,5 @@
+{
+  "name": "Sapot Lokal",
+  "description": "Connecting Malaysians with surplus food from local hawkers and bakeries to reduce waste.",
+  "requestFramePermissions": ["geolocation"]
+}
