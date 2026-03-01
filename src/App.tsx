@@ -1966,35 +1966,40 @@ function VendorStorefront({listing, allListings, cart, onAdd, onClose, t, isSubs
 // Format: image URL or YouTube embed URL
 // Revenue: sold to national advertisers per week/month
 
-const NATIONWIDE_ADS = {
+// ─── AD CONFIG — stored in localStorage, editable via Admin Panel ─────────────
+const LS_ADS = 'sapot_nationwide_ads';
+const DEFAULT_ADS = {
   receipt: {
-    active: true,
-    type: "image",   // "image" | "video"
-    // Replace with actual advertiser asset:
-    src: "https://picsum.photos/seed/adslot1/800/300",
-    caption: "Powered by Sapot Lokal · Ad space available",
+    active: false,
+    type: "image",
+    src: "",
+    caption: "",
     ctaLabel: "Learn More",
-    ctaUrl: "https://sapotlokal.com/advertise",
-    advertiser: "Sapot Lokal",
+    ctaUrl: "",
+    advertiser: "",
   },
   feed: {
-    active: true,
+    active: false,
     type: "image",
-    src: "https://picsum.photos/seed/feedbanner1/800/200",
-    caption: "Your brand here — reach hungry Malaysians nationwide",
-    ctaLabel: "Advertise with us",
-    ctaUrl: "https://sapotlokal.com/advertise",
-    advertiser: "Sapot Lokal",
+    src: "",
+    caption: "",
+    ctaLabel: "Visit Now",
+    ctaUrl: "",
+    advertiser: "",
   },
 };
+function getAds(){
+  try{ return Object.assign({},DEFAULT_ADS,JSON.parse(localStorage.getItem(LS_ADS)||'{}')); }
+  catch(e){ return DEFAULT_ADS; }
+}
+function saveAds(ads){ localStorage.setItem(LS_ADS, JSON.stringify(ads)); }
 
 // ── Receipt Ad Slot ──────────────────────────────────────────────────────────
 function ReceiptAdSlot(){
-  var ad = NATIONWIDE_ADS.receipt;
-  if(!ad || !ad.active) return null;
+  var ads = getAds();
+  var ad = ads.receipt;
   var [dismissed, setDismissed] = useState(false);
-  if(dismissed) return null;
-
+  if(!ad || !ad.active || !ad.src || dismissed) return null;
   return(
     <div className="mx-5 mb-1">
       <div className="flex items-center justify-between mb-1.5">
@@ -2003,19 +2008,19 @@ function ReceiptAdSlot(){
       </div>
       <div className="rounded-2xl overflow-hidden border border-slate-100 shadow-sm">
         {ad.type==="video"?(
-          <iframe src={ad.src} className="w-full h-40" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen/>
+          <iframe src={ad.src} className="w-full h-40" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen title="ad"/>
         ):(
-          <img src={ad.src} className="w-full h-32 object-cover" alt={ad.advertiser}/>
+          <img src={ad.src} className="w-full h-32 object-cover" alt={ad.advertiser||"Sponsored"}/>
         )}
         <div className="bg-white px-4 py-3 flex items-center justify-between">
-          <div>
-            <p className="font-black text-xs text-slate-800">{ad.caption}</p>
-            <p className="text-slate-400 text-[9px]">{ad.advertiser}</p>
+          <div className="flex-1 min-w-0 mr-2">
+            <p className="font-black text-xs text-slate-800 truncate">{ad.caption}</p>
+            {ad.advertiser&&<p className="text-slate-400 text-[9px]">{ad.advertiser}</p>}
           </div>
           {ad.ctaUrl&&(
             <a href={ad.ctaUrl} target="_blank" rel="noopener noreferrer"
-              className="bg-slate-900 text-white text-[9px] font-black px-3 py-2 rounded-xl whitespace-nowrap flex-shrink-0 ml-2">
-              {ad.ctaLabel}
+              className="bg-slate-900 text-white text-[9px] font-black px-3 py-2 rounded-xl whitespace-nowrap flex-shrink-0">
+              {ad.ctaLabel||"Learn More"}
             </a>
           )}
         </div>
@@ -2026,11 +2031,10 @@ function ReceiptAdSlot(){
 
 // ── Feed Banner Ad ────────────────────────────────────────────────────────────
 function FeedBannerAd(){
-  var ad = NATIONWIDE_ADS.feed;
-  if(!ad || !ad.active) return null;
+  var ads = getAds();
+  var ad = ads.feed;
   var [dismissed, setDismissed] = useState(false);
-  if(dismissed) return null;
-
+  if(!ad || !ad.active || !ad.src || dismissed) return null;
   return(
     <div className="mx-4 my-2 rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative">
       <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full">
@@ -2039,16 +2043,19 @@ function FeedBannerAd(){
       <button onClick={()=>setDismissed(true)}
         className="absolute top-2 right-2 w-6 h-6 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-[9px]">✕</button>
       {ad.type==="video"?(
-        <iframe src={ad.src} className="w-full h-36" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen/>
+        <iframe src={ad.src} className="w-full h-36" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen title="ad"/>
       ):(
-        <img src={ad.src} className="w-full h-28 object-cover" alt={ad.advertiser}/>
+        <img src={ad.src} className="w-full h-28 object-cover" alt={ad.advertiser||"Sponsored"}/>
       )}
       <div className="bg-white px-3 py-2.5 flex items-center justify-between">
-        <p className="font-bold text-xs text-slate-700">{ad.caption}</p>
+        <div className="flex-1 min-w-0 mr-2">
+          <p className="font-bold text-xs text-slate-700 truncate">{ad.caption}</p>
+          {ad.advertiser&&<p className="text-slate-400 text-[8px]">{ad.advertiser}</p>}
+        </div>
         {ad.ctaUrl&&(
           <a href={ad.ctaUrl} target="_blank" rel="noopener noreferrer"
-            className="bg-emerald-500 text-white text-[9px] font-black px-3 py-1.5 rounded-xl whitespace-nowrap flex-shrink-0 ml-2 active:scale-95 transition-transform">
-            {ad.ctaLabel}
+            className="bg-emerald-500 text-white text-[9px] font-black px-3 py-1.5 rounded-xl whitespace-nowrap flex-shrink-0 active:scale-95 transition-transform">
+            {ad.ctaLabel||"Visit Now"}
           </a>
         )}
       </div>
@@ -3339,11 +3346,257 @@ function SubscriptionGate({onSubscribe,onClose,t}){
   );
 }
 
+
+// ─── ADMIN PANEL ──────────────────────────────────────────────────────────────
+// Password-protected. Only you (the operator) can access this.
+// Accessible via: triple-tap the app logo in the header.
+// Lets you upload/swap ads for receipt and feed — no code changes needed.
+
+const ADMIN_PASSWORD = "sapotadmin2026"; // Change this to your own password
+
+function AdminPanel({onClose}){
+  var [authed, setAuthed]       = useState(false);
+  var [pw, setPw]               = useState("");
+  var [pwError, setPwError]     = useState(false);
+  var [ads, setAdsState]        = useState(()=>getAds());
+  var [saved, setSaved]         = useState(false);
+  var [activeTab, setActiveTab] = useState("receipt"); // "receipt" | "feed"
+
+  function login(){
+    if(pw===ADMIN_PASSWORD){ setAuthed(true); setPwError(false); }
+    else{ setPwError(true); setPw(""); }
+  }
+
+  function updateAd(placement, field, value){
+    setAdsState(function(prev){
+      var updated = Object.assign({},prev);
+      updated[placement] = Object.assign({},updated[placement],{[field]:value});
+      return updated;
+    });
+    setSaved(false);
+  }
+
+  function handleSave(){
+    saveAds(ads);
+    setSaved(true);
+    setTimeout(()=>setSaved(false),2000);
+  }
+
+  function handleClear(placement){
+    var cleared = Object.assign({},ads);
+    cleared[placement] = Object.assign({},DEFAULT_ADS[placement],{active:false});
+    setAdsState(cleared);
+    saveAds(cleared);
+    setSaved(true);
+    setTimeout(()=>setSaved(false),2000);
+  }
+
+  // ── Login screen ──────────────────────────────────────────────────────────
+  if(!authed){
+    return(
+      <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+        className="fixed inset-0 z-[900] bg-black/90 backdrop-blur-md flex items-center justify-center p-5">
+        <motion.div initial={{scale:0.9,opacity:0}} animate={{scale:1,opacity:1}} transition={{type:"spring",damping:20}}
+          className="w-full max-w-xs bg-[#0d1929] rounded-3xl p-7">
+          <div className="text-center mb-6">
+            <div className="text-4xl mb-3">🔐</div>
+            <h2 className="text-white font-black text-xl">Admin Panel</h2>
+            <p className="text-white/40 text-xs mt-1">Sapot Lokal · Operator Access</p>
+          </div>
+          <input
+            type="password"
+            value={pw}
+            onChange={function(e){setPw(e.target.value);setPwError(false);}}
+            onKeyDown={function(e){if(e.key==="Enter") login();}}
+            placeholder="Enter admin password"
+            className={"w-full bg-white/5 border rounded-2xl px-4 py-3 text-white text-sm font-bold focus:outline-none mb-3 "+(pwError?"border-red-500":"border-white/20 focus:border-indigo-500")}
+            autoFocus
+          />
+          {pwError&&<p className="text-red-400 text-xs font-bold mb-3 text-center">Wrong password</p>}
+          <button onClick={login}
+            className="w-full bg-indigo-500 text-white py-3 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-transform mb-3">
+            Login
+          </button>
+          <button onClick={onClose}
+            className="w-full bg-white/5 text-white/40 py-2.5 rounded-2xl font-bold text-xs">
+            Cancel
+          </button>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  // ── Main admin UI ─────────────────────────────────────────────────────────
+  var currentAd = ads[activeTab];
+  var placements = [
+    {id:"receipt", label:"Receipt Ad", icon:"🧾", desc:"Shows on buyer receipt after payment"},
+    {id:"feed",    label:"Feed Banner", icon:"📋", desc:"Shows between listings in buyer feed"},
+  ];
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[900] bg-black/90 backdrop-blur-md flex items-end justify-center"
+      onClick={onClose}>
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}}
+        transition={{type:"spring",damping:26,stiffness:260}}
+        onClick={function(e){e.stopPropagation();}}
+        className="w-full max-w-sm bg-[#0d1929] rounded-t-[36px] max-h-[92vh] overflow-y-auto">
+
+        {/* Header */}
+        <div className="sticky top-0 bg-[#0d1929] z-10 px-5 pt-5 pb-4 border-b border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-white font-black text-lg">🔐 Admin Panel</h2>
+              <p className="text-white/30 text-[9px] font-bold uppercase tracking-widest">Nationwide Ad Manager</p>
+            </div>
+            <button onClick={onClose} className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white text-sm">✕</button>
+          </div>
+          {/* Tab switcher */}
+          <div className="flex gap-2 mt-4">
+            {placements.map(function(p){
+              return(
+                <button key={p.id} onClick={()=>setActiveTab(p.id)}
+                  className={"flex-1 py-2 rounded-xl text-[10px] font-black transition-all "+(activeTab===p.id?"bg-indigo-500 text-white":"bg-white/5 text-white/40")}>
+                  {p.icon} {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-5 py-5 space-y-5">
+          {/* Placement description */}
+          <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl px-4 py-3">
+            <p className="text-indigo-300 font-black text-xs">{placements.find(function(p){return p.id===activeTab;}).icon} {placements.find(function(p){return p.id===activeTab;}).label}</p>
+            <p className="text-white/40 text-[10px] mt-0.5">{placements.find(function(p){return p.id===activeTab;}).desc}</p>
+          </div>
+
+          {/* Active toggle */}
+          <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl px-4 py-3">
+            <div>
+              <p className="text-white font-black text-sm">Ad Active</p>
+              <p className="text-white/30 text-[9px]">Turn off to hide this placement</p>
+            </div>
+            <button onClick={()=>updateAd(activeTab,"active",!currentAd.active)}
+              className={"w-12 h-6 rounded-full transition-all relative "+(currentAd.active?"bg-emerald-500":"bg-white/10")}>
+              <div className={"w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all "+(currentAd.active?"left-6":"left-0.5")}/>
+            </button>
+          </div>
+
+          {/* Ad type */}
+          <div>
+            <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Ad Type</label>
+            <div className="grid grid-cols-2 gap-2">
+              {["image","video"].map(function(type){
+                return(
+                  <button key={type} onClick={()=>updateAd(activeTab,"type",type)}
+                    className={"py-2.5 rounded-xl font-black text-xs uppercase transition-all "+(currentAd.type===type?"bg-indigo-500 text-white":"bg-white/5 text-white/40 border border-white/10")}>
+                    {type==="image"?"🖼️ Image":"🎬 Video"}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Asset URL */}
+          <div>
+            <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">
+              {currentAd.type==="video"?"YouTube Embed URL or Video URL":"Image URL"}
+            </label>
+            <input
+              value={currentAd.src}
+              onChange={function(e){updateAd(activeTab,"src",e.target.value);}}
+              placeholder={currentAd.type==="video"?"https://www.youtube.com/embed/VIDEO_ID":"https://yourdomain.com/ad-image.jpg"}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-bold focus:border-indigo-500 focus:outline-none"
+            />
+            {currentAd.type==="image"&&<p className="text-white/20 text-[9px] mt-1">Tip: use Imgur, Cloudinary, or any direct image URL. Recommended size: 800×300px</p>}
+            {currentAd.type==="video"&&<p className="text-white/20 text-[9px] mt-1">Tip: use YouTube embed URL format: https://www.youtube.com/embed/VIDEO_ID</p>}
+          </div>
+
+          {/* Preview */}
+          {currentAd.src&&(
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Preview</label>
+              <div className="rounded-2xl overflow-hidden border border-white/10">
+                {currentAd.type==="video"?(
+                  <iframe src={currentAd.src} className="w-full h-36" frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen title="preview"/>
+                ):(
+                  <img src={currentAd.src} className="w-full h-28 object-cover" alt="preview"
+                    onError={function(e){e.target.style.display="none";}}/>
+                )}
+                <div className="bg-white/5 px-3 py-2 flex items-center justify-between">
+                  <p className="text-white/60 text-[10px] font-bold truncate flex-1">{currentAd.caption||"Caption appears here"}</p>
+                  <span className="text-white/20 text-[9px] ml-2 whitespace-nowrap">{currentAd.ctaLabel||"CTA"}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Caption */}
+          <div>
+            <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Caption</label>
+            <input value={currentAd.caption} onChange={function(e){updateAd(activeTab,"caption",e.target.value);}}
+              placeholder="Short tagline shown below the ad"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-bold focus:border-indigo-500 focus:outline-none"/>
+          </div>
+
+          {/* Advertiser name */}
+          <div>
+            <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Advertiser Name</label>
+            <input value={currentAd.advertiser} onChange={function(e){updateAd(activeTab,"advertiser",e.target.value);}}
+              placeholder="e.g. Maxis, Grab, AirAsia"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-xs font-bold focus:border-indigo-500 focus:outline-none"/>
+          </div>
+
+          {/* CTA button */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">CTA Label</label>
+              <input value={currentAd.ctaLabel} onChange={function(e){updateAd(activeTab,"ctaLabel",e.target.value);}}
+                placeholder="Learn More"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-xs font-bold focus:border-indigo-500 focus:outline-none"/>
+            </div>
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">CTA Link</label>
+              <input value={currentAd.ctaUrl} onChange={function(e){updateAd(activeTab,"ctaUrl",e.target.value);}}
+                placeholder="https://..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-xs font-bold focus:border-indigo-500 focus:outline-none"/>
+            </div>
+          </div>
+
+          {/* Save / Clear buttons */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button onClick={()=>handleClear(activeTab)}
+              className="py-3 rounded-2xl font-black text-xs uppercase bg-red-500/10 text-red-400 border border-red-500/20 active:scale-95 transition-transform">
+              🗑️ Clear Ad
+            </button>
+            <button onClick={handleSave}
+              className={"py-3 rounded-2xl font-black text-xs uppercase transition-all active:scale-95 "+(saved?"bg-emerald-500 text-white":"bg-indigo-500 text-white")}>
+              {saved?"✅ Saved!":"💾 Save Ad"}
+            </button>
+          </div>
+
+          <p className="text-white/20 text-[9px] text-center pb-2">Changes go live immediately for all users</p>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function App(){
   const [lang, setLang]=useState("en");
   const [tab, setTab]=useState("deals");  // "deals" | "student" | "sell"
   const trial       = useTrial();
+  const [showAdmin, setShowAdmin]=useState(false);
+  const logoTapCount=useRef(0);
+  const logoTapTimer=useRef(null);
+  function handleLogoTap(){
+    logoTapCount.current+=1;
+    if(logoTapTimer.current) clearTimeout(logoTapTimer.current);
+    logoTapTimer.current=setTimeout(()=>{logoTapCount.current=0;},600);
+    if(logoTapCount.current>=3){ setShowAdmin(true); logoTapCount.current=0; }
+  }
   const locationHook= useLocation();
   const [vendorMeta,setVendorMeta]   = useState(()=>getVendorProfile());
   const [showOnboarding,setShowOnboarding] = useState(false);
@@ -3420,9 +3673,9 @@ export default function App(){
 
       <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src="/icon-192.png" className="w-8 h-8 rounded-xl object-cover" alt="Sapot Lokal"/>
+          <img src="/icon-192.png" className="w-10 h-10 rounded-xl object-contain" alt="Sapot Lokal"/>
           <div>
-            <h1 className="font-black text-emerald-800 text-base leading-none">Sapot Lokal</h1>
+            <h1 onClick={handleLogoTap} className="font-black text-emerald-800 text-base leading-none cursor-pointer select-none">Sapot Lokal</h1>
             <button onClick={()=>locationHook.status!=='requesting'&&locationHook.request()}
               className="text-left">
               <p className="text-slate-400 text-[9px] font-bold">
@@ -3475,6 +3728,11 @@ export default function App(){
             <VendorFlow onNewListing={handleNewListing} onPostSuccess={()=>setTab("deals")} trial={trial} t={t} vendorProfile={vendorProfile} onUpdateProfile={setVendorProfile} vendorMeta={vendorMeta} locationHook={locationHook}/>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Admin Panel — triple-tap logo to access */}
+      <AnimatePresence>
+        {showAdmin&&<AdminPanel onClose={()=>setShowAdmin(false)}/>}
       </AnimatePresence>
 
       {/* Vendor onboarding — shows on first Sell tab tap */}
