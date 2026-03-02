@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { supabase, getActiveListings, createListing, createOrder, getVendorSales, upsertVendor, getVendor, getAdsFromDB, updateAdInDB } from "./supabase";
 import { motion, AnimatePresence } from "motion/react";
 
 // ─── TRANSLATIONS ─────────────────────────────────────────────────────────────
@@ -1993,6 +1994,13 @@ function getAds(){
   catch(e){ return DEFAULT_ADS; }
 }
 function saveAds(ads){ localStorage.setItem(LS_ADS, JSON.stringify(ads)); }
+// Load ads from Supabase (overrides localStorage if available)
+async function loadAdsFromDB(){
+  try{
+    const ads = await getAdsFromDB();
+    if(ads){ localStorage.setItem(LS_ADS, JSON.stringify(ads)); }
+  }catch(e){ console.log('Ads load error:',e); }
+}
 
 // ── Receipt Ad Slot ──────────────────────────────────────────────────────────
 function ReceiptAdSlot(){
@@ -2251,10 +2259,10 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                         <div className="h-px bg-slate-200"/>
                         <div className="flex justify-between text-sm"><span className="font-black text-slate-900">{t.total}</span><span className="font-black text-emerald-600 text-base">RM{fmtRM(total)}</span></div>
                       </div>
-                      <button onClick={()=>{
+                      <button onClick={async()=>{
         setPaying(true);
-        setTimeout(()=>{
-          // Save each item to order history (retrievable via My Orders)
+        try{
+          // Save to localStorage for offline access
           cart.forEach(item=>{
             saveOrderToHistory({
               id: Date.now()+Math.random(),
@@ -2267,8 +2275,27 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
               orderedAt:  new Date().toISOString(),
             });
           });
+          // Save to Supabase
+          const session = await supabase.auth.getSession();
+          const buyerId = session.data.session?.user?.id || null;
+          await Promise.all(cart.map(item=>
+            createOrder({
+              buyer_id:    buyerId,
+              listing_id:  item.fromDB ? item.id : null,
+              vendor_id:   item.vendorSbId || null,
+              item_name:   item.title,
+              vendor_name: item.vendorName,
+              amount:      item.dealPrice,
+              delivery_mode: deliveryMode,
+              pickup_code: pickupCode,
+              status:      'confirmed',
+            })
+          ));
+        }catch(err){
+          console.error('Order save error:',err);
+        }finally{
           setPaying(false);setSuccess(true);
-        },2200);
+        }
       }} disabled={paying||cart.length===0}
                         className="w-full bg-[#1a6ef5] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-blue-200">
                         {paying?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t.processingTNG}</>:t.checkoutTNG}
@@ -2440,7 +2467,7 @@ function BuyerFeed({vendorListings,activeTab,notifQueue,onNotifView,t,userLocati
     return hav(userLocation.lat,userLocation.lon,geo.lat,geo.lon);
   };
 
-  const allListings=[...MOCK_LISTINGS,...vendorListings].map(l=>({
+  const allListings=[...sbListings,...MOCK_LISTINGS,...vendorListings].filter((l,i,a)=>a.findIndex(x=>x.id===l.id)===i).map(l=>({
     ...l,
     distance: calcDist(l),
   }));
@@ -2789,11 +2816,15 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
     setForm({title:post.title,desc:post.desc,price:post.price,original:post.original,studentPrice:"",hasStudentPrice:false,endTime:"",qty:"",reheat:"none",halal:null});
     setPhoto(null);setShowPast(false);setStep(3);
   };
-  const handlePublish=()=>{
+  const handlePublish=async()=>{
     setPublishing(true);
-    setTimeout(()=>{
+    try{
       const newPost={
-        id:Date.now(),vendorId:99,vendorName:(vendorMeta && vendorMeta.shopName)||"My Shop",vendorSubscribed:!!(trial&&trial.status==='subscribed'),branch:(vendorMeta && vendorMeta.area)||null,vendorLat:locationHook.loc && locationHook.loc.lat,vendorLon:locationHook.loc && locationHook.loc.lon,
+        id:Date.now(),vendorId:99,vendorName:(vendorMeta && vendorMeta.shopName)||"My Shop",
+        vendorSubscribed:!!(trial&&trial.status==='subscribed'),
+        branch:(vendorMeta && vendorMeta.area)||null,
+        vendorLat:locationHook.loc && locationHook.loc.lat,
+        vendorLon:locationHook.loc && locationHook.loc.lon,
         freeDeliveryThreshold:vendorProfile.freeDeliveryThreshold,
         sharedPool:vendorProfile.sharedPool||false,
         studentPrice:form.hasStudentPrice&&form.studentPrice?parseFloat(form.studentPrice):null,
@@ -2806,16 +2837,44 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
         qty:form.qty?parseInt(form.qty):null,claimed:0,
         type:postType||"surplus",reheat:form.reheat,postedAt:Date.now()
       };
+
+      // Save to Supabase if vendor has DB id
+      if(sbVendorId){
+        const expiresAt = computedEnd ? new Date(computedEnd).toISOString() : null;
+        await createListing(sbVendorId, {
+          title: form.title,
+          description: form.desc,
+          original_price: parseFloat(form.original)||parseFloat(form.price)*1.5,
+          deal_price: parseFloat(form.price),
+          image: photo||null,
+          emoji: (template && template.emoji)||'🍱',
+          post_type: postType||'surplus',
+          halal: form.halal===1,
+          halal_cert: form.halal===2,
+          muslim_owned: form.muslimOwned||false,
+          expires_at: expiresAt,
+          qty_total: form.qty?parseInt(form.qty):1,
+          qty_remaining: form.qty?parseInt(form.qty):1,
+          free_delivery_threshold: vendorProfile.freeDeliveryThreshold||null,
+          shared_pool: vendorProfile.sharedPool||false,
+          active: true,
+        });
+      }
+
       setActivePosts(p=>[newPost,...p]);
       setSuccessPost({price:form.price,radius});
       addSaleLog({itemName:form.title, amount:parseFloat(form.price), net:parseFloat(form.price)*0.9, ts:Date.now()});
       onNewListing(newPost);
       onPostSuccess && onPostSuccess();
-      setShowSuccess(true);setPublishing(false);
+      setShowSuccess(true);
+    }catch(err){
+      console.error('Publish error:',err);
+    }finally{
+      setPublishing(false);
       setStep(1);setPostType(null);setTemplate(null);setPhoto(null);
       setTimeMode("stock");
       setForm({title:"",desc:"",price:"",original:"",studentPrice:"",hasStudentPrice:false,endTime:"",qty:"",reheat:"none",halal:null});
-    },1500);
+    }
   };
 
   const tag=postType?dealTag(postType,t):null;
@@ -3378,6 +3437,18 @@ function AdminPanel({onClose}){
 
   function handleSave(){
     saveAds(ads);
+    // Also sync to Supabase so all users see the ad
+    Object.entries(ads).forEach(([placement, ad])=>{
+      updateAdInDB(placement, {
+        active: ad.active,
+        type: ad.type,
+        src: ad.src,
+        caption: ad.caption,
+        advertiser: ad.advertiser,
+        cta_label: ad.ctaLabel,
+        cta_url: ad.ctaUrl,
+      });
+    });
     setSaved(true);
     setTimeout(()=>setSaved(false),2000);
   }
@@ -3605,9 +3676,79 @@ export default function App(){
   // Auto-request GPS on first load (buyer side)
   useEffect(()=>{
     if(locationHook.status==='idle') locationHook.request();
+    loadAdsFromDB(); // load latest ads from Supabase
   },[]);
   const [vendorListings, setVendorListings]=useState([]);
   const [vendorProfile, setVendorProfile]=useState({freeDeliveryThreshold:null,sharedPool:false,notifRadius:DEFAULT_RADIUS,openTime:'09:00',closeTime:'22:00'});
+  const [sbListings, setSbListings]=useState([]);     // listings from Supabase
+  const [sbLoading, setSbLoading]=useState(true);     // loading state
+  const [authUser, setAuthUser]=useState(null);        // logged in user
+  const [sbVendorId, setSbVendorId]=useState(null);   // vendor's supabase id
+
+  // ── Auth listener ──────────────────────────────────────────────────────────
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data:{session}})=>{
+      setAuthUser(session?.user||null);
+      if(session?.user) loadVendorFromDB(session.user.id);
+    });
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
+      setAuthUser(session?.user||null);
+      if(session?.user) loadVendorFromDB(session.user.id);
+    });
+    return ()=>subscription.unsubscribe();
+  },[]);
+
+  async function loadVendorFromDB(userId){
+    const {data} = await getVendor(userId);
+    if(data){ setSbVendorId(data.id); }
+  }
+
+  // ── Load listings from Supabase ───────────────────────────────────────────
+  useEffect(()=>{
+    loadListings();
+    // Realtime subscription — new listings appear instantly
+    const channel = supabase.channel('listings-changes')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'listings'},
+        (payload)=>{ setSbListings(p=>[mapListing(payload.new),...p]); })
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'listings'},
+        (payload)=>{ setSbListings(p=>p.map(l=>l.id===payload.new.id?mapListing(payload.new):l)); })
+      .subscribe();
+    return ()=>supabase.removeChannel(channel);
+  },[]);
+
+  async function loadListings(){
+    setSbLoading(true);
+    const {data,error} = await getActiveListings();
+    if(!error && data){ setSbListings(data.map(mapListing)); }
+    setSbLoading(false);
+  }
+
+  function mapListing(l){
+    return {
+      id: l.id,
+      vendorId: l.vendor_id,
+      vendorName: l.vendors?.name || l.vendor_name || 'Vendor',
+      title: l.title,
+      description: l.description||'',
+      originalPrice: l.original_price,
+      dealPrice: l.deal_price,
+      image: l.image||'https://picsum.photos/seed/'+l.id+'/400/300',
+      emoji: l.emoji||'🍱',
+      postType: l.post_type||'surplus',
+      halal: l.halal,
+      muslimOwned: l.muslim_owned,
+      halalCert: l.halal_cert,
+      expiresAt: l.expires_at ? new Date(l.expires_at) : null,
+      qty: l.qty_remaining||1,
+      freeDeliveryThreshold: l.free_delivery_threshold||null,
+      sharedPool: l.shared_pool||false,
+      vendorLat: l.vendors?.lat||null,
+      vendorLon: l.vendors?.lon||null,
+      vendorArea: l.vendors?.area||null,
+      vendorSubscribed: l.vendors?.subscribed||false,
+      fromDB: true,
+    };
+  }
   const [showHalalDisclaimer, setShowHalalDisclaimer]=useState(true);
   const [notifEnabled, setNotifEnabled]=useState(null); // null=not asked, true, false
   const [showNotifPrompt, setShowNotifPrompt]=useState(false);
@@ -3727,7 +3868,7 @@ export default function App(){
       <AnimatePresence mode="wait">
         {tab==="sell"&&(
           <motion.div key="sell" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-            <VendorFlow onNewListing={handleNewListing} onPostSuccess={()=>setTab("deals")} trial={trial} t={t} vendorProfile={vendorProfile} onUpdateProfile={setVendorProfile} vendorMeta={vendorMeta} locationHook={locationHook}/>
+            <VendorFlow onNewListing={handleNewListing} onPostSuccess={()=>setTab("deals")} trial={trial} t={t} vendorProfile={vendorProfile} onUpdateProfile={setVendorProfile} vendorMeta={vendorMeta} locationHook={locationHook} sbVendorId={sbVendorId} authUser={authUser}/>
           </motion.div>
         )}
       </AnimatePresence>
