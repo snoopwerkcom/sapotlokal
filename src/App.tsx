@@ -961,6 +961,303 @@ function getVendorProfile(){
 }
 function saveVendorProfile(p){ localStorage.setItem(LS_VENDOR, JSON.stringify(p)); }
 
+
+// ─── VENDOR AUTH ──────────────────────────────────────────────────────────────
+// Full signup/login flow for vendors
+// Replaces onboarding for new vendors — existing localStorage vendors still work
+
+function VendorAuth({t, onDone, onSkip}){
+  var [mode, setMode]       = useState("welcome"); // welcome | login | signup | profile
+  var [email, setEmail]     = useState("");
+  var [password, setPassword] = useState("");
+  var [shopName, setShopName] = useState("");
+  var [area, setArea]       = useState("");
+  var [phone, setPhone]     = useState("");
+  var [loading, setLoading] = useState(false);
+  var [error, setError]     = useState("");
+  var [showPw, setShowPw]   = useState(false);
+
+  async function handleSignup(){
+    if(!email||!password||!shopName){ setError("Please fill in all fields"); return; }
+    if(password.length<6){ setError("Password must be at least 6 characters"); return; }
+    setLoading(true); setError("");
+    try{
+      // 1. Create auth account
+      var {data, error:signupErr} = await supabase.auth.signUp({email, password});
+      if(signupErr) throw signupErr;
+      var userId = data.user?.id;
+      if(!userId) throw new Error("Signup failed");
+
+      // 2. Create vendor profile in DB
+      var {data:vendor, error:vendorErr} = await supabase.from('vendors').insert({
+        user_id:      userId,
+        name:         shopName.trim(),
+        area:         area.trim()||'My Area',
+        phone:        phone.trim(),
+        trial_start:  new Date().toISOString(),
+        subscribed:   false,
+      }).select().single();
+      if(vendorErr) throw vendorErr;
+
+      // 3. Save to localStorage for offline
+      var profile = {shopName:shopName.trim(), area:area.trim()||'My Area', phone:phone.trim(), joinedAt:new Date().toISOString(), sbId:vendor.id};
+      saveVendorProfile(profile);
+      onDone(profile);
+    }catch(err){
+      setError(err.message||"Signup failed. Please try again.");
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  async function handleLogin(){
+    if(!email||!password){ setError("Please enter email and password"); return; }
+    setLoading(true); setError("");
+    try{
+      var {data, error:loginErr} = await supabase.auth.signInWithPassword({email, password});
+      if(loginErr) throw loginErr;
+      var userId = data.user?.id;
+
+      // Load vendor profile from DB
+      var {data:vendor} = await supabase.from('vendors').select('*').eq('user_id', userId).single();
+      if(vendor){
+        var profile = {shopName:vendor.name, area:vendor.area||'', phone:vendor.phone||'', joinedAt:vendor.created_at, sbId:vendor.id};
+        saveVendorProfile(profile);
+        onDone(profile);
+      } else {
+        // Logged in but no vendor profile yet → go to profile setup
+        setMode("profile");
+      }
+    }catch(err){
+      setError(err.message||"Login failed. Check your email and password.");
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  async function handleCreateProfile(){
+    if(!shopName){ setError("Shop name is required"); return; }
+    setLoading(true); setError("");
+    try{
+      var {data:{session}} = await supabase.auth.getSession();
+      if(!session) throw new Error("Not logged in");
+      var {data:vendor, error:vendorErr} = await supabase.from('vendors').insert({
+        user_id:      session.user.id,
+        name:         shopName.trim(),
+        area:         area.trim()||'My Area',
+        phone:        phone.trim(),
+        trial_start:  new Date().toISOString(),
+        subscribed:   false,
+      }).select().single();
+      if(vendorErr) throw vendorErr;
+      var profile = {shopName:shopName.trim(), area:area.trim()||'My Area', phone:phone.trim(), joinedAt:new Date().toISOString(), sbId:vendor.id};
+      saveVendorProfile(profile);
+      onDone(profile);
+    }catch(err){
+      setError(err.message||"Failed to create profile");
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  // ── Welcome screen ──────────────────────────────────────────────────────────
+  if(mode==="welcome"){
+    return(
+      <motion.div initial={{opacity:0}} animate={{opacity:1}}
+        className="fixed inset-0 z-[700] bg-[#0a0f1e] flex flex-col items-center justify-center p-6">
+        <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.1}}
+          className="w-full max-w-sm text-center">
+          <div className="text-7xl mb-5">🏪</div>
+          <h2 className="text-white font-black text-2xl mb-2">Jual dengan Sapot Lokal</h2>
+          <p className="text-white/40 text-sm mb-8">Post deals. Reach hungry buyers near you.</p>
+          <div className="space-y-3">
+            <button onClick={()=>setMode("signup")}
+              className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-emerald-900/50 active:scale-95 transition-all">
+              🚀 Create Vendor Account
+            </button>
+            <button onClick={()=>setMode("login")}
+              className="w-full bg-white/10 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm active:scale-95 transition-all">
+              🔑 I Already Have an Account
+            </button>
+            <button onClick={onSkip}
+              className="w-full text-white/20 text-xs font-bold py-2 mt-2">
+              Continue without account
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  // ── Signup screen ───────────────────────────────────────────────────────────
+  if(mode==="signup"){
+    return(
+      <motion.div initial={{opacity:0}} animate={{opacity:1}}
+        className="fixed inset-0 z-[700] bg-[#0a0f1e] overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center p-6">
+          <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.1}}
+            className="w-full max-w-sm">
+            <button onClick={()=>setMode("welcome")} className="text-white/30 text-sm mb-6 flex items-center gap-1">
+              ← Back
+            </button>
+            <h2 className="text-white font-black text-2xl mb-1">Create Account</h2>
+            <p className="text-white/30 text-sm mb-6">Free 60-day trial — no credit card needed</p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Shop Name *</label>
+                <input value={shopName} onChange={e=>setShopName(e.target.value)}
+                  placeholder="e.g. Warung Mak Teh" autoFocus
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+              </div>
+              <div>
+                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Area</label>
+                <input value={area} onChange={e=>setArea(e.target.value)}
+                  placeholder="e.g. SS15 Subang, Chow Kit KL"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+              </div>
+              <div>
+                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">WhatsApp Number</label>
+                <input value={phone} onChange={e=>setPhone(e.target.value)}
+                  placeholder="01X-XXXXXXX" type="tel" inputMode="numeric"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+              </div>
+              <div className="h-px bg-white/5"/>
+              <div>
+                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Email *</label>
+                <input value={email} onChange={e=>setEmail(e.target.value)}
+                  placeholder="your@email.com" type="email" inputMode="email"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+              </div>
+              <div>
+                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Password *</label>
+                <div className="relative">
+                  <input value={password} onChange={e=>setPassword(e.target.value)}
+                    placeholder="Min 6 characters" type={showPw?"text":"password"}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20 pr-12"/>
+                  <button onClick={()=>setShowPw(!showPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">
+                    {showPw?"🙈":"👁️"}
+                  </button>
+                </div>
+              </div>
+              {error&&<p className="text-red-400 text-xs font-bold bg-red-400/10 px-3 py-2 rounded-xl">{error}</p>}
+            </div>
+            <button onClick={handleSignup} disabled={loading||!email||!password||!shopName}
+              className="w-full mt-6 bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-emerald-900/50 disabled:opacity-30 active:scale-95 transition-all flex items-center justify-center gap-2">
+              {loading?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Creating...</>:"🚀 Create Account — It's Free"}
+            </button>
+            <button onClick={()=>setMode("login")} className="w-full mt-3 text-white/30 text-xs font-bold py-2 text-center">
+              Already have an account? Login
+            </button>
+          </motion.div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ── Login screen ────────────────────────────────────────────────────────────
+  if(mode==="login"){
+    return(
+      <motion.div initial={{opacity:0}} animate={{opacity:1}}
+        className="fixed inset-0 z-[700] bg-[#0a0f1e] flex flex-col items-center justify-center p-6">
+        <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.1}}
+          className="w-full max-w-sm">
+          <button onClick={()=>setMode("welcome")} className="text-white/30 text-sm mb-6 flex items-center gap-1">
+            ← Back
+          </button>
+          <h2 className="text-white font-black text-2xl mb-1">Welcome Back</h2>
+          <p className="text-white/30 text-sm mb-6">Login to your vendor account</p>
+          <div className="space-y-4">
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Email</label>
+              <input value={email} onChange={e=>setEmail(e.target.value)}
+                placeholder="your@email.com" type="email" inputMode="email" autoFocus
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+            </div>
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Password</label>
+              <div className="relative">
+                <input value={password} onChange={e=>setPassword(e.target.value)}
+                  placeholder="Your password" type={showPw?"text":"password"}
+                  onKeyDown={e=>e.key==="Enter"&&handleLogin()}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20 pr-12"/>
+                <button onClick={()=>setShowPw(!showPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">
+                  {showPw?"🙈":"👁️"}
+                </button>
+              </div>
+            </div>
+            {error&&<p className="text-red-400 text-xs font-bold bg-red-400/10 px-3 py-2 rounded-xl">{error}</p>}
+          </div>
+          <button onClick={handleLogin} disabled={loading||!email||!password}
+            className="w-full mt-6 bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-emerald-900/50 disabled:opacity-30 active:scale-95 transition-all flex items-center justify-center gap-2">
+            {loading?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Logging in...</>:"🔑 Login"}
+          </button>
+          <button onClick={async()=>{
+            if(!email){ setError("Enter your email first"); return; }
+            setLoading(true);
+            var {error:resetErr} = await supabase.auth.resetPasswordForEmail(email, {
+              redirectTo: window.location.origin+'/reset-password'
+            });
+            setLoading(false);
+            if(resetErr) setError(resetErr.message);
+            else setError("✅ Password reset email sent! Check your inbox.");
+          }} className="w-full mt-3 text-white/30 text-xs font-bold py-2 text-center">
+            Forgot password?
+          </button>
+          <button onClick={()=>setMode("signup")} className="w-full text-white/30 text-xs font-bold py-2 text-center">
+            No account yet? Sign up free
+          </button>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  // ── Profile setup (after login, no vendor profile yet) ──────────────────────
+  if(mode==="profile"){
+    return(
+      <motion.div initial={{opacity:0}} animate={{opacity:1}}
+        className="fixed inset-0 z-[700] bg-[#0a0f1e] flex flex-col items-center justify-center p-6">
+        <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}}
+          className="w-full max-w-sm">
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">🏪</div>
+            <h2 className="text-white font-black text-xl">Set Up Your Shop</h2>
+            <p className="text-white/30 text-sm mt-1">Just a few details to get started</p>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Shop Name *</label>
+              <input value={shopName} onChange={e=>setShopName(e.target.value)}
+                placeholder="e.g. Warung Mak Teh" autoFocus
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+            </div>
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">Area</label>
+              <input value={area} onChange={e=>setArea(e.target.value)}
+                placeholder="e.g. SS15 Subang"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+            </div>
+            <div>
+              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">WhatsApp</label>
+              <input value={phone} onChange={e=>setPhone(e.target.value)}
+                placeholder="01X-XXXXXXX" type="tel"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+            </div>
+            {error&&<p className="text-red-400 text-xs font-bold bg-red-400/10 px-3 py-2 rounded-xl">{error}</p>}
+          </div>
+          <button onClick={handleCreateProfile} disabled={loading||!shopName}
+            className="w-full mt-6 bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm disabled:opacity-30 active:scale-95 transition-all flex items-center justify-center gap-2">
+            {loading?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Saving...</>:"✅ Save & Start Selling"}
+          </button>
+        </motion.div>
+      </motion.div>
+    );
+  }
+
+  return null;
+}
+
 function VendorOnboarding({t, onDone}){
   const [form, setForm]=useState({shopName:'',area:'',phone:''});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
@@ -3842,7 +4139,7 @@ export default function App(){
             <button onClick={()=>setTab("deals")} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="deals"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.buy}</button>
             <button onClick={()=>setTab("student")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all ${tab==="student"?"bg-white shadow-sm text-indigo-600":"text-slate-400"}`}>{t.studentTab}</button>
             <button onClick={()=>{
-              if(!vendorMeta) { setShowOnboarding(true); return; }
+              if(!vendorMeta){ setShowOnboarding(true); return; }
               setTab("sell");
             }} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="sell"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.sell}</button>
           </div>
@@ -3878,7 +4175,7 @@ export default function App(){
         {showAdmin&&<AdminPanel onClose={()=>setShowAdmin(false)}/>}
       </AnimatePresence>
 
-      {/* Vendor onboarding — shows on first Sell tab tap */}
+      {/* Vendor onboarding — first Sell tab tap */}
       <AnimatePresence>
         {showOnboarding&&(
           <VendorOnboarding t={t} onDone={(profile)=>{
