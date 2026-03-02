@@ -11,7 +11,7 @@ const T = {
     nearbyDeals:"Deals Near You", searchResults:"Search Results ({0})",
     almostGone:"Almost Gone", item:"item",
     save:"SAVE", perUnit:"unit left", soldOut:"Sold Out",
-    surplusTag:"♻️ Surplus", promoTag:"⚡ Flash Deal", specialTag:"🌟 Vendor Special",
+    surplusTag:"🔥 Limited Deal", promoTag:"⚡ Flash Deal", specialTag:"🌟 Vendor Special",
     studentTag:"🎓 Student Deal",
     microwave:"♨️ Microwave", addToCart:"Add to Cart", addedToCart:"✅ Added",
     expired:"Expired", justNow:"Just now", minAgo:"min ago", hrAgo:"hr ago",
@@ -80,7 +80,7 @@ const T = {
     pickupCode:"Pickup Code", goPickup:"Got it!", myOrders:"Orders",
     // Vendor
     whatToPost:"What to post today?", chooseType:"Choose your deal type",
-    surplusType:"♻️ Surplus Saver", surplusDesc:"Leftover food — recover costs before closing",
+    surplusType:"🔥 Limited Deal", surplusDesc:"Discounted food — limited quantity available",
     promoType:"⚡ Flash Deal", promoDesc:"Time-limited offer to fill quiet hours",
     specialType:"🌟 Vendor Special", specialDesc:"Launch a new dish cheaply, get feedback",
     chooseCategory:"Choose Category", templateNote:"Template pre-fills basic info",
@@ -274,7 +274,7 @@ const T = {
     deliveryNote:"Rider Lalamove dalam perjalanan",
     pickupCode:"Kod Pickup", goPickup:"Okay, Faham!", myOrders:"Pesanan",
     whatToPost:"Apa nak post hari ni?", chooseType:"Pilih jenis deal anda",
-    surplusType:"♻️ Surplus Saver", surplusDesc:"Makanan lebihan — pulang modal sebelum tutup",
+    surplusType:"🔥 Limited Deal", surplusDesc:"Makanan lebihan — pulang modal sebelum tutup",
     promoType:"⚡ Flash Deal", promoDesc:"Tawaran masa terhad untuk masa sunyi",
     specialType:"🌟 Menu Baru", specialDesc:"Lancar hidangan baru — dapat feedback murah",
     chooseCategory:"Pilih Kategori", templateNote:"Template isi maklumat asas",
@@ -592,7 +592,7 @@ const FOOD_TEMPLATES = [
   {id:"custom",    label:"Custom",       emoji:"✏️",defaultTitle:"",defaultDesc:"",defaultPrice:"",defaultOriginal:"",category:"Other"}
 ];
 const MOCK_PAST_POSTS = [
-  {id:"p1",title:"Nasi Lemak Bungkus",desc:"Telur, Sambal, Ikan Bilis",price:"3.50",original:"5.00",emoji:"🍛",type:"surplus",sold:24},
+  {id:"p1",title:"Nasi Lemak Bungkus",desc:"Telur, Sambal, Ikan Bilis",price:"3.50",original:"5.00",emoji:"🍛",type:"limited",sold:24},
   {id:"p2",title:"Assorted Pastry Box",desc:"Croissant, Danish, Bun",price:"9.90",original:"15.00",emoji:"🥐",type:"promo",sold:11}
 ];
 const CATEGORIES = ["Rice","Bakery","Drinks","Dessert","Other"];
@@ -615,14 +615,14 @@ const MOCK_VENDORS_GEO = {
 };
 
 const MOCK_LISTINGS = [
-  {id:1, vendorId:1,vendorSubscribed:true,vendorName:"Warung Mak Teh",       freeDeliveryThreshold:20,sharedPool:false,studentPrice:2.00, branch:null,           title:"Nasi Lemak Bungkus",       desc:"Telur, Sambal Ikan Bilis, Timun Fresh",  originalPrice:5.00, dealPrice:3.00,emoji:"🍛",image:"https://picsum.photos/seed/nasilemak1/800/600", category:"Rice",   halal:1,endTime:"21:00",qty:18,claimed:6, type:"surplus",reheat:"none",     postedAt:Date.now()-60000*20},
+  {id:1, vendorId:1,vendorSubscribed:true,vendorName:"Warung Mak Teh",       freeDeliveryThreshold:20,sharedPool:false,studentPrice:2.00, branch:null,           title:"Nasi Lemak Bungkus",       desc:"Telur, Sambal Ikan Bilis, Timun Fresh",  originalPrice:5.00, dealPrice:3.00,emoji:"🍛",image:"https://picsum.photos/seed/nasilemak1/800/600", category:"Rice",   halal:1,endTime:"21:00",qty:18,claimed:6, type:"limited",reheat:"none",     postedAt:Date.now()-60000*20},
   {id:2, vendorId:1,vendorSubscribed:true,vendorName:"Warung Mak Teh",       freeDeliveryThreshold:20,sharedPool:false,studentPrice:1.50, branch:null,           title:"Teh Tarik Gelas Besar",    desc:"Teh tarik pekat, fresh buat",            originalPrice:3.50,dealPrice:2.00,emoji:"🧋",image:"https://picsum.photos/seed/tehtarik/800/600",  category:"Drinks", halal:1,endTime:"21:00",qty:null,claimed:0,type:"promo",  reheat:"none",     postedAt:Date.now()-60000*10},
-  {id:3, vendorId:2,vendorSubscribed:true,vendorName:"Bakeri Fariz",         freeDeliveryThreshold:30,sharedPool:true, studentPrice:7.50, branch:"SS15",         title:"Assorted Pastry Box",      desc:"Croissant, Danish Almond, Bun Coklat",  originalPrice:15.00,dealPrice:9.90,emoji:"🥐",image:"https://picsum.photos/seed/pastrybox1/800/600",category:"Bakery", halal:1,endTime:"20:30",qty:10,claimed:9, type:"surplus",reheat:"oven",     postedAt:Date.now()-60000*45},
+  {id:3, vendorId:2,vendorSubscribed:true,vendorName:"Bakeri Fariz",         freeDeliveryThreshold:30,sharedPool:true, studentPrice:7.50, branch:"SS15",         title:"Assorted Pastry Box",      desc:"Croissant, Danish Almond, Bun Coklat",  originalPrice:15.00,dealPrice:9.90,emoji:"🥐",image:"https://picsum.photos/seed/pastrybox1/800/600",category:"Bakery", halal:1,endTime:"20:30",qty:10,claimed:9, type:"limited",reheat:"oven",     postedAt:Date.now()-60000*45},
   {id:4, vendorId:3,vendorSubscribed:true,vendorName:"Kedai Kopi Uncle Lim", freeDeliveryThreshold:null,sharedPool:false,studentPrice:null,branch:null,          title:"Bundle Minuman Special",   desc:"Teh Tarik + Milo Ais + Air Limau",       originalPrice:9.00, dealPrice:5.50,emoji:"🧋",image:"https://picsum.photos/seed/drinks1/800/600",  category:"Drinks", halal:2,endTime:"22:00",qty:null,claimed:3,type:"promo",  reheat:"none",     postedAt:Date.now()-60000*10},
   {id:5, vendorId:4,vendorSubscribed:false,vendorName:"Gerai Pak Din",        freeDeliveryThreshold:25,sharedPool:false,studentPrice:3.50, branch:null,           title:"Nasi Campur Ekonomi",      desc:"2 Sayur + 1 Lauk Pilihan Anda",          originalPrice:8.00, dealPrice:5.00,emoji:"🍱",image:"https://picsum.photos/seed/nasicamp1/800/600", category:"Rice",   halal:1,endTime:"14:30",qty:20,claimed:14,type:"promo",  reheat:"microwave",postedAt:Date.now()-60000*5},
   {id:6, vendorId:5,vendorSubscribed:true,vendorName:"Kuih Mak Jah",         freeDeliveryThreshold:20,sharedPool:true, studentPrice:5.00, branch:null,           title:"Set Kuih Muih Tradisional",desc:"Kuih Lapis, Onde-onde, Seri Muka",        originalPrice:12.00,dealPrice:7.00,emoji:"🍡",image:"https://picsum.photos/seed/kuih1/800/600",    category:"Dessert",halal:1,endTime:"18:00",qty:8, claimed:5, type:"special",reheat:"none",     postedAt:Date.now()-60000*60},
   {id:7, vendorId:6,vendorSubscribed:true,vendorName:"Restoran Maju Jaya",   freeDeliveryThreshold:35,sharedPool:false,studentPrice:6.00, branch:null,           title:"Ayam Percik Madu Baru",    desc:"Resipi baru! Cuba dan bagi feedback",    originalPrice:14.00,dealPrice:8.00,emoji:"🍗",image:"https://picsum.photos/seed/ayampercik/800/600",category:"Rice",   halal:3,endTime:"20:00",qty:15,claimed:2, type:"special",reheat:"oven",     postedAt:Date.now()-60000*15},
-  {id:8, vendorId:7,vendorSubscribed:false,vendorName:"Mee Goreng Mat Zin",   freeDeliveryThreshold:20,sharedPool:false,studentPrice:2.50, branch:null,           title:"Mee Goreng Mamak",         desc:"Pedas, rangup, fresh dari kuali",        originalPrice:7.00, dealPrice:4.00,emoji:"🍜",image:"https://picsum.photos/seed/meegoreng/800/600",category:"Rice",   halal:1,endTime:"23:00",qty:30,claimed:8, type:"surplus",reheat:"none",     postedAt:Date.now()-60000*8},
+  {id:8, vendorId:7,vendorSubscribed:false,vendorName:"Mee Goreng Mat Zin",   freeDeliveryThreshold:20,sharedPool:false,studentPrice:2.50, branch:null,           title:"Mee Goreng Mamak",         desc:"Pedas, rangup, fresh dari kuali",        originalPrice:7.00, dealPrice:4.00,emoji:"🍜",image:"https://picsum.photos/seed/meegoreng/800/600",category:"Rice",   halal:1,endTime:"23:00",qty:30,claimed:8, type:"limited",reheat:"none",     postedAt:Date.now()-60000*8},
   {id:9, vendorId:8,vendorSubscribed:true,vendorName:"Kepong Home Kitchen",  freeDeliveryThreshold:25,sharedPool:false,studentPrice:null, branch:null,           title:"Char Kuey Teow",           desc:"Wok hei tinggi, udang besar",            originalPrice:9.00, dealPrice:5.50,emoji:"🍳",image:"https://picsum.photos/seed/ckt/800/600",      category:"Rice",   halal:0,endTime:"21:30",qty:12,claimed:3, type:"promo",  reheat:"none",     postedAt:Date.now()-60000*25},
   {id:10,vendorId:9,vendorSubscribed:false,vendorName:"PJ Kopitiam",          freeDeliveryThreshold:30,sharedPool:false,studentPrice:3.00, branch:"SS2",          title:"Set Breakfast Kopitiam",   desc:"Roti Bakar + Telur + Kopi O",            originalPrice:10.00,dealPrice:6.50,emoji:"☕",image:"https://picsum.photos/seed/kopitiam/800/600",category:"Drinks", halal:0,endTime:"11:00",qty:20,claimed:7, type:"promo",  reheat:"none",     postedAt:Date.now()-60000*40},
 ];
@@ -666,7 +666,7 @@ function expandSearch(q){
   return [lower].concat(direct).concat(extra);
 }
 function matchesSearch(listing,terms){
-  const hay=[listing.title,listing.desc,listing.vendorName,listing.category,listing.branch||''].join(' ').toLowerCase();
+  const hay=[listing.title,listing.desc,listing.vendorName,listing.category,listing.branch||'',listing.vendorArea||listing.area||''].join(' ').toLowerCase();
   return terms.some(function(t){return hay.includes(t);});
 }
 
@@ -678,7 +678,7 @@ const getNow    = ()=>new Date().toTimeString().slice(0,5);
 const addHours  = (time,hrs)=>{var parts=time.split(":"); var h=parseInt(parts[0]); var m=parseInt(parts[1]); var t=h*60+m+hrs*60; return String(Math.floor(t/60)%24).padStart(2,"0")+":"+String(t%60).padStart(2,"0");}; 
 const timeAgo   = (ts,t)=>{const m=Math.floor((Date.now()-ts)/60000);if(m<1)return t.justNow;if(m<60)return`${m} ${t.minAgo}`;return`${Math.floor(m/60)} ${t.hrAgo}`;};
 const stockPct  = (qty,claimed)=>qty?Math.min(Math.round((claimed/qty)*100),100):null;
-const dealTag   = (type,t)=>({surplus:{label:t.surplusTag,bg:"bg-orange-500"},promo:{label:t.promoTag,bg:"bg-blue-500"},special:{label:t.specialTag,bg:"bg-purple-500"}})[type]||{label:t.surplusTag,bg:"bg-orange-500"};
+const dealTag   = (type,t)=>({limited:{label:t.surplusTag,bg:"bg-orange-500"},promo:{label:t.promoTag,bg:"bg-blue-500"},special:{label:t.specialTag,bg:"bg-purple-500"}})[type]||{label:t.surplusTag,bg:"bg-orange-500"};
 const fill      = (str,...vals)=>vals.reduce((s,v,i)=>s.replace(`{${i}}`,v),str);
 const halalBadge= (h,t)=>{
   if(h===1)return{label:t.halalCertLabel,  bg:"bg-emerald-500"};
@@ -1339,6 +1339,7 @@ function getOrderHistory(){
 function OrderHistorySheet({t, onClose}){
   const [orders]=useState(()=>getOrderHistory());
   const [expandedId, setExpandedId]=useState(null);
+  const scrollRef=useRef(null);
 
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
@@ -2380,8 +2381,10 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
 
   // Build per-vendor status — shared pool vendors use total cart, own-only use per-vendor subtotal
   const vendorGroups=cart.reduce((acc,item)=>{
-    if(!acc[item.vendorId]) acc[item.vendorId]={vendorId:item.vendorId,vendorName:item.vendorName,items:[],threshold:item.freeDeliveryThreshold,sharedPool:item.sharedPool};
-    acc[item.vendorId].items.push(item);return acc;
+    // Use vendorId+vendorName combo as key to avoid collisions between mock and real listings
+    var key = (item.vendorId||'')+'_'+(item.vendorName||'');
+    if(!acc[key]) acc[key]={vendorId:item.vendorId,vendorName:item.vendorName,items:[],threshold:item.freeDeliveryThreshold,sharedPool:item.sharedPool};
+    acc[key].items.push(item);return acc;
   },{});
   const vendorStatus=Object.values(vendorGroups).map(v=>{
     const vSubtotal=v.items.reduce((s,i)=>s+i.dealPrice,0);
@@ -2792,9 +2795,9 @@ function BuyerFeed({vendorListings,activeTab,notifQueue,onNotifView,t,userLocati
   const filtered=allListings.filter(l=>{
     if(isStudentMode) return l.studentPrice!=null;
     const ms=search===''||matchesSearch(l, searchTerms);
-    const mh=halalFilter==="all"?true:halalFilter==="halal_any"?l.halal>0:halalFilter==="halal_cert"?l.halal===1:l.halal===2;
+    const mh=halalFilter==="halal_all"?true:halalFilter==="halal_any"?l.halal>0:halalFilter==="halal_cert"?l.halal===1:l.halal===2;
     const mc=catFilter==="all"||l.category===catFilter;
-    const mt=typeFilter==="all"||l.type===typeFilter;
+    const mt=typeFilter==="all"||l.type===typeFilter||(typeFilter==="limited"&&(l.type==="surplus"||l.type==="limited"));
     return ms&&mh&&mc&&mt;
   });
 
@@ -2856,25 +2859,25 @@ function BuyerFeed({vendorListings,activeTab,notifQueue,onNotifView,t,userLocati
         <div className="bg-white border-b border-slate-100 px-4 pt-3 pb-3 sticky top-[60px] z-40">
           <div className="relative mb-3">
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder={t.searchPlaceholder}
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search food or shop name..."
               className="w-full bg-slate-100 rounded-2xl pl-9 pr-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
           </div>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-2">
-            {[{id:"all",label:t.allCat},{id:"surplus",label:t.surplusTag},{id:"promo",label:t.promoTag},{id:"special",label:t.specialTag}].map(f=>(
+            {[{id:"all",label:t.allCat},{id:"limited",label:t.surplusTag},{id:"promo",label:t.promoTag},{id:"special",label:t.specialTag}].map(f=>(
               <button key={f.id} onClick={()=>setTypeFilter(f.id)}
                 className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase border flex-shrink-0 transition-all ${typeFilter===f.id?"bg-slate-900 text-white border-slate-900":"bg-white border-slate-200 text-slate-500"}`}>{f.label}</button>
             ))}
           </div>
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {[{id:"halal_any",label:t.halalAny},{id:"halal_cert",label:t.halalCert},{id:"muslim_owned",label:t.muslimOwned},{id:"all",label:t.all}].map(f=>(
+            {[{id:"halal_any",label:"Halal"},{id:"halal_cert",label:"Certified"},{id:"muslim_owned",label:"Muslim-Owned"},{id:"halal_all",label:"Show All"}].map(f=>(
               <button key={f.id} onClick={()=>setHalalFilter(f.id)}
                 className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase border flex-shrink-0 transition-all ${halalFilter===f.id?"bg-emerald-600 text-white border-emerald-600":"bg-white border-slate-200 text-slate-500"}`}>{f.label}</button>
             ))}
             <div className="w-px bg-slate-200 flex-shrink-0 mx-1"/>
-            {["all",...CATEGORIES].map(c=>(
+            {CATEGORIES.map(c=>(
               <button key={c} onClick={()=>setCatFilter(c)}
                 className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase border flex-shrink-0 transition-all ${catFilter===c?"bg-slate-700 text-white border-slate-700":"bg-white border-slate-200 text-slate-500"}`}>
-                {c==="all"?t.allCat:c}
+                {c}
               </button>
             ))}
           </div>
@@ -3080,7 +3083,7 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
   const radius=vendorProfile.notifRadius||DEFAULT_RADIUS;
 
   const postTypes=[
-    {id:"surplus",icon:"♻️",title:t.surplusType,desc:t.surplusDesc,border:"border-orange-500/30"},
+    {id:"limited",icon:"♻️",title:t.surplusType,desc:t.surplusDesc,border:"border-orange-500/30"},
     {id:"promo",  icon:"⚡",title:t.promoType,  desc:t.promoDesc,  border:"border-blue-500/30"},
     {id:"special",icon:"🌟",title:t.specialType,desc:t.specialDesc,border:"border-purple-500/30"}
   ];
@@ -3132,7 +3135,7 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
         category:(template && template.category)||"Other",
         halal:form.halal!==null?form.halal:0,distance:0.1,endTime:computedEnd,timeMode,
         qty:form.qty?parseInt(form.qty):null,claimed:0,
-        type:postType||"surplus",reheat:form.reheat,postedAt:Date.now()
+        type:postType||"limited",reheat:form.reheat,postedAt:Date.now()
       };
 
       // Save to Supabase if vendor has DB id
@@ -3145,7 +3148,7 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
           deal_price: parseFloat(form.price),
           image: photo||null,
           emoji: (template && template.emoji)||'🍱',
-          post_type: postType||'surplus',
+          post_type: postType||'limited',
           halal: form.halal===1,
           halal_cert: form.halal===2,
           muslim_owned: form.muslimOwned||false,
@@ -4031,7 +4034,7 @@ export default function App(){
       dealPrice: l.deal_price,
       image: l.image||'https://picsum.photos/seed/'+l.id+'/400/300',
       emoji: l.emoji||'🍱',
-      postType: l.post_type||'surplus',
+      postType: l.post_type||'limited',
       halal: l.halal,
       muslimOwned: l.muslim_owned,
       halalCert: l.halal_cert,
@@ -4120,9 +4123,10 @@ export default function App(){
               className="text-left">
               <p className="text-slate-400 text-[10px] font-bold">
                 {(function(){
-                   if(locationHook.status==='requesting') return '📍 Locating...';
+                   if(locationHook.status==='requesting') return '📍 Finding you...';
                    if(locationHook.loc && locationHook.loc.area) return '📍 '+locationHook.loc.area;
-                   return '📍 Set location';
+                   if(locationHook.status==='denied') return '📍 Tap to enter area';
+                   return '📍 Detecting location...';
                  })()}
               </p>
             </button>
