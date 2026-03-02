@@ -180,8 +180,8 @@ const T = {
     onboardSkip:"Skip for now",
     // Location
     locating:"Finding your location...",
-    locationDenied:"Location access denied",
-    locationDeniedDesc:"Allow location in browser settings, or type your area below",
+    locationDenied:"Where are you? 📍",
+    locationDeniedDesc:"Type your area to see the closest food deals near you",
     nearYou:"Near You",
     kmAway:"{0}km away",
     noDealsArea:"No deals near you right now",
@@ -904,13 +904,15 @@ function LocationPrompt({locationHook,t}){
       {!showManual?(
         <div className="p-4">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0 text-lg">📍</div>
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">📍</div>
             <div className="flex-1">
               <p className="font-black text-sm text-slate-800">
-                {status==='denied'?t.locationDenied:"See deals near you"}
+                {status==='denied'?"Where are you?" : "Find food near you 🍱"}
               </p>
               <p className="text-slate-400 text-xs mt-0.5">
-                {status==='denied'?t.locationDeniedDesc:"Allow location to see closest deals first"}
+                {status==='denied'
+                  ? "Type your area (e.g. Puchong, SS15, Chow Kit) to see nearby deals"
+                  : "We show the closest deals to you first"}
               </p>
             </div>
           </div>
@@ -918,22 +920,24 @@ function LocationPrompt({locationHook,t}){
             {status!=='denied'&&(
               <button onClick={request}
                 className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform">
-                📍 Allow Location
+                📍 Use My Location
               </button>
             )}
             <button onClick={()=>setShowManual(true)}
-              className={`${status==='denied'?'flex-1 bg-slate-900':'flex-1 bg-slate-100'} text-${status==='denied'?'white':'slate-600'} py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform`}>
-              ✏️ Enter Area
+              className={`flex-1 ${status==='denied'?'bg-slate-900 text-white':'bg-slate-100 text-slate-600'} py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform`}>
+              ✏️ Type My Area
             </button>
           </div>
         </div>
       ):(
         <div className="p-4">
-          <p className="font-black text-sm text-slate-800 mb-3">📍 {t.onboardAreaPH}</p>
+          <p className="font-black text-sm text-slate-800 mb-1">Type your area</p>
+          <p className="text-slate-400 text-xs mb-3">e.g. Puchong, Subang Jaya, Chow Kit KL</p>
           <input
             value={manualArea}
             onChange={e=>setManualArea(e.target.value)}
-            placeholder={t.onboardAreaPH}
+            placeholder="Your area..."
+            autoFocus
             className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-emerald-500 focus:outline-none mb-3"
             onKeyDown={e=>{if(e.key==='Enter'&&manualArea.trim()) setManual(manualArea.trim());}}
           />
@@ -942,7 +946,7 @@ function LocationPrompt({locationHook,t}){
             <button onClick={()=>{if(manualArea.trim()) setManual(manualArea.trim());}}
               disabled={!manualArea.trim()}
               className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-40 active:scale-95 transition-transform">
-              Confirm →
+              Show Nearby Deals →
             </button>
           </div>
         </div>
