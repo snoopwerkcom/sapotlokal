@@ -2712,7 +2712,7 @@ function VendorSettingsPanel({profile,onSave,onClose,t}){
 }
 
 // ─── BUYER FEED ───────────────────────────────────────────────────────────────
-function BuyerFeed({vendorListings,activeTab,notifQueue,onNotifView,t,userLocation,locationHook}){
+function BuyerFeed({vendorListings,sbListings=[],activeTab,notifQueue,onNotifView,t,userLocation,locationHook}){
   const scrollRef=useRef(null);
   const savedScroll=useRef(0);
   // Save scroll when leaving, restore when returning
@@ -4164,7 +4164,7 @@ export default function App(){
 
       {/* Keep BuyerFeed always mounted — just hide it — so cart and listings survive tab switches */}
       <div style={{display: (tab==="deals"||tab==="student") ? "block" : "none"}}>
-        <BuyerFeed vendorListings={vendorListings} activeTab={tab} notifQueue={notifQueue} onNotifView={handleNotifAction} t={t} userLocation={locationHook.loc} locationHook={locationHook}/>
+        <BuyerFeed vendorListings={vendorListings} sbListings={sbListings} activeTab={tab} notifQueue={notifQueue} onNotifView={handleNotifAction} t={t} userLocation={locationHook.loc} locationHook={locationHook}/>
       </div>
       <AnimatePresence mode="wait">
         {tab==="sell"&&(
