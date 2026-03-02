@@ -893,64 +893,105 @@ function useLocation(){
 
 // Location permission prompt — shows once, sits above the feed
 function LocationPrompt({locationHook,t}){
-  var status=locationHook.status; var request=locationHook.request; var setManual=locationHook.setManual; var manualArea=locationHook.manualArea; var setManualArea=locationHook.setManualArea;
+  var status=locationHook.status;
+  var request=locationHook.request;
+  var setManual=locationHook.setManual;
+  var manualArea=locationHook.manualArea;
+  var setManualArea=locationHook.setManualArea;
+  var loc=locationHook.loc;
   const [showManual, setShowManual]=useState(false);
 
-  if(status==='ok'||status==='requesting') return null;
+  // Already have a location — show a small "change location" bar instead
+  if(status==='ok' && loc && loc.area && !showManual){
+    return(
+      <motion.div initial={{opacity:0}} animate={{opacity:1}}
+        className="mx-4 mt-2 mb-1 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-base">📍</span>
+          <div>
+            <p className="text-emerald-700 font-black text-xs">Showing deals near <span className="text-emerald-600">{loc.area}</span></p>
+            <p className="text-emerald-500 text-[10px]">Auto-detected your location</p>
+          </div>
+        </div>
+        <button onClick={()=>setShowManual(true)}
+          className="text-emerald-600 text-[10px] font-black bg-emerald-100 px-2.5 py-1 rounded-lg active:scale-95">
+          Change
+        </button>
+      </motion.div>
+    );
+  }
 
+  // Still detecting
+  if(status==='requesting') return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}}
+      className="mx-4 mt-2 mb-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 flex items-center gap-3">
+      <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin flex-shrink-0"/>
+      <p className="text-slate-500 text-xs font-bold">Detecting your location automatically...</p>
+    </motion.div>
+  );
+
+  // Manual input mode
+  if(showManual) return(
+    <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}
+      className="mx-4 mt-2 mb-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="p-4">
+        {loc&&loc.area&&(
+          <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
+            <span className="text-sm">📍</span>
+            <p className="text-emerald-700 text-xs font-bold">Currently showing deals near <span className="font-black">{loc.area}</span></p>
+          </div>
+        )}
+        <p className="font-black text-sm text-slate-800 mb-1">Search food in a different area?</p>
+        <p className="text-slate-400 text-xs mb-3">Type any area in Malaysia — e.g. Puchong, SS15 Subang, Chow Kit KL</p>
+        <input
+          value={manualArea}
+          onChange={e=>setManualArea(e.target.value)}
+          placeholder="Type area name..."
+          autoFocus
+          className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-emerald-500 focus:outline-none mb-3"
+          onKeyDown={e=>{if(e.key==='Enter'&&manualArea.trim()) setManual(manualArea.trim());}}
+        />
+        <div className="flex gap-2">
+          <button onClick={()=>setShowManual(false)}
+            className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black text-xs">
+            ← Cancel
+          </button>
+          <button onClick={()=>{if(manualArea.trim()){ setManual(manualArea.trim()); setShowManual(false); }}}
+            disabled={!manualArea.trim()}
+            className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-40 active:scale-95 transition-transform">
+            Show Deals Here →
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  // Location denied or failed — auto-detect did not work
   return(
-    <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}
-      className="mx-4 mt-3 mb-1 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-      {!showManual?(
-        <div className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">📍</div>
-            <div className="flex-1">
-              <p className="font-black text-sm text-slate-800">
-                {status==='denied'?"Where are you?" : "Find food near you 🍱"}
-              </p>
-              <p className="text-slate-400 text-xs mt-0.5">
-                {status==='denied'
-                  ? "Type your area (e.g. Puchong, SS15, Chow Kit) to see nearby deals"
-                  : "We show the closest deals to you first"}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-2 mt-3">
-            {status!=='denied'&&(
-              <button onClick={request}
-                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform">
-                📍 Use My Location
-              </button>
-            )}
-            <button onClick={()=>setShowManual(true)}
-              className={`flex-1 ${status==='denied'?'bg-slate-900 text-white':'bg-slate-100 text-slate-600'} py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform`}>
-              ✏️ Type My Area
-            </button>
+    <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}
+      className="mx-4 mt-2 mb-1 bg-white border border-amber-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">📍</div>
+          <div className="flex-1">
+            <p className="font-black text-sm text-slate-800">Could not detect your location</p>
+            <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">
+              This app auto-detects your location to show nearby food deals.
+              Your browser blocked this. To fix it, allow location in your browser — or just type your area below.
+            </p>
           </div>
         </div>
-      ):(
-        <div className="p-4">
-          <p className="font-black text-sm text-slate-800 mb-1">Type your area</p>
-          <p className="text-slate-400 text-xs mb-3">e.g. Puchong, Subang Jaya, Chow Kit KL</p>
-          <input
-            value={manualArea}
-            onChange={e=>setManualArea(e.target.value)}
-            placeholder="Your area..."
-            autoFocus
-            className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-emerald-500 focus:outline-none mb-3"
-            onKeyDown={e=>{if(e.key==='Enter'&&manualArea.trim()) setManual(manualArea.trim());}}
-          />
-          <div className="flex gap-2">
-            <button onClick={()=>setShowManual(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black text-xs">← Back</button>
-            <button onClick={()=>{if(manualArea.trim()) setManual(manualArea.trim());}}
-              disabled={!manualArea.trim()}
-              className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest disabled:opacity-40 active:scale-95 transition-transform">
-              Show Nearby Deals →
-            </button>
-          </div>
+        <div className="flex gap-2">
+          <button onClick={request}
+            className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform">
+            📍 Try Again
+          </button>
+          <button onClick={()=>setShowManual(true)}
+            className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-transform">
+            ✏️ Type My Area
+          </button>
         </div>
-      )}
+      </div>
     </motion.div>
   );
 }
@@ -1975,95 +2016,70 @@ function ListingCard({listing,onAddToCart,inCart,cartTopupBanner,isStudentMode,t
   const showStudentPrice=isStudentMode&&listing.studentPrice;
 
   return(
-    <motion.div layout initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} exit={{opacity:0,scale:0.94}}
-      className={`bg-white rounded-3xl overflow-hidden shadow-sm border ${showStudentPrice?"border-indigo-100":"border-slate-100"} ${(isSoldOut||isExpired)?"opacity-50":""}`}>
-      <div className="relative h-44">
+    <motion.div layout initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:0.94}}
+      className={`bg-white rounded-2xl overflow-hidden shadow-sm border ${showStudentPrice?"border-indigo-100":"border-slate-100"} ${(isSoldOut||isExpired)?"opacity-50":""} flex flex-col`}>
+
+      {/* Square image */}
+      <div className="relative w-full aspect-square">
         <img src={listing.image} alt={listing.title} className="w-full h-full object-cover"/>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"/>
-        {/* Halal badge + self-declared note */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          {hb&&(
-            <div>
-              <span className={`text-white text-[9px] font-black px-2 py-1 rounded-t-lg uppercase tracking-wider inline-block ${hb.bg}`}>{hb.label}</span>
-              <div className="bg-black/50 rounded-b-lg px-2 py-0.5">
-                <p className="text-white/60 text-[7px] font-bold">{t.halalSelfDeclared}</p>
-              </div>
-            </div>
-          )}
-          <span className="bg-white/90 text-slate-800 text-[9px] font-black px-2 py-1 rounded-lg uppercase w-fit">{listing.category}</span>
-        </div>
-        {/* Savings badge */}
+        {/* Savings badge top-left */}
         {(showStudentPrice?studentSavings:savings)&&(
-          <div className={`absolute top-3 right-3 text-[10px] font-black px-2.5 py-1.5 rounded-xl shadow -rotate-2 ${showStudentPrice?"bg-indigo-500 text-white":"bg-yellow-400 text-black"}`}>
-            {t.save} {showStudentPrice?studentSavings:savings}%
+          <div className={`absolute top-2 left-2 text-[9px] font-black px-2 py-1 rounded-lg shadow ${showStudentPrice?"bg-indigo-500 text-white":"bg-yellow-400 text-black"}`}>
+            -{showStudentPrice?studentSavings:savings}%
           </div>
         )}
-        <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
-          <span className={`text-[9px] font-black px-2.5 py-1 rounded-full uppercase text-white ${tag.bg}`}>{tag.label}</span>
-          {showStudentPrice&&<span className="text-[9px] font-black px-2.5 py-1 rounded-full uppercase text-white bg-indigo-500">{t.studentTag}</span>}
+        {/* Halal badge top-right */}
+        {hb&&(
+          <div className={`absolute top-2 right-2 text-[8px] font-black px-2 py-1 rounded-lg text-white ${hb.bg}`}>{hb.label}</div>
+        )}
+        {/* Deal type badge bottom-left */}
+        <div className="absolute bottom-2 left-2">
+          <span className={`text-[8px] font-black px-2 py-1 rounded-full uppercase text-white ${tag.bg}`}>{tag.label}</span>
         </div>
-        <div className={`absolute bottom-3 right-3 text-[9px] font-black px-2.5 py-1 rounded-full ${isExpired?"bg-slate-800 text-white/50":"bg-red-500 text-white"}`}>⏱ {countdown}</div>
-        {/* Share button — top right of card image */}
-        <div className="absolute top-3 right-3">
-          <ShareButton listing={listing} t={t}/>
-      <ReportButton listing={listing} t={t}/>
-        </div>
+        {/* Stock bar bottom */}
+        {pct!==null&&(
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
+            <div className={`h-full transition-all ${pct>=90?"bg-red-500":pct>=60?"bg-orange-400":"bg-emerald-400"}`} style={{width:`${pct}%`}}/>
+          </div>
+        )}
+        {/* Sold out overlay */}
+        {(isSoldOut||isExpired)&&(
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span className="bg-white text-slate-800 text-xs font-black px-3 py-1.5 rounded-full uppercase">{isSoldOut?t.soldOutLabel:"Expired"}</span>
+          </div>
+        )}
       </div>
 
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-1">
-          <div className="flex-1 pr-3">
-            <h3 className="font-black text-slate-900 text-base leading-tight">{listing.title}</h3>
-            <p className="text-slate-400 text-[11px] mt-0.5">{listing.desc}</p>
-          </div>
-          <div className="text-right flex-shrink-0">
-            <p className="text-[10px] text-slate-300 line-through">RM{fmtRM(listing.originalPrice)}</p>
-            {showStudentPrice?(
-              <div>
-                <p className="text-[10px] text-slate-400 line-through">RM{fmtRM(listing.dealPrice)}</p>
-                <p className="text-lg font-black text-indigo-600">RM{fmtRM(listing.studentPrice)}</p>
-                <p className="text-[8px] text-indigo-400 font-black uppercase">{t.studentPriceLabel}</p>
-              </div>
-            ):(
-              <p className="text-lg font-black text-emerald-600">RM{fmtRM(listing.dealPrice)}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 mt-1.5 mb-2">
-          <span className="text-[10px] text-slate-400 font-bold">📍 {listing.vendorName}{listing.branch?` · ${listing.branch}`:""} · {listing.distance}km</span>
-          <span className="text-slate-200">·</span>
-          <span className="text-[10px] text-slate-400">{timeAgo(listing.postedAt,t)}</span>
-        </div>
-
-        {/* Delivery teaser — shows shared pool badge if applicable */}
-        {cartTopupBanner?(
-          <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
-            <span className="text-sm">🚗</span>
-            <p className="text-amber-700 text-[10px] font-black flex-1">{cartTopupBanner}</p>
-          </div>
-        ):(
-          <div className={`text-[10px] font-black px-3 py-1.5 rounded-xl mb-3 ${listing.freeDeliveryThreshold?"bg-emerald-50 text-emerald-700":"bg-slate-50 text-slate-400"}`}>
-            {listing.freeDeliveryThreshold
-              ? listing.sharedPool ? t.freeDeliveryShared : fill(t.freeDeliveryFrom,fmtRM(listing.freeDeliveryThreshold))
-              : `🚶 ${t.noDelivery}`}
-          </div>
+      {/* Info below image */}
+      <div className="p-2.5 flex flex-col flex-1">
+        <p className="font-black text-slate-900 text-xs leading-tight line-clamp-2 mb-0.5">{listing.title}</p>
+        <p className="text-slate-400 text-[9px] font-bold truncate">{listing.vendorName}{listing.branch?` · ${listing.branch}`:""}</p>
+        {listing.distance!=null&&(
+          <p className="text-slate-300 text-[9px]">{listing.distance<1?(listing.distance*1000).toFixed(0)+"m":listing.distance+"km away"}</p>
         )}
 
-        {pct!==null&&(
-          <div className="mb-3">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">
-              {isSoldOut?t.soldOutLabel:isUrgent?`⚠️ ${t.almostOut} ${listing.qty-listing.claimed} ${t.unitsLeft}`:`${listing.qty-listing.claimed} / ${listing.qty} ${t.perUnit}`}
+        {/* Price row */}
+        <div className="flex items-end justify-between mt-1.5 mb-2">
+          <div>
+            <p className="text-[9px] text-slate-300 line-through leading-none">RM{fmtRM(showStudentPrice?listing.dealPrice:listing.originalPrice)}</p>
+            <p className={`font-black text-sm leading-none ${showStudentPrice?"text-indigo-600":"text-emerald-600"}`}>
+              RM{fmtRM(showStudentPrice?listing.studentPrice:listing.dealPrice)}
             </p>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-700 ${pct>=90?"bg-red-500":pct>=60?"bg-orange-400":"bg-emerald-500"}`} style={{width:`${pct}%`}}/>
-            </div>
           </div>
+          {listing.freeDeliveryThreshold&&(
+            <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Free Del</span>
+          )}
+        </div>
+
+        {/* Stock warning */}
+        {isUrgent&&!isSoldOut&&(
+          <p className="text-[9px] font-black text-red-500 mb-1.5">⚠️ Only {listing.qty-listing.claimed} left!</p>
         )}
 
+        {/* Add button */}
         <button onClick={()=>onAddToCart({...listing,dealPrice:showStudentPrice?listing.studentPrice:listing.dealPrice})}
           disabled={isSoldOut||inCart||isExpired}
-          className={`w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 ${
+          className={`w-full mt-auto py-2 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-95 ${
             inCart?"bg-emerald-100 text-emerald-600 cursor-default"
             :isSoldOut||isExpired?"bg-slate-100 text-slate-400 cursor-not-allowed"
             :showStudentPrice?"bg-indigo-700 text-white"
@@ -2860,95 +2876,107 @@ function BuyerFeed({vendorListings,sbListings=[],activeTab,notifQueue,onNotifVie
 
       {/* Filters (main tab only) */}
       {!isStudentMode&&(
-        <div className="bg-white border-b border-slate-100 px-4 pt-3 pb-3 sticky top-[60px] z-40">
-          <div className="relative mb-3">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search food or shop name..."
-              className="w-full bg-slate-100 rounded-2xl pl-9 pr-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
+        <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
+          {/* Search bar */}
+          <div className="relative mb-2">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Search food or shop name..."
+              className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
+            {search&&(
+              <button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>
+            )}
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mb-2">
-            {[{id:"all",label:t.allCat},{id:"limited",label:t.surplusTag},{id:"promo",label:t.promoTag},{id:"special",label:t.specialTag}].map(f=>(
+          {/* Single combined filter row */}
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+            {[{id:"all",label:"All",color:"slate"},{id:"limited",label:"🔥 Deals"},{id:"promo",label:"⚡ Flash"},{id:"special",label:"🌟 Special"}].map(f=>(
               <button key={f.id} onClick={()=>setTypeFilter(f.id)}
-                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase border flex-shrink-0 transition-all ${typeFilter===f.id?"bg-slate-900 text-white border-slate-900":"bg-white border-slate-200 text-slate-500"}`}>{f.label}</button>
+                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex-shrink-0 transition-all ${typeFilter===f.id?"bg-slate-900 text-white":"bg-slate-100 text-slate-500"}`}>{f.label}</button>
             ))}
-          </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            {[{id:"halal_any",label:"Halal"},{id:"halal_cert",label:"Certified"},{id:"muslim_owned",label:"Muslim-Owned"},{id:"halal_all",label:"Show All"}].map(f=>(
-              <button key={f.id} onClick={()=>setHalalFilter(f.id)}
-                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase border flex-shrink-0 transition-all ${halalFilter===f.id?"bg-emerald-600 text-white border-emerald-600":"bg-white border-slate-200 text-slate-500"}`}>{f.label}</button>
-            ))}
-            <div className="w-px bg-slate-200 flex-shrink-0 mx-1"/>
-            {CATEGORIES.map(c=>(
-              <button key={c} onClick={()=>setCatFilter(c)}
-                className={`whitespace-nowrap px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase border flex-shrink-0 transition-all ${catFilter===c?"bg-slate-700 text-white border-slate-700":"bg-white border-slate-200 text-slate-500"}`}>
-                {c}
-              </button>
+            <div className="w-px bg-slate-200 flex-shrink-0"/>
+            {[{id:"halal_any",label:"Halal"},{id:"halal_cert",label:"✓ Cert"},{id:"muslim_owned",label:"Muslim"}].map(f=>(
+              <button key={f.id} onClick={()=>setHalalFilter(halalFilter===f.id?"halal_all":f.id)}
+                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex-shrink-0 transition-all ${halalFilter===f.id?"bg-emerald-600 text-white":"bg-slate-100 text-slate-500"}`}>{f.label}</button>
             ))}
           </div>
         </div>
       )}
 
-      <div className="px-4 pt-4 space-y-6">
+      <div className="px-3 pt-3 pb-6">
         {/* Student corner header */}
         {isStudentMode&&(
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-3xl p-5">
-            <h2 className="font-black text-indigo-900 text-xl mb-1">{t.studentCornerTitle}</h2>
-            <p className="text-indigo-600 text-xs leading-relaxed">{t.studentCornerDesc}</p>
+          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4 mb-3">
+            <h2 className="font-black text-indigo-900 text-base mb-0.5">{t.studentCornerTitle}</h2>
+            <p className="text-indigo-600 text-xs">{t.studentCornerDesc}</p>
           </div>
         )}
 
+        {/* Almost Gone — horizontal scroll strip */}
         {urgentDeals.length>0&&(
-          <section>
-            <div className="flex items-center gap-2 mb-3">
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"/>
-              <h2 className="text-base font-black text-slate-900">{t.almostGone}</h2>
+              <h2 className="text-sm font-black text-slate-900">{t.almostGone}</h2>
               <span className="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">{urgentDeals.length} {t.item}</span>
             </div>
-            <div className="grid gap-4">
-              {urgentDeals.map(l=><ListingCard key={l.id} listing={l} onAddToCart={addToCart} inCart={cartIds.includes(l.id)} cartTopupBanner={getCartTopupBanner(l)} isStudentMode={false} t={t}/>)}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              {urgentDeals.map(l=>(
+                <div key={l.id} className="w-36 flex-shrink-0">
+                  <ListingCard listing={l} onAddToCart={addToCart} inCart={cartIds.includes(l.id)} cartTopupBanner={getCartTopupBanner(l)} isStudentMode={false} t={t}/>
+                </div>
+              ))}
             </div>
-          </section>
+          </div>
         )}
 
-        <section>
-          {!isStudentMode&&(
-            <h2 className="text-base font-black text-slate-900 mb-3">
-              {search||catFilter!=="all"||typeFilter!=="all"?fill(t.searchResults,regular.length):t.nearbyDeals}
+        {/* Main grid header */}
+        {!isStudentMode&&(
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-black text-slate-900">
+              {search||catFilter!=="all"||typeFilter!=="all"?`${regular.length} results`:t.nearbyDeals}
             </h2>
-          )}
-          {regular.length===0&&urgentDeals.length===0?(
-            <div className="text-center py-20 px-8">
-              <p className="text-5xl mb-3">{isStudentMode?"🎓":search||catFilter!=="all"||typeFilter!=="all"?"🔍":"🍽️"}</p>
-              <p className="text-slate-600 font-black text-base">
-                {isStudentMode?t.studentCornerEmpty
-                 :search||catFilter!=="all"||typeFilter!=="all"?t.noDeals
-                 :t.noDealsArea}
-              </p>
-              <p className="text-slate-400 text-sm mt-2">
-                {isStudentMode?t.studentCornerEmptySub
-                 :search||catFilter!=="all"||typeFilter!=="all"?t.tryFilter
-                 :fill(t.noDealsAreaSub,(userLocation && userLocation.area)||"your area")}
-              </p>
-              {!isStudentMode&&!search&&catFilter==="all"&&typeFilter==="all"&&(
-                <button onClick={()=>locationHook && locationHook.request()}
-                  className="mt-5 bg-emerald-50 border border-emerald-200 text-emerald-700 font-black text-xs px-5 py-3 rounded-2xl uppercase tracking-widest active:scale-95 transition-transform">
-                  📍 {t.changeLocation}
-                </button>
-              )}
-            </div>
-          ):(
-            <div className="grid gap-4">
-              {regular.map(function(l,idx){
-                return(
-                  <React.Fragment key={l.id}>
-                    {idx===3&&<FeedBannerAd/>}
-                    <ListingCard listing={l} onAddToCart={addToCart} inCart={cartIds.includes(l.id)} cartTopupBanner={getCartTopupBanner(l)} isStudentMode={isStudentMode} t={t}/>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          )}
-        </section>
+            <span className="text-[10px] text-slate-400 font-bold">{filtered.length} deals</span>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {regular.length===0&&urgentDeals.length===0?(
+          <div className="text-center py-20 px-8">
+            <p className="text-5xl mb-3">{isStudentMode?"🎓":search||catFilter!=="all"||typeFilter!=="all"?"🔍":"🍽️"}</p>
+            <p className="text-slate-600 font-black text-base">
+              {isStudentMode?t.studentCornerEmpty
+               :search||catFilter!=="all"||typeFilter!=="all"?t.noDeals
+               :t.noDealsArea}
+            </p>
+            <p className="text-slate-400 text-sm mt-2">
+              {isStudentMode?t.studentCornerEmptySub
+               :search||catFilter!=="all"||typeFilter!=="all"?t.tryFilter
+               :fill(t.noDealsAreaSub,(userLocation && userLocation.area)||"your area")}
+            </p>
+            {!isStudentMode&&!search&&catFilter==="all"&&typeFilter==="all"&&(
+              <button onClick={()=>locationHook && locationHook.request()}
+                className="mt-5 bg-emerald-50 border border-emerald-200 text-emerald-700 font-black text-xs px-5 py-3 rounded-2xl uppercase tracking-widest active:scale-95 transition-transform">
+                📍 {t.changeLocation}
+              </button>
+            )}
+          </div>
+        ):(
+          /* 2-column grid */
+          <div className="grid grid-cols-2 gap-2.5">
+            {regular.map(function(l,idx){
+              return(
+                <React.Fragment key={l.id}>
+                  {idx===4&&(
+                    <div className="col-span-2">
+                      <FeedBannerAd/>
+                    </div>
+                  )}
+                  <ListingCard listing={l} onAddToCart={addToCart} inCart={cartIds.includes(l.id)} cartTopupBanner={getCartTopupBanner(l)} isStudentMode={isStudentMode} t={t}/>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Floating cart button */}
