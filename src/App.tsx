@@ -2771,7 +2771,7 @@ function BuyerFeed({vendorListings,sbListings=[],activeTab,notifQueue,onNotifVie
     return hav(userLocation.lat,userLocation.lon,geo.lat,geo.lon);
   };
 
-  const allListings=[...sbListings,...MOCK_LISTINGS,...vendorListings].filter((l,i,a)=>a.findIndex(x=>x.id===l.id)===i).map(l=>({
+  const allListings=[...vendorListings,...sbListings,...MOCK_LISTINGS].filter((l,i,a)=>a.findIndex(x=>String(x.id)===String(l.id))===i).map(l=>({  // vendorListings first so new posts always appear
     ...l,
     distance: calcDist(l),
   }));
@@ -3055,7 +3055,7 @@ function VendorDashboard({activePosts, t}){
   );
 }
 
-function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdateProfile,vendorMeta,locationHook}){
+function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdateProfile,vendorMeta,locationHook,sbVendorId,authUser,onReloadListings}){
   const [step, setStep]=useState(1);
   const [postType, setPostType]=useState(null);
   const [template, setTemplate]=useState(null);
@@ -3124,7 +3124,8 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
     setPublishing(true);
     try{
       const newPost={
-        id:Date.now(),vendorId:99,vendorName:(vendorMeta && vendorMeta.shopName)||"My Shop",
+        id:'local_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+        vendorId:99,vendorName:(vendorMeta && vendorMeta.shopName)||"My Shop",
         vendorSubscribed:!!(trial&&trial.status==='subscribed'),
         branch:(vendorMeta && vendorMeta.area)||null,
         vendorLat:locationHook.loc && locationHook.loc.lat,
@@ -3139,7 +3140,10 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
         category:(template && template.category)||"Other",
         halal:form.halal!==null?form.halal:0,distance:0.1,endTime:computedEnd,timeMode,
         qty:form.qty?parseInt(form.qty):null,claimed:0,
-        type:postType||"limited",reheat:form.reheat,postedAt:Date.now()
+        type:postType||"limited",reheat:form.reheat,postedAt:Date.now(),
+        desc:form.desc, dealPrice:parseFloat(form.price),
+        originalPrice:parseFloat(form.original)||parseFloat(form.price)*1.5,
+        active:true, fromLocal:true
       };
 
       // Save to Supabase if vendor has DB id
@@ -3171,6 +3175,8 @@ function VendorFlow({onNewListing,onPostSuccess,trial,t,vendorProfile,onUpdatePr
       onNewListing(newPost);
       onPostSuccess && onPostSuccess();
       setShowSuccess(true);
+      // Reload DB listings to sync any Supabase-saved posts
+      setTimeout(()=>onReloadListings && onReloadListings(), 2000);
     }catch(err){
       console.error('Publish error:',err);
     }finally{
@@ -4173,7 +4179,7 @@ export default function App(){
       <AnimatePresence mode="wait">
         {tab==="sell"&&(
           <motion.div key="sell" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-            <VendorFlow onNewListing={handleNewListing} onPostSuccess={()=>setTab("deals")} trial={trial} t={t} vendorProfile={vendorProfile} onUpdateProfile={setVendorProfile} vendorMeta={vendorMeta} locationHook={locationHook} sbVendorId={sbVendorId} authUser={authUser}/>
+            <VendorFlow onNewListing={handleNewListing} onPostSuccess={()=>setTab("deals")} trial={trial} t={t} vendorProfile={vendorProfile} onUpdateProfile={setVendorProfile} vendorMeta={vendorMeta} locationHook={locationHook} sbVendorId={sbVendorId} authUser={authUser} onReloadListings={loadListings}/>
           </motion.div>
         )}
       </AnimatePresence>
