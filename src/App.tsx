@@ -374,7 +374,6 @@ const T = {
     shareTitle:"分享优惠", shareWhatsapp:"WhatsApp分享", shareCopy:"复制链接", shareCopied:"链接已复制！",
     shareMsg:"🍱 在Sapot Lokal发现好优惠：{0}，来自{1}，只需RM{2}！👉 {3}",
   },
-  };
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const DELIVERY_FEE = 8;
