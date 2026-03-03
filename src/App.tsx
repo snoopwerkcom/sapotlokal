@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase, getActiveListings, createListing, createOrder, getVendorSales, upsertVendor, getVendor, getAdsFromDB, updateAdInDB } from "./supabase";
 import { motion, AnimatePresence } from "motion/react";
 
-// ─── TRANSLATIONS (Simple English) ───────────────────────────────────────────
+// ─── TRANSLATIONS ────────────────────────────────────────────────────────────
 const T = {
   en: {
     appTagline:"Vendor Portal", buy:"Deals", sell:"Sell", studentTab:"🎓 Students",
@@ -23,7 +23,7 @@ const T = {
     freeDeliveryFrom:"🚗 Free delivery from RM{0}",
     noDelivery:"Self-pickup only",
     halalDisclaimerTitle:"Halal Status Notice",
-    halalDisclaimerBody:"The Halal and Muslim-Owned badges are self-declared by vendors. Sapot Lokal does not check or guarantee any halal status.\n\nPlease use your own judgement. Sapot Lokal is not responsible for any halal claims.",
+    halalDisclaimerBody:"The Halal and Muslim-Owned badges are self-declared by vendors. Sapot Lokal does not check or guarantee any halal status.",
     halalDisclaimerBtn:"I understand, continue",
     studentCornerTitle:"🎓 Student Corner",
     studentCornerDesc:"Special prices posted by vendors who support students. No verification needed.",
@@ -121,7 +121,6 @@ const T = {
     noDealsArea:"No deals near you right now",
     noDealsAreaSub:"Vendors in {0} haven't posted yet. Check back soon!",
     changeLocation:"Change location",
-    // Single vendor cart
     orderingFrom:"Ordering from",
     differentVendorTitle:"Start a new order?",
     differentVendorBody:"You already have items from {0} in your cart. Adding from {1} needs a separate order.",
@@ -129,17 +128,11 @@ const T = {
     keepCartBtn:"Keep current cart",
     continueShoppingBtn:"Add more from {0}",
     vendorLockedMsg:"Finish your current order first",
-    // Subscription plans
-    planBasic:"Basic",
-    planPro:"Pro",
-    planBusiness:"Business",
-    planPopular:"Most Popular",
+    planBasic:"Basic", planPro:"Pro", planBusiness:"Business", planPopular:"Most Popular",
     planBasicDesc:"For new vendors just starting out",
     planProDesc:"For active vendors growing fast",
     planBusinessDesc:"For high-volume food businesses",
     planBasicPerks:["Post up to 3 deals","15% commission","Basic dashboard","Student corner listings"],
-    planProPerks:["Post up to 10 deals","10% commission","Full dashboard","Priority buyer alerts","One-tap repost","Free delivery settings"],
-    planBusinessPerks:["Unlimited posts","8% commission","Advanced analytics","Dedicated support","Custom storefront","API access"],
     choosePlan:"Choose Your Plan",
     choosePlanSub:"Start free for 60 days, then subscribe",
     currentPlan:"Current Plan",
@@ -147,7 +140,6 @@ const T = {
     celebTitle:"Welcome aboard! 🎉",
     celebSub:"Your {0} plan is now active.",
     celebBtn:"Start Posting",
-    // Categories
     catAll:"All Deals", catFood:"Food", catDrink:"Drink", catFruit:"Fruit", catBakery:"Bakery", catOther:"Other",
   },
   bm: {
@@ -169,12 +161,12 @@ const T = {
     freeDeliveryFrom:"🚗 Penghantaran percuma dari RM{0}",
     noDelivery:"Ambil sendiri sahaja",
     halalDisclaimerTitle:"Notis Status Halal",
-    halalDisclaimerBody:"Lencana Halal dan Milik Muslim dalam app ini adalah pengisytiharan sendiri oleh vendor. Sapot Lokal tidak mengesahkan atau menjamin status halal mana-mana makanan.\n\nPembeli dinasihatkan untuk membuat pertimbangan sendiri. Sapot Lokal tidak bertanggungjawab ke atas status halal.",
+    halalDisclaimerBody:"Lencana Halal dan Milik Muslim dalam app ini adalah pengisytiharan sendiri oleh vendor.",
     halalDisclaimerBtn:"Saya faham, teruskan",
     studentCornerTitle:"🎓 Sudut Pelajar",
-    studentCornerDesc:"Harga khas yang dipost oleh vendor yang menyokong pelajar kampus. Tiada pengesahan diperlukan.",
+    studentCornerDesc:"Harga khas yang dipost oleh vendor yang menyokong pelajar kampus.",
     studentCornerEmpty:"Tiada deal pelajar buat masa ini",
-    studentCornerEmptySub:"Vendor post deal pelajar baru sepanjang hari. Semak semula nanti!",
+    studentCornerEmptySub:"Vendor post deal pelajar baru sepanjang hari.",
     studentPriceLabel:"Harga pelajar",
     cart:"Troli", cartEmpty:"Troli anda kosong", browseDeals:"Semak deal di atas",
     subtotal:"Subtotal", deliveryFee:"Yuran Penghantaran",
@@ -205,7 +197,7 @@ const T = {
     tngNote:"Bayaran diproses melalui TNG eWallet",
     pastPosts:"Posting Lepas", repostNote:"Tap untuk repost serta-merta",
     repost:"🔁 Repost", sold:"dijual",
-    postSuccess:"Posting Berjaya!", liveNote:"Deal anda live. Pembeli berdekatan akan dimaklumkan.",
+    postSuccess:"Posting Berjaya!", liveNote:"Deal anda live.",
     salePrice:"Harga Jual", commission:"Fi Sapot",
     youGet:"Anda Terima", payoutNote:"Dibayar ke TNG selepas pickup",
     viewDash:"Lihat Dashboard",
@@ -222,45 +214,32 @@ const T = {
     subscribeCTA:"💙 Langgan via TNG", autoRenew:"Auto-renew · Batal bila-bila masa",
     processing:"Memproses...",
     timeModeLabel:"Berapa lama posting ini kekal?",
-    timeModeStock:"⏳ Selagi ada stok", timeModeStock_desc:"Kekal live sehingga habis atau anda buang",
-    timeModeHours:"⚡ Tempoh tetap", timeModeHours_desc:"Auto-buang selepas jam yang ditetapkan",
-    timeModeSched:"🕐 Jadual hari ini", timeModeSched_desc:"Live dari buka hingga tutup kedai",
+    timeModeStock:"⏳ Selagi ada stok",
+    timeModeHours:"⚡ Tempoh tetap",
+    timeModeSched:"🕐 Jadual hari ini",
     openTime:"Buka jam", closeTime:"Tutup jam",
-    liveUntil:"Live sehingga", liveUntilStock:"Live · Selagi ada stok", liveUntilClose:"Live · Hingga waktu tutup",
-    removePost:"✕ Buang", cancelConfirm:"Buang listing ini?", cancelYes:"Ya, buang", cancelNo:"Kekalkan live",
-    trialActive:"Percubaan Percuma", trialDaysLeft:"{0} hari lagi",
-    trialExpired:"Percubaan percuma tamat", trialExpiredDesc:"Langgan untuk terus posting deal.",
-    trialBannerFree:"🎁 Percuma {0} hari lagi", trialBannerWarn:"⚠️ {0} hari lagi dalam percubaan",
-    trialBannerUrgent:"🔴 Percubaan tamat dalam {0} hari!", trialBannerExpired:"🔒 Percubaan tamat — langgan untuk post",
-    subscribeNow:"Langgan Sekarang", alreadySubscribed:"✅ Langganan aktif", subscribedUntil:"Dilanggan hingga {0}",
-    maxPostsReached:"Maks 3 posting aktif — buang satu untuk post semula",
-    onboardTitle:"Sediakan Kedai Anda", onboardSub:"Ambil masa 30 saat.",
-    onboardShopName:"Nama Kedai", onboardShopNamePH:"cth: Warung Mak Teh",
-    onboardArea:"Kawasan / Bandar Anda", onboardAreaPH:"cth: Puchong, Kepong",
-    onboardPhone:"Nombor WhatsApp", onboardPhonePH:"cth: 0123456789",
-    onboardDone:"Mula Jual →", onboardSkip:"Langkau buat masa ini",
-    locating:"Mencari lokasi anda...", locationDenied:"Di mana anda? 📍",
-    locationDeniedDesc:"Taip kawasan anda untuk melihat deal berdekatan",
-    nearYou:"Berdekatan Anda", kmAway:"{0}km jauh",
-    noDealsArea:"Tiada deal berdekatan anda buat masa ini",
-    noDealsAreaSub:"Vendor di {0} belum post hari ini. Semak semula nanti!",
+    liveUntil:"Live sehingga",
+    removePost:"✕ Buang",
+    trialActive:"Percubaan Percuma",
+    trialDaysLeft:"{0} hari lagi",
+    trialExpired:"Percubaan percuma tamat",
+    trialBannerFree:"🎁 Percuma {0} hari lagi",
+    subscribeNow:"Langgan Sekarang",
+    maxPostsReached:"Maks 3 posting aktif — buang satu",
+    onboardTitle:"Sediakan Kedai Anda",
+    onboardShopName:"Nama Kedai",
+    onboardArea:"Kawasan Anda",
+    onboardPhone:"Nombor WhatsApp",
+    onboardDone:"Mula Jual →",
+    nearYou:"Berdekatan Anda",
+    kmAway:"{0}km jauh",
+    noDealsArea:"Tiada deal berdekatan anda",
     changeLocation:"Tukar lokasi",
-    orderingFrom:"Menempah dari",
-    differentVendorTitle:"Mulakan pesanan baru?",
-    differentVendorBody:"Anda ada item dari {0} dalam troli. Menambah dari {1} perlukan pesanan berasingan.",
-    clearCartBtn:"Mulakan pesanan baru", keepCartBtn:"Kekalkan troli semasa",
-    continueShoppingBtn:"Tambah lagi dari {0}", vendorLockedMsg:"Selesaikan pesanan semasa dahulu",
-    planBasic:"Asas", planPro:"Pro", planBusiness:"Perniagaan", planPopular:"Paling Popular",
-    planBasicDesc:"Untuk vendor baru bermula", planProDesc:"Untuk vendor aktif berkembang", planBusinessDesc:"Untuk perniagaan makanan besar",
-    planBasicPerks:["Post sehingga 3 deal","Komisyen 15%","Dashboard asas","Senarai Sudut Pelajar"],
-    planProPerks:["Post sehingga 10 deal","Komisyen 10%","Dashboard penuh","Amaran pembeli keutamaan","Repost satu ketuk","Tetapan penghantaran percuma"],
-    planBusinessPerks:["Post tanpa had","Komisyen 8%","Analitik lanjutan","Sokongan khusus","Storefront tersuai","Akses API"],
-    choosePlan:"Pilih Pelan Anda", choosePlanSub:"Cuba percuma 60 hari, kemudian langgan",
-    currentPlan:"Pelan Semasa", upgradePlan:"Naik Taraf",
-    celebTitle:"Selamat datang! 🎉", celebSub:"Pelan {0} anda kini aktif.", celebBtn:"Mula Post",
+    continueShoppingBtn:"Tambah dari {0}",
+    planBasic:"Asas", planPro:"Pro", planBusiness:"Perniagaan",
+    choosePlan:"Pilih Pelan",
+    celebTitle:"Selamat datang! 🎉",
     catAll:"Semua Deal", catFood:"Makanan", catDrink:"Minuman", catFruit:"Buah", catBakery:"Bakeri", catOther:"Lain-lain",
-    shareTitle:"Kongsi Deal", shareWhatsapp:"Kongsi di WhatsApp", shareCopy:"Salin Pautan", shareCopied:"Pautan disalin!",
-    shareMsg:"🍱 Tengok deal ni kat Sapot Lokal: {0} dari {1} hanya RM{2}! 👉 {3}",
   },
   zh: {
     appTagline:"校园美食优惠", buy:"优惠", sell:"卖家", studentTab:"🎓 学生",
@@ -273,7 +252,7 @@ const T = {
     studentTag:"🎓 学生价",
     microwave:"♨️ 微波炉", addToCart:"加入购物车", addedToCart:"✅ 已加入",
     expired:"已过期", justNow:"刚刚", minAgo:"分钟前", hrAgo:"小时前",
-    noDeals:"没有找到优惠", tryFilter:"尝试更改筛选条件或重新搜索",
+    noDeals:"没有找到优惠", tryFilter:"尝试更改筛选条件",
     halalCertLabel:"清真认证", muslimOwnedLabel:"穆斯林经营", nonHalalLabel:"非清真",
     halalSelfDeclared:"*商家自行申报清真状态",
     almostOut:"快售完 —", unitsLeft:"份", soldOutLabel:"已售罄 🎉",
@@ -281,12 +260,12 @@ const T = {
     freeDeliveryFrom:"🚗 消费RM{0}免运费",
     noDelivery:"仅限自取",
     halalDisclaimerTitle:"清真状态声明",
-    halalDisclaimerBody:"本应用显示的清真及穆斯林经营标志均由商家自行申报。Sapot Lokal 不对任何食品或商家的清真状态进行核实或保证。\n\n买家请自行判断。Sapot Lokal 对本平台出售的任何商品的清真状态不承担任何责任。",
+    halalDisclaimerBody:"本应用显示的清真及穆斯林经营标志均由商家自行申报。",
     halalDisclaimerBtn:"我明白，继续",
     studentCornerTitle:"🎓 学生专区",
-    studentCornerDesc:"商家为校园学生提供的特别价格。无需验证 — 诚信制度。",
+    studentCornerDesc:"商家为校园学生提供的特别价格。",
     studentCornerEmpty:"暂无学生优惠",
-    studentCornerEmptySub:"商家全天发布新的学生优惠，请稍后再查！",
+    studentCornerEmptySub:"请稍后再查！",
     studentPriceLabel:"学生价",
     cart:"购物车", cartEmpty:"购物车是空的", browseDeals:"浏览上方优惠",
     subtotal:"小计", deliveryFee:"运费",
@@ -301,12 +280,12 @@ const T = {
     whatToPost:"今天发布什么？", chooseType:"选择优惠类型",
     surplusType:"🔥 限量优惠", surplusDesc:"剩余食物 — 数量有限",
     promoType:"⚡ 限时优惠", promoDesc:"限时特卖填补淡季",
-    specialType:"🌟 特别推介", specialDesc:"低价推出新菜品，收集反馈",
+    specialType:"🌟 特别推介", specialDesc:"低价推出新菜品",
     chooseCategory:"选择类别", templateNote:"模板自动填写基本信息",
     postNewDeal:"发布新优惠", liveNow:"正在上线", repeatBtn:"重复", activeLabel:"进行中",
     snapPhoto:"拍摄食物照片", retakePhoto:"重新拍照", uploading:"上传中...", snapFirst2:"拍摄食物照片",
     foodName:"食物名称", foodNamePH:"例：椰浆饭套餐",
-    shortDesc:"简短描述", shortDescPH:"例：鸡蛋、参巴、江鱼仔",
+    shortDesc:"简短描述", shortDescPH:"例：鸡蛋、参巴",
     originalPrice:"原价 (RM)", dealPrice:"优惠价 (RM)",
     youReceive:"您收到（扣除费用后）",
     endTime:"结束时间", quick:"⚡ 快速", manual:"🕐 手动", endAt:"结束于：",
@@ -317,7 +296,7 @@ const T = {
     tngNote:"通过TNG电子钱包处理付款",
     pastPosts:"过往发布", repostNote:"点击立即重新发布",
     repost:"🔁 重新发布", sold:"已售",
-    postSuccess:"发布成功！", liveNote:"您的优惠已上线。附近买家将收到通知。",
+    postSuccess:"发布成功！", liveNote:"您的优惠已上线。",
     salePrice:"售价", commission:"Sapot费用",
     youGet:"您收到", payoutNote:"取餐确认后转入您的TNG",
     viewDash:"查看仪表板",
@@ -327,1359 +306,228 @@ const T = {
     vendorSettings:"商店设置",
     freeDeliveryThreshold:"免运费门槛 (RM)",
     thresholdOff:"不提供免运费",
-    thresholdWarning:"触发时约RM8运费将从您的收款中扣除",
+    thresholdWarning:"RM8运费将从您的收款中扣除",
     saveSettings:"保存", settingsSaved:"✅ 已保存",
     offerFreeDelivery:"为买家提供免运费",
     monthlyPlan:"月度计划", perMonth:"/月",
-    subscribeCTA:"💙 通过TNG订阅", autoRenew:"自动续订 · 随时取消",
+    subscribeCTA:"💙 通过TNG订阅", autoRenew:"自动续订",
     processing:"处理中...",
     timeModeLabel:"帖子保留多长时间？",
-    timeModeStock:"⏳ 售完为止", timeModeStock_desc:"一直显示直到售罄或您手动移除",
-    timeModeHours:"⚡ 固定时长", timeModeHours_desc:"设定小时后自动移除",
-    timeModeSched:"🕐 今日营业时间", timeModeSched_desc:"从开店到关店时间显示",
+    timeModeStock:"⏳ 售完为止",
+    timeModeHours:"⚡ 固定时长",
+    timeModeSched:"🕐 今日营业时间",
     openTime:"开店时间", closeTime:"关店时间",
-    liveUntil:"显示至", liveUntilStock:"显示中 · 售完为止", liveUntilClose:"显示中 · 至关店时间",
-    removePost:"✕ 移除", cancelConfirm:"移除此商品？", cancelYes:"是，移除", cancelNo:"继续显示",
-    trialActive:"免费试用", trialDaysLeft:"还剩{0}天",
-    trialExpired:"免费试用已结束", trialExpiredDesc:"订阅以继续发布优惠。",
-    trialBannerFree:"🎁 还有{0}天免费", trialBannerWarn:"⚠️ 试用还剩{0}天",
-    trialBannerUrgent:"🔴 试用还剩{0}天！", trialBannerExpired:"🔒 试用已结束 — 订阅后可继续发帖",
-    subscribeNow:"立即订阅", alreadySubscribed:"✅ 订阅有效", subscribedUntil:"订阅至{0}",
-    maxPostsReached:"最多3个活跃帖子 — 请先移除一个",
-    onboardTitle:"设置您的商店", onboardSub:"只需30秒。",
-    onboardShopName:"商店名称", onboardShopNamePH:"例：Warung Mak Teh",
-    onboardArea:"您的地区/城镇", onboardAreaPH:"例：Puchong、Subang",
-    onboardPhone:"WhatsApp号码", onboardPhonePH:"例：0123456789",
-    onboardDone:"开始销售 →", onboardSkip:"暂时跳过",
-    locating:"正在获取您的位置...", locationDenied:"您在哪里？📍",
-    locationDeniedDesc:"请输入您的地区以查看附近食物优惠",
-    nearYou:"附近", kmAway:"{0}公里外",
+    liveUntil:"显示至",
+    removePost:"✕ 移除",
+    trialActive:"免费试用",
+    trialDaysLeft:"还剩{0}天",
+    trialExpired:"免费试用已结束",
+    trialBannerFree:"🎁 还有{0}天免费",
+    subscribeNow:"立即订阅",
+    maxPostsReached:"最多3个活跃帖子",
+    onboardTitle:"设置您的商店",
+    onboardShopName:"商店名称",
+    onboardArea:"您的地区",
+    onboardPhone:"WhatsApp号码",
+    onboardDone:"开始销售 →",
+    nearYou:"附近",
+    kmAway:"{0}公里外",
     noDealsArea:"附近暂无优惠",
-    noDealsAreaSub:"{0}的商家今天还没有发布优惠，请稍后再查！",
     changeLocation:"更改位置",
-    orderingFrom:"正在从以下商家订购",
-    differentVendorTitle:"开始新订单？",
-    differentVendorBody:"您的购物车已有来自{0}的商品。添加来自{1}的商品需要单独下单。",
-    clearCartBtn:"开始新订单", keepCartBtn:"保留当前购物车",
-    continueShoppingBtn:"继续从{0}添加", vendorLockedMsg:"请先完成当前订单",
-    planBasic:"基础版", planPro:"专业版", planBusiness:"商业版", planPopular:"最受欢迎",
-    planBasicDesc:"适合刚起步的新商家", planProDesc:"适合快速成长的活跃商家", planBusinessDesc:"适合高销量食品企业",
-    planBasicPerks:["最多发布3个优惠","15%佣金","基础仪表板","学生专区列表"],
-    planProPerks:["最多发布10个优惠","10%佣金","完整仪表板","优先买家通知","一键重复发布","免运费设置"],
-    planBusinessPerks:["无限发布","8%佣金","高级分析","专属支持","自定义店面","API访问"],
-    choosePlan:"选择您的计划", choosePlanSub:"免费试用60天，然后订阅",
-    currentPlan:"当前计划", upgradePlan:"升级",
-    celebTitle:"欢迎加入！🎉", celebSub:"您的{0}计划现已激活。", celebBtn:"开始发布",
+    continueShoppingBtn:"从{0}添加更多",
+    planBasic:"基础版", planPro:"专业版", planBusiness:"商业版",
+    choosePlan:"选择您的计划",
+    celebTitle:"欢迎加入！🎉",
     catAll:"全部优惠", catFood:"食物", catDrink:"饮料", catFruit:"水果", catBakery:"面包烘焙", catOther:"其他",
-    shareTitle:"分享优惠", shareWhatsapp:"WhatsApp分享", shareCopy:"复制链接", shareCopied:"链接已复制！",
-    shareMsg:"🍱 在Sapot Lokal发现好优惠：{0}，来自{1}，只需RM{2}！👉 {3}",
   },
-  };
+};
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const DELIVERY_FEE = 8;
-const DEFAULT_RADIUS = 10;
-
 const FOOD_TEMPLATES = [
-  {id:"nasi_lemak",label:"Nasi Lemak",emoji:"🍛",defaultTitle:"Nasi Lemak Bungkus",defaultDesc:"Egg, Sambal, Anchovies",defaultPrice:"3.50",defaultOriginal:"5.00",category:"Food"},
-  {id:"econ_rice",label:"Economy Rice",emoji:"🍱",defaultTitle:"Nasi Campur Special",defaultDesc:"2 Veg + 1 Main",defaultPrice:"5.50",defaultOriginal:"8.00",category:"Food"},
-  {id:"roti",label:"Roti / Bread",emoji:"🥐",defaultTitle:"Assorted Pastry Box",defaultDesc:"Croissant, Danish, Sweet Bun",defaultPrice:"9.90",defaultOriginal:"15.00",category:"Bakery"},
-  {id:"drinks",label:"Drinks",emoji:"🧋",defaultTitle:"Drink Bundle",defaultDesc:"Teh Tarik / Milo / Juice",defaultPrice:"2.50",defaultOriginal:"4.00",category:"Drink"},
-  {id:"kuih",label:"Kuih/Dessert",emoji:"🍡",defaultTitle:"Kuih Set",defaultDesc:"Kuih Lapis, Onde-onde, Seri Muka",defaultPrice:"6.00",defaultOriginal:"10.00",category:"Food"},
-  {id:"fruit",label:"Fruit",emoji:"🍉",defaultTitle:"Fresh Fruit Pack",defaultDesc:"Seasonal cut fruits",defaultPrice:"5.00",defaultOriginal:"8.00",category:"Fruit"},
-  {id:"custom",label:"Custom",emoji:"✏️",defaultTitle:"",defaultDesc:"",defaultPrice:"",defaultOriginal:"",category:"Other"}
+  {id:"nasi_lemak",label:"Nasi Lemak",emoji:"🍛",category:"Food"},
+  {id:"econ_rice",label:"Economy Rice",emoji:"🍱",category:"Food"},
+  {id:"roti",label:"Roti / Bread",emoji:"🥐",category:"Bakery"},
+  {id:"drinks",label:"Drinks",emoji:"🧋",category:"Drink"},
+  {id:"fruit",label:"Fruit",emoji:"🍉",category:"Fruit"},
+  {id:"custom",label:"Custom",emoji:"✏️",category:"Other"}
 ];
-
-const MOCK_VENDORS_GEO = {
-  1:{lat:3.0696,lon:101.5989,area:"Puchong"},
-  2:{lat:3.1073,lon:101.6067,area:"Subang Jaya"},
-  3:{lat:3.1478,lon:101.6953,area:"Chow Kit"},
-  4:{lat:3.0169,lon:101.5969,area:"Shah Alam"},
-  5:{lat:3.1209,lon:101.6538,area:"Bangsar"},
-  6:{lat:3.1878,lon:101.7029,area:"Ampang"},
-  7:{lat:3.1319,lon:101.6841,area:"KLCC"},
-  8:{lat:3.2068,lon:101.5987,area:"Kepong"},
-  9:{lat:3.1073,lon:101.6370,area:"Petaling Jaya"},
-};
 
 const MOCK_LISTINGS = [
   {id:1,vendorId:1,vendorName:"Warung Mak Teh",freeDeliveryThreshold:20,studentPrice:2.00,title:"Nasi Lemak Bungkus",desc:"Egg, Sambal, Anchovies",originalPrice:5.00,dealPrice:3.00,emoji:"🍛",image:"https://picsum.photos/seed/nasilemak1/800/600",category:"Food",halal:1,endTime:"21:00",qty:18,claimed:6,type:"limited",reheat:"none",postedAt:Date.now()-60000*20,vendorSubscribed:true},
   {id:2,vendorId:1,vendorName:"Warung Mak Teh",freeDeliveryThreshold:20,studentPrice:1.50,title:"Teh Tarik Large",desc:"Fresh, thick teh tarik",originalPrice:3.50,dealPrice:2.00,emoji:"🧋",image:"https://picsum.photos/seed/tehtarik/800/600",category:"Drink",halal:1,endTime:"21:00",qty:null,claimed:0,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:true},
   {id:3,vendorId:2,vendorName:"Bakeri Fariz",freeDeliveryThreshold:30,studentPrice:7.50,title:"Assorted Pastry Box",desc:"Croissant, Danish Almond, Chocolate Bun",originalPrice:15.00,dealPrice:9.90,emoji:"🥐",image:"https://picsum.photos/seed/pastrybox1/800/600",category:"Bakery",halal:1,endTime:"20:30",qty:10,claimed:9,type:"limited",reheat:"oven",postedAt:Date.now()-60000*45,vendorSubscribed:true},
-  {id:4,vendorId:3,vendorName:"Uncle Lim Kopitiam",freeDeliveryThreshold:null,studentPrice:null,title:"Drink Bundle",desc:"Teh Tarik + Milo Ais + Lime Juice",originalPrice:9.00,dealPrice:5.50,emoji:"🧋",image:"https://picsum.photos/seed/drinks1/800/600",category:"Drink",halal:2,endTime:"22:00",qty:null,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:false},
-  {id:5,vendorId:4,vendorName:"Pak Din Gerai",freeDeliveryThreshold:25,studentPrice:3.50,title:"Economy Rice",desc:"2 Veg + 1 Main of your choice",originalPrice:8.00,dealPrice:5.00,emoji:"🍱",image:"https://picsum.photos/seed/nasicamp1/800/600",category:"Food",halal:1,endTime:"14:30",qty:20,claimed:14,type:"promo",reheat:"microwave",postedAt:Date.now()-60000*5,vendorSubscribed:false},
-  {id:6,vendorId:5,vendorName:"Kuih Mak Jah",freeDeliveryThreshold:20,studentPrice:5.00,title:"Traditional Kuih Set",desc:"Kuih Lapis, Onde-onde, Seri Muka",originalPrice:12.00,dealPrice:7.00,emoji:"🍡",image:"https://picsum.photos/seed/kuih1/800/600",category:"Food",halal:1,endTime:"18:00",qty:8,claimed:5,type:"special",reheat:"none",postedAt:Date.now()-60000*60,vendorSubscribed:true},
-  {id:7,vendorId:6,vendorName:"Restoran Maju Jaya",freeDeliveryThreshold:35,studentPrice:6.00,title:"Honey Chicken (New!)",desc:"New recipe — try it and give feedback",originalPrice:14.00,dealPrice:8.00,emoji:"🍗",image:"https://picsum.photos/seed/ayampercik/800/600",category:"Food",halal:1,endTime:"20:00",qty:15,claimed:2,type:"special",reheat:"oven",postedAt:Date.now()-60000*15,vendorSubscribed:true},
-  {id:8,vendorId:7,vendorName:"Mat Zin Mee Goreng",freeDeliveryThreshold:20,studentPrice:2.50,title:"Mamak Fried Noodles",desc:"Spicy, crispy, fresh from the wok",originalPrice:7.00,dealPrice:4.00,emoji:"🍜",image:"https://picsum.photos/seed/meegoreng/800/600",category:"Food",halal:1,endTime:"23:00",qty:30,claimed:8,type:"limited",reheat:"none",postedAt:Date.now()-60000*8,vendorSubscribed:false},
   {id:9,vendorId:8,vendorName:"Kepong Home Kitchen",freeDeliveryThreshold:25,studentPrice:null,title:"Char Kuey Teow",desc:"High wok heat, big prawns",originalPrice:9.00,dealPrice:5.50,emoji:"🍳",image:"https://picsum.photos/seed/ckt/800/600",category:"Food",halal:0,endTime:"21:30",qty:12,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*25,vendorSubscribed:true},
-  {id:10,vendorId:9,vendorName:"PJ Kopitiam",freeDeliveryThreshold:30,studentPrice:3.00,title:"Kopitiam Breakfast Set",desc:"Toast + Egg + Coffee",originalPrice:10.00,dealPrice:6.50,emoji:"☕",image:"https://picsum.photos/seed/kopitiam/800/600",category:"Drink",halal:0,endTime:"11:00",qty:20,claimed:7,type:"promo",reheat:"none",postedAt:Date.now()-60000*40,vendorSubscribed:false},
-  {id:11,vendorId:4,vendorName:"Pak Din Gerai",freeDeliveryThreshold:25,studentPrice:null,title:"Fresh Watermelon Pack",desc:"1kg cut watermelon, chilled",originalPrice:7.00,dealPrice:4.50,emoji:"🍉",image:"https://picsum.photos/seed/watermelon/800/600",category:"Fruit",halal:1,endTime:"18:00",qty:15,claimed:2,type:"limited",reheat:"none",postedAt:Date.now()-60000*12,vendorSubscribed:false},
 ];
 
-const MOCK_PAST_POSTS = [
-  {id:"p1",title:"Nasi Lemak Bungkus",desc:"Egg, Sambal, Anchovies",price:"3.50",original:"5.00",emoji:"🍛",type:"limited",sold:24},
-  {id:"p2",title:"Assorted Pastry Box",desc:"Croissant, Danish, Bun",price:"9.90",original:"15.00",emoji:"🥐",type:"promo",sold:11}
+const SUBSCRIPTION_PLANS = [
+  { id:"basic", name:"Basic", price:"29.90", color:"from-slate-800 to-slate-900", perks:["Post up to 3 deals", "15% commission", "Basic dashboard"] },
+  { id:"pro", name:"Pro", price:"49.90", color:"from-emerald-600 to-teal-700", perks:["Unlimited posts", "10% commission", "Full dashboard", "Priority alerts"] }
 ];
-
-// ─── SUBSCRIPTION PLANS ───────────────────────────────────────────────────────
-const SUBSCRIPTION_PLAN = {
-  id:"subscriber", name:"Subscriber", price:"29.90",
-  color:"from-emerald-600 to-teal-700",
-  accent:"text-emerald-300", border:"border-emerald-500/40",
-  commission:"10%",
-  perks:["10% commission (save 5%)","Unlimited posts","Full dashboard","Priority buyer alerts","One-tap repost","Free delivery settings"],
-};
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
-const fmtRM = v=>{const n=parseFloat(v);return isNaN(n)?"0.00":n.toFixed(2);};
-const savingsPct = (o,s)=>{const ov=parseFloat(o),sv=parseFloat(s);if(!ov||!sv||ov<=sv)return null;return Math.round(((ov-sv)/ov)*100);};
-const getNow = ()=>new Date().toTimeString().slice(0,5);
-const addHours = (time,hrs)=>{var p=time.split(":");var h=parseInt(p[0]);var m=parseInt(p[1]);var t=h*60+m+hrs*60;return String(Math.floor(t/60)%24).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
-const timeAgo = (ts)=>{const m=Math.floor((Date.now()-ts)/60000);if(m<1)return"Just now";if(m<60)return`${m}m ago`;return`${Math.floor(m/60)}h ago`;};
-const stockPct = (qty,claimed)=>qty?Math.min(Math.round((claimed/qty)*100),100):null;
-const dealTag = (type)=>({limited:{label:"🔥 Limited",bg:"bg-orange-500"},promo:{label:"⚡ Flash",bg:"bg-blue-500"},special:{label:"🌟 Special",bg:"bg-purple-500"}})[type]||{label:"🔥 Limited",bg:"bg-orange-500"};
-const fill = (str,...vals)=>vals.reduce((s,v,i)=>s.replace(`{${i}}`,v),str);
-const halalBadge = (h)=>{
-  if(h===1)return{label:"Halal ✓",bg:"bg-emerald-500"};
-  if(h===2)return{label:"Muslim",bg:"bg-blue-500"};
-  if(h===3)return{label:"Non-Halal",bg:"bg-slate-500"};
-  return null;
-};
+const fmtRM = v => parseFloat(v).toFixed(2);
+const fill = (str, ...vals) => vals.reduce((s, v, i) => s.replace(`{${i}}`, v), str);
 
-function useCountdown(endTime){
-  const [left, setLeft]=useState("");
-  useEffect(()=>{
-    if(!endTime){setLeft("While stock lasts");return;}
-    const calc=()=>{
-      const now=new Date();const p=endTime.split(":").map(Number);
-      const end=new Date();end.setHours(p[0],p[1],0,0);
-      if(end<now){setLeft("Expired");return;}
-      const d=end-now;const hh=Math.floor(d/3600000);const mm=Math.floor((d%3600000)/60000);
-      setLeft(hh>0?`${hh}h ${mm}m left`:`${mm} min left`);
-    };
-    calc();const id=setInterval(calc,30000);return()=>clearInterval(id);
-  },[endTime]);
-  return left;
-}
+export default function App() {
+  const [lang, setLang] = useState<'en' | 'bm' | 'zh'>('en');
+  const [selCat, setSelCat] = useState('All');
+  const [cart, setCart] = useState<any[]>([]);
+  const [showSubSheet, setShowSubSheet] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const t = T[lang];
 
-// ─── LOCAL STORAGE ────────────────────────────────────────────────────────────
-const LS_VENDOR = 'sapot_vendor_profile';
-const LS_ORDERS = 'sapot_orders';
-const LS_SUB = 'sapot_subscription';
-const LS_LAT = 'sapot_lat';
-const LS_LON = 'sapot_lon';
-const LS_AREA = 'sapot_area';
-
-function getVendorProfile(){try{return JSON.parse(localStorage.getItem(LS_VENDOR)||'null');}catch{return null;}}
-function saveVendorProfile(p){localStorage.setItem(LS_VENDOR,JSON.stringify(p));}
-function getSubscription(){try{return JSON.parse(localStorage.getItem(LS_SUB)||'null');}catch{return null;}}
-function saveSubscription(s){localStorage.setItem(LS_SUB,JSON.stringify(s));}
-function getOrders(){try{return JSON.parse(localStorage.getItem(LS_ORDERS)||'[]');}catch{return[];}}
-function saveOrder(o){const e=getOrders();localStorage.setItem(LS_ORDERS,JSON.stringify([o,...e].slice(0,20)));}
-
-// ─── LOCATION HOOK ────────────────────────────────────────────────────────────
-function useLocation(){
-  const [loc,setLoc]=useState(()=>{
-    const lat=localStorage.getItem(LS_LAT);const lon=localStorage.getItem(LS_LON);const area=localStorage.getItem(LS_AREA)||'';
-    if(lat&&lon)return{lat:parseFloat(lat),lon:parseFloat(lon),area,source:'saved'};return null;
-  });
-  const [status,setStatus]=useState(()=>localStorage.getItem(LS_LAT)?'ok':'idle');
-  const [manualArea,setManualArea]=useState('');
-
-  const AREAS={
-    'puchong':{lat:3.0696,lon:101.5989},'subang':{lat:3.1073,lon:101.6067},'subang jaya':{lat:3.1073,lon:101.6067},
-    'kuala lumpur':{lat:3.1390,lon:101.6869},'kl':{lat:3.1390,lon:101.6869},'petaling jaya':{lat:3.1073,lon:101.6370},
-    'pj':{lat:3.1073,lon:101.6370},'kepong':{lat:3.2068,lon:101.5987},'bangsar':{lat:3.1209,lon:101.6538},
-    'shah alam':{lat:3.0738,lon:101.5183},'klang':{lat:3.0449,lon:101.4456},'ampang':{lat:3.1500,lon:101.7600},
+  const addToCart = (item: any) => {
+    setCart([...cart, item]);
   };
 
-  const request=()=>{
-    if(!navigator.geolocation){setStatus('denied');return;}
-    setStatus('requesting');
-    navigator.geolocation.getCurrentPosition(
-      pos=>{
-        const lat=pos.coords.latitude,lon=pos.coords.longitude;
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
-          .then(r=>r.json()).then(d=>{
-            const a=d.address||{};
-            const area=a.suburb||a.city_district||a.town||a.city||'Near you';
-            localStorage.setItem(LS_LAT,lat);localStorage.setItem(LS_LON,lon);localStorage.setItem(LS_AREA,area);
-            setLoc({lat,lon,area,source:'gps'});setStatus('ok');
-          }).catch(()=>{
-            localStorage.setItem(LS_LAT,lat);localStorage.setItem(LS_LON,lon);localStorage.setItem(LS_AREA,'Near you');
-            setLoc({lat,lon,area:'Near you',source:'gps'});setStatus('ok');
-          });
-      },()=>setStatus('denied'),{enableHighAccuracy:true,timeout:8000}
-    );
-  };
-
-  const setManual=(area)=>{
-    const key=area.trim().toLowerCase();
-    const coords=AREAS[key]||{lat:3.1390,lon:101.6869};
-    localStorage.setItem(LS_LAT,coords.lat);localStorage.setItem(LS_LON,coords.lon);localStorage.setItem(LS_AREA,area);
-    setLoc({lat:coords.lat,lon:coords.lon,area,source:'manual'});setStatus('ok');
-  };
-
-  return{loc,status,request,setManual,manualArea,setManualArea};
-}
-
-// ─── HALAL DISCLAIMER ────────────────────────────────────────────────────────
-function HalalDisclaimer({t,onAccept}){
-  return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}}
-      className="fixed inset-0 z-[900] bg-black/80 backdrop-blur-md flex items-center justify-center p-5">
-      <motion.div initial={{scale:0.92,opacity:0}} animate={{scale:1,opacity:1}} transition={{type:"spring",delay:0.1}}
-        className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl">
-        <div className="text-center mb-4">
-          <div className="text-5xl mb-3">⚠️</div>
-          <h2 className="font-black text-lg">{t.halalDisclaimerTitle}</h2>
-        </div>
-        {t.halalDisclaimerBody.split("\n\n").map((para,i)=>(
-          <p key={i} className="text-slate-600 text-sm leading-relaxed mb-3">{para}</p>
-        ))}
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 mb-5 flex gap-2 items-center">
-          <span className="text-lg flex-shrink-0">ℹ️</span>
-          <p className="text-amber-700 text-[11px] font-bold">{t.halalSelfDeclared}</p>
-        </div>
-        <button onClick={onAccept}
-          className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-transform">
-          {t.halalDisclaimerBtn}
-        </button>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ─── LOCATION PROMPT ──────────────────────────────────────────────────────────
-function LocationPrompt({locationHook}){
-  const {status,request,setManual,manualArea,setManualArea,loc}=locationHook;
-  const [showManual,setShowManual]=useState(false);
-
-  if(status==='ok'&&loc&&!showManual){
-    return(
-      <div className="mx-4 mt-2 mb-1 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span>📍</span>
-          <p className="text-emerald-700 font-black text-xs">Near <span className="text-emerald-600">{loc.area}</span></p>
-        </div>
-        <button onClick={()=>setShowManual(true)} className="text-emerald-600 text-[10px] font-black bg-emerald-100 px-2.5 py-1 rounded-lg">Change</button>
-      </div>
-    );
-  }
-
-  if(status==='requesting') return(
-    <div className="mx-4 mt-2 mb-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-      <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin flex-shrink-0"/>
-      <p className="text-slate-500 text-xs font-bold">Finding your location...</p>
-    </div>
-  );
-
-  if(showManual) return(
-    <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}
-      className="mx-4 mt-2 mb-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-      <p className="font-black text-sm text-slate-800 mb-1">Search deals in another area?</p>
-      <p className="text-slate-400 text-xs mb-3">e.g. Puchong, SS15 Subang, Chow Kit</p>
-      <input value={manualArea} onChange={e=>setManualArea(e.target.value)} placeholder="Type area name..." autoFocus
-        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-emerald-500 focus:outline-none mb-3"
-        onKeyDown={e=>{if(e.key==='Enter'&&manualArea.trim())setManual(manualArea.trim());}}/>
-      <div className="flex gap-2">
-        <button onClick={()=>setShowManual(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black text-xs">Cancel</button>
-        <button onClick={()=>{if(manualArea.trim()){setManual(manualArea.trim());setShowManual(false);}}}
-          disabled={!manualArea.trim()}
-          className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase disabled:opacity-40">
-          Show Deals →
-        </button>
-      </div>
-    </motion.div>
-  );
-
-  return(
-    <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}
-      className="mx-4 mt-2 mb-1 bg-white border border-amber-200 rounded-2xl shadow-sm p-4">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">📍</div>
-        <div>
-          <p className="font-black text-sm text-slate-800">{T.en.locationDenied}</p>
-          <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{T.en.locationDeniedDesc}</p>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <button onClick={request} className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase">📍 Try Again</button>
-        <button onClick={()=>setShowManual(true)} className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-xs uppercase">✏️ Type Area</button>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─── 1. CATEGORY DROPDOWN ────────────────────────────────────────────────────
-const CATEGORIES_DROPDOWN = [
-  {id:"all",label:"All Deals",emoji:"🏪"},
-  {id:"Food",label:"Food",emoji:"🍛"},
-  {id:"Drink",label:"Drink",emoji:"🧋"},
-  {id:"Fruit",label:"Fruit",emoji:"🍉"},
-  {id:"Bakery",label:"Bakery",emoji:"🥐"},
-  {id:"Other",label:"Other",emoji:"📦"},
-];
-
-function CategoryDropdown({value, onChange}){
-  const [open,setOpen]=useState(false);
-  const ref=useRef(null);
-  const selected=CATEGORIES_DROPDOWN.find(c=>c.id===value)||CATEGORIES_DROPDOWN[0];
-
-  useEffect(()=>{
-    const handler=(e)=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};
-    document.addEventListener('mousedown',handler);
-    return()=>document.removeEventListener('mousedown',handler);
-  },[]);
-
-  return(
-    <div className="relative" ref={ref}>
-      <button onClick={()=>setOpen(!open)}
-        className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-xl text-[11px] font-black text-slate-700 transition-all active:scale-95 min-w-[100px]">
-        <span>{selected.emoji}</span>
-        <span className="flex-1 text-left">{selected.label}</span>
-        <motion.span animate={{rotate:open?180:0}} transition={{duration:0.2}} className="text-slate-400 text-[8px]">▼</motion.span>
-      </button>
-      <AnimatePresence>
-        {open&&(
-          <motion.div
-            initial={{opacity:0,y:-8,scale:0.95}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-8,scale:0.95}}
-            transition={{type:"spring",damping:20,stiffness:300}}
-            className="absolute top-full mt-1.5 left-0 z-50 bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden min-w-[140px]">
-            {CATEGORIES_DROPDOWN.map((cat,i)=>(
-              <motion.button
-                key={cat.id}
-                initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} transition={{delay:i*0.03}}
-                onClick={()=>{onChange(cat.id);setOpen(false);}}
-                className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-xs font-bold transition-colors ${value===cat.id?"bg-emerald-50 text-emerald-700":"text-slate-700 hover:bg-slate-50"}`}>
-                <span className="text-base">{cat.emoji}</span>
-                <span className="flex-1">{cat.label}</span>
-                {value===cat.id&&<span className="text-emerald-500 font-black text-sm">✓</span>}
-              </motion.button>
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20 font-sans text-slate-900">
+      
+      {/* ─── HEADER & LANGUAGE/CATEGORY ─── */}
+      <header className="sticky top-0 z-40 bg-white border-b p-4 shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <h1 className="text-xl font-black text-blue-600">Sapot Lokal</h1>
+          <div className="flex gap-3 text-xs font-bold uppercase tracking-wider">
+            {['en', 'bm', 'zh'].map(l => (
+              <button key={l} onClick={() => setLang(l as any)} className={lang === l ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-400"}>
+                {l}
+              </button>
             ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── LISTING CARD ─────────────────────────────────────────────────────────────
-function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLockedTap}){
-  const countdown=useCountdown(listing.endTime);
-  const pct=stockPct(listing.qty,listing.claimed);
-  const savings=savingsPct(listing.originalPrice,listing.dealPrice);
-  const studentSavings=listing.studentPrice?savingsPct(listing.originalPrice,listing.studentPrice):null;
-  const isUrgent=listing.qty&&(listing.qty-listing.claimed)<=3;
-  const isSoldOut=listing.qty&&listing.claimed>=listing.qty;
-  const isExpired=listing.endTime&&countdown==="Expired";
-  const tag=dealTag(listing.type);
-  const hb=halalBadge(listing.halal);
-  const showStudentPrice=isStudentMode&&listing.studentPrice;
-
-  return(
-    <motion.div layout initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}}
-      className={`bg-white rounded-2xl overflow-hidden shadow-sm border flex flex-col relative ${isLocked?"border-slate-200 opacity-60":"border-slate-100"} ${(isSoldOut||isExpired)?"opacity-50":""}`}>
-      {/* Lock overlay */}
-      {isLocked&&(
-        <button onClick={onLockedTap} className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
-          <div className="bg-slate-900 text-white px-3 py-2 rounded-xl text-[10px] font-black flex items-center gap-1.5">
-            <span>🔒</span>
-            <span>Finish current order first</span>
           </div>
-        </button>
-      )}
-      <div className="relative w-full aspect-square">
-        <img src={listing.image} alt={listing.title} className="w-full h-full object-cover"/>
-        {(showStudentPrice?studentSavings:savings)&&(
-          <div className={`absolute top-2 left-2 text-[9px] font-black px-2 py-1 rounded-lg shadow ${showStudentPrice?"bg-indigo-500 text-white":"bg-yellow-400 text-black"}`}>
-            -{showStudentPrice?studentSavings:savings}%
-          </div>
-        )}
-        {hb&&<div className={`absolute top-2 right-2 text-[8px] font-black px-2 py-1 rounded-lg text-white ${hb.bg}`}>{hb.label}</div>}
-        <div className="absolute bottom-2 left-2">
-          <span className={`text-[8px] font-black px-2 py-1 rounded-full uppercase text-white ${tag.bg}`}>{tag.label}</span>
         </div>
-        {pct!==null&&(
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
-            <div className={`h-full ${pct>=90?"bg-red-500":pct>=60?"bg-orange-400":"bg-emerald-400"}`} style={{width:`${pct}%`}}/>
-          </div>
-        )}
-        {(isSoldOut||isExpired)&&(
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-white text-slate-800 text-xs font-black px-3 py-1.5 rounded-full uppercase">{isSoldOut?"Sold Out":"Expired"}</span>
-          </div>
-        )}
-      </div>
-      <div className="p-2.5 flex flex-col flex-1">
-        <p className="font-black text-slate-900 text-xs leading-tight line-clamp-2 mb-0.5">{listing.title}</p>
-        <p className="text-slate-400 text-[9px] font-bold truncate">{listing.vendorName}</p>
-        {isUrgent&&!isSoldOut&&<p className="text-[9px] font-black text-red-500 mt-0.5">⚠️ {listing.qty-listing.claimed} left!</p>}
-        <div className="flex items-end justify-between mt-1.5 mb-2">
-          <div>
-            <p className="text-[9px] text-slate-300 line-through leading-none">RM{fmtRM(showStudentPrice?listing.dealPrice:listing.originalPrice)}</p>
-            <p className={`font-black text-sm leading-none ${showStudentPrice?"text-indigo-600":"text-emerald-600"}`}>RM{fmtRM(showStudentPrice?listing.studentPrice:listing.dealPrice)}</p>
-          </div>
-          {listing.freeDeliveryThreshold&&<span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Free Del</span>}
-        </div>
-        <button onClick={()=>onAddToCart({...listing,dealPrice:showStudentPrice?listing.studentPrice:listing.dealPrice})}
-          disabled={isSoldOut||inCart||isExpired||isLocked}
-          className={`w-full mt-auto py-2 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-1 transition-all active:scale-95 ${
-            inCart?"bg-emerald-100 text-emerald-600 cursor-default"
-            :isSoldOut||isExpired?"bg-slate-100 text-slate-400 cursor-not-allowed"
-            :showStudentPrice?"bg-indigo-700 text-white":"bg-slate-900 text-white"}`}>
-          {inCart?T.en.addedToCart:isSoldOut?T.en.soldOut:isExpired?T.en.expired:T.en.addToCart}
-        </button>
-      </div>
-    </motion.div>
-  );
-}
 
-// ─── 2+3. SINGLE-VENDOR CART ──────────────────────────────────────────────────
-function DifferentVendorModal({currentVendorName,newVendorName,onClear,onKeep}){
-  return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-      className="fixed inset-0 z-[600] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5">
-      <motion.div initial={{scale:0.9,opacity:0}} animate={{scale:1,opacity:1}} transition={{type:"spring",damping:20}}
-        className="bg-white rounded-3xl p-6 max-w-xs w-full shadow-2xl">
-        <div className="text-center mb-4">
-          <div className="text-4xl mb-3">🛒</div>
-          <h2 className="font-black text-lg">{T.en.differentVendorTitle}</h2>
-          <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-            {fill(T.en.differentVendorBody,currentVendorName,newVendorName)}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <button onClick={onClear}
-            className="w-full bg-slate-900 text-white py-3.5 rounded-2xl font-black text-sm active:scale-95 transition-transform">
-            {T.en.clearCartBtn}
-          </button>
-          <button onClick={onKeep}
-            className="w-full bg-slate-100 text-slate-700 py-3.5 rounded-2xl font-black text-sm active:scale-95 transition-transform">
-            {T.en.keepCartBtn}
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-}
+        <select 
+          value={selCat} 
+          onChange={(e) => setSelCat(e.target.value)}
+          className="w-full p-3 bg-gray-100 border-none rounded-xl font-semibold text-sm appearance-none"
+        >
+          <option value="All">{t.catAll}</option>
+          <option value="Food">{t.catFood}</option>
+          <option value="Drink">{t.catDrink}</option>
+          <option value="Fruit">{t.catFruit}</option>
+          <option value="Bakery">{t.catBakery}</option>
+        </select>
+      </header>
 
-function ContinueShoppingBar({vendorId,vendorName,allListings,cart,onAdd}){
-  const cartIds=cart.map(i=>i.id);
-  const moreItems=allListings.filter(l=>l.vendorId===vendorId&&!cartIds.includes(l.id)&&!(l.qty&&l.claimed>=l.qty)).slice(0,6);
-  if(moreItems.length===0) return null;
-
-  return(
-    <div className="mt-3">
-      <div className="border border-dashed border-emerald-300 bg-emerald-50 rounded-2xl overflow-hidden">
-        <div className="px-4 py-3 flex items-center gap-2">
-          <span className="text-base">🏪</span>
-          <p className="font-black text-emerald-800 text-xs flex-1">{fill(T.en.continueShoppingBtn,vendorName)}</p>
-          <span className="text-emerald-500 text-[10px] font-bold">{moreItems.length} more</span>
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-3 px-4 no-scrollbar">
-          {moreItems.map(item=>{
-            const inCart=cartIds.includes(item.id);
-            const savings=savingsPct(item.originalPrice,item.dealPrice);
-            return(
-              <div key={item.id} className="flex-shrink-0 w-28 bg-white rounded-xl overflow-hidden border border-emerald-100 shadow-sm">
-                <div className="relative w-full h-20">
-                  <img src={item.image} className="w-full h-full object-cover" alt=""/>
-                  {savings&&<span className="absolute top-1 left-1 bg-yellow-400 text-black text-[8px] font-black px-1 rounded">-{savings}%</span>}
-                </div>
-                <div className="p-1.5">
-                  <p className="font-black text-[9px] text-slate-800 truncate">{item.title}</p>
-                  <p className="text-emerald-600 font-black text-[10px] mt-0.5">RM{fmtRM(item.dealPrice)}</p>
-                  <button onClick={()=>onAdd(item)} disabled={inCart}
-                    className={`w-full mt-1.5 py-1 rounded-lg font-black text-[9px] uppercase transition-all ${inCart?"bg-emerald-100 text-emerald-600":"bg-slate-900 text-white active:scale-95"}`}>
-                    {inCart?"✓":"+ Add"}
+      {/* ─── MAIN LISTINGS ─── */}
+      <main className="p-4 grid gap-4">
+        {MOCK_LISTINGS
+          .filter(l => selCat === 'All' || l.category === selCat)
+          .map(listing => (
+            <div key={listing.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+              <img src={listing.image} className="h-48 w-full object-cover" />
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-lg">{listing.title}</h3>
+                    <p className="text-gray-500 text-sm">{listing.vendorName}</p>
+                  </div>
+                  <button onClick={() => addToCart(listing)} className="bg-blue-600 text-white px-4 py-2 rounded-xl font-bold text-sm">
+                    {t.addToCart}
                   </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd}){
-  const [deliveryMode,setDeliveryMode]=useState("pickup");
-  const [paying,setPaying]=useState(false);
-  const [success,setSuccess]=useState(false);
-  const [pickupCode]=useState(()=>Math.random().toString(36).slice(2,8).toUpperCase());
-  const t=T.en;
-
-  const subtotal=cart.reduce((s,i)=>s+i.dealPrice,0);
-  const currentVendor=cart[0]||null;
-  const threshold=currentVendor?.freeDeliveryThreshold;
-  const toGo=threshold?Math.max(0,threshold-subtotal):null;
-  const freeUnlocked=threshold&&subtotal>=threshold;
-  const deliveryCost=deliveryMode==="pickup"?0:(freeUnlocked?0:DELIVERY_FEE);
-  const total=subtotal+deliveryCost;
-
-  return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-      className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md flex items-end justify-center"
-      onClick={!success?onClose:undefined}>
-      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}}
-        transition={{type:"spring",damping:28,stiffness:280}}
-        onClick={e=>e.stopPropagation()}
-        className="w-full max-w-sm bg-white rounded-t-[36px] overflow-hidden max-h-[92vh] flex flex-col">
-        <AnimatePresence mode="wait">
-          {success?(
-            <motion.div key="ok" initial={{opacity:0}} animate={{opacity:1}} className="flex flex-col overflow-y-auto max-h-[88vh]">
-              <div className="p-7 pb-4 text-center">
-                <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",delay:0.1}} className="text-6xl mb-3">🎉</motion.div>
-                <h2 className="font-black text-2xl mb-1">{t.orderPlaced}</h2>
-                <p className="text-slate-500 text-sm">{t.pickupNote}</p>
-              </div>
-              <div className="mx-5 bg-emerald-50 border-2 border-emerald-200 border-dashed rounded-2xl p-5 mb-4 text-center">
-                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{t.pickupCode}</p>
-                <p className="text-emerald-600 font-black text-4xl tracking-[8px]">{pickupCode}</p>
-              </div>
-              <div className="mx-5 bg-slate-50 rounded-2xl p-4 mb-4 space-y-1.5">
-                <div className="flex justify-between text-xs"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(subtotal)}</span></div>
-                <div className="flex justify-between text-xs"><span className="text-slate-400">{t.deliveryFee}</span><span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryCost===0?t.free:`RM${fmtRM(deliveryCost)}`}</span></div>
-                <div className="h-px bg-slate-200"/>
-                <div className="flex justify-between text-sm"><span className="font-black">{t.total}</span><span className="font-black text-emerald-600 text-base">RM{fmtRM(total)}</span></div>
-              </div>
-              <div className="mx-5 mb-8 mt-4">
-                <button onClick={()=>{onCheckout({pickupCode});onClose();}}
-                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs">{t.goPickup}</button>
-              </div>
-            </motion.div>
-          ):(
-            <motion.div key="cart" className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 flex-shrink-0">
-                <h2 className="font-black text-xl">{t.cart}</h2>
-                <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-sm">✕</button>
-              </div>
-              {cart.length===0?(
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                  <p className="text-4xl mb-3">🛒</p>
-                  <p className="font-bold text-slate-500">{t.cartEmpty}</p>
-                  <p className="text-slate-300 text-xs mt-1">{t.browseDeals}</p>
-                </div>
-              ):(
-                <>
-                  <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                    {/* Single vendor banner */}
-                    {currentVendor&&(
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 flex items-center gap-2">
-                        <span className="text-base">🏪</span>
-                        <div>
-                          <p className="text-emerald-700 font-black text-xs">{t.orderingFrom}</p>
-                          <p className="text-emerald-800 font-black text-sm">{currentVendor.vendorName}</p>
-                        </div>
-                      </div>
-                    )}
-                    {/* Free delivery progress */}
-                    {threshold&&(
-                      <div className={`rounded-2xl border px-4 py-3 ${freeUnlocked?"bg-emerald-50 border-emerald-200":"bg-slate-50 border-slate-200"}`}>
-                        {freeUnlocked?(
-                          <p className="text-emerald-600 font-black text-xs">🎉 Free delivery unlocked!</p>
-                        ):(
-                          <>
-                            <div className="flex justify-between items-center mb-2">
-                              <p className="text-[10px] font-black text-slate-500">🚗 Add RM{fmtRM(toGo)} more for free delivery</p>
-                              <p className="text-[10px] font-bold text-slate-400">RM{fmtRM(subtotal)}/RM{fmtRM(threshold)}</p>
-                            </div>
-                            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                              <motion.div className="bg-emerald-500 h-full rounded-full" animate={{width:`${Math.min((subtotal/threshold)*100,100)}%`}} transition={{duration:0.6}}/>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                    {/* Cart items */}
-                    {cart.map((item,idx)=>(
-                      <motion.div key={`${item.id}-${idx}`} layout exit={{opacity:0,x:-20}} className="flex gap-3 items-center bg-slate-50 rounded-2xl p-3">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-200"><img src={item.image} className="w-full h-full object-cover" alt=""/></div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-black text-sm truncate">{item.title}</h4>
-                          <p className="text-slate-400 text-[10px]">{item.vendorName}</p>
-                          <p className="text-emerald-600 font-black text-sm mt-0.5">RM{fmtRM(item.dealPrice)}</p>
-                        </div>
-                        <button onClick={()=>onRemove(idx)} className="text-slate-300 hover:text-red-400 text-xs font-bold flex-shrink-0">{t.removeItem}</button>
-                      </motion.div>
-                    ))}
-                    {/* 3. Continue shopping from same vendor */}
-                    {currentVendor&&(
-                      <ContinueShoppingBar
-                        vendorId={currentVendor.vendorId}
-                        vendorName={currentVendor.vendorName}
-                        allListings={allListings}
-                        cart={cart}
-                        onAdd={onAdd}
-                      />
-                    )}
-                  </div>
-                  <div className="px-5 pb-8 pt-4 border-t border-slate-100 flex-shrink-0 space-y-4 bg-white">
-                    <div className="grid grid-cols-2 gap-2">
-                      {[{id:"pickup",icon:"🚶",title:t.selfPickup,desc:"Free"},{id:"delivery",icon:"🛵",title:t.delivery,desc:freeUnlocked?"Vendor pays":t.deliveryDesc,badge:freeUnlocked?t.free:null}].map(opt=>(
-                        <button key={opt.id} onClick={()=>setDeliveryMode(opt.id)}
-                          className={`p-3 rounded-2xl border-2 text-left transition-all ${deliveryMode===opt.id?"border-emerald-500 bg-emerald-50":"border-slate-100 bg-slate-50"}`}>
-                          <div className="text-xl mb-1">{opt.icon}</div>
-                          <p className={`font-black text-[11px] ${deliveryMode===opt.id?"text-emerald-700":"text-slate-700"}`}>{opt.title}</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5">{opt.desc}</p>
-                          {opt.badge&&<span className="text-[8px] font-black text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mt-1 inline-block">{opt.badge}!</span>}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="bg-slate-50 rounded-2xl px-4 py-3 space-y-1.5">
-                      <div className="flex justify-between text-xs"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(subtotal)}</span></div>
-                      <div className="flex justify-between text-xs"><span className="text-slate-400">{t.deliveryFee}</span>
-                        <span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryMode==="pickup"?t.free:deliveryCost===0?`${t.free} 🎉`:`RM${fmtRM(deliveryCost)}`}</span>
-                      </div>
-                      <div className="h-px bg-slate-200"/>
-                      <div className="flex justify-between text-sm"><span className="font-black">{t.total}</span><span className="font-black text-emerald-600 text-base">RM{fmtRM(total)}</span></div>
-                    </div>
-                    <button onClick={()=>{setPaying(true);setTimeout(()=>{setPaying(false);setSuccess(true);},1800);}} disabled={paying}
-                      className="w-full bg-[#1a6ef5] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-blue-200">
-                      {paying?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t.processingTNG}</>:t.checkoutTNG}
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ─── 5. SUBSCRIPTION PLANS SHEET ─────────────────────────────────────────────
-function SubscriptionSheet({onClose,onSubscribe,isSubscribed}){
-  const [loading,setLoading]=useState(false);
-  const [celebrated,setCelebrated]=useState(false);
-  const t=T.en;
-  const plan=SUBSCRIPTION_PLAN;
-
-  function handleSubscribe(){
-    setLoading(true);
-    setTimeout(()=>{
-      const sub={planId:plan.id,planName:plan.name,price:plan.price,activatedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+30*86400000).toISOString()};
-      saveSubscription(sub);
-      setLoading(false);
-      setCelebrated(true);
-    },2000);
-  }
-
-  if(celebrated){
-    return(
-      <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-        className="fixed inset-0 z-[700] bg-black/70 backdrop-blur-sm flex items-end justify-center">
-        <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}}
-          transition={{type:"spring",damping:26}}
-          className="w-full max-w-sm bg-[#0d1929] rounded-t-[36px] p-8 pb-12 text-center">
-          <motion.div initial={{scale:0}} animate={{scale:[0,1.2,1]}} transition={{delay:0.1,duration:0.5}} className="text-7xl mb-4">🎉</motion.div>
-          <h2 className="text-white font-black text-2xl mb-2">Welcome aboard!</h2>
-          <p className="text-white/50 text-sm mb-8">You're now on the Subscriber plan. Enjoy 10% commission.</p>
-          <div className={`bg-gradient-to-br ${plan.color} rounded-2xl p-4 mb-6 text-center border ${plan.border}`}>
-            <p className="text-white/70 text-xs mb-1">Monthly Plan</p>
-            <p className="text-white font-black text-3xl">RM{plan.price}<span className="text-base font-normal text-white/50">/mo</span></p>
-          </div>
-          <button onClick={()=>{onSubscribe(plan);onClose();}}
-            className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm active:scale-95 transition-transform">
-            Start Posting 🚀
-          </button>
-        </motion.div>
-      </motion.div>
-    );
-  }
-
-  return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-      className="fixed inset-0 z-[700] bg-black/70 backdrop-blur-sm flex items-end justify-center"
-      onClick={onClose}>
-      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}}
-        transition={{type:"spring",damping:26,stiffness:260}}
-        onClick={e=>e.stopPropagation()}
-        className="w-full max-w-sm bg-[#0d1929] rounded-t-[36px] p-5 pb-10">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <h2 className="text-white font-black text-xl">Subscribe · RM{plan.price}/mo</h2>
-            <p className="text-white/40 text-xs mt-0.5">Free 2-month trial for all new vendors</p>
-          </div>
-          <button onClick={onClose} className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white">✕</button>
-        </div>
-        {/* Plan Card */}
-        <motion.div whileTap={{scale:0.99}}
-          className={`w-full text-left rounded-3xl overflow-hidden border-2 ${plan.border} mb-4`}>
-          <div className={`bg-gradient-to-br ${plan.color} p-5`}>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-white font-black text-xl mb-1">Subscriber Plan</p>
-                <p className="text-white/60 text-xs">10% commission · vs 15% without plan</p>
-              </div>
-              <div className="text-right">
-                <p className="text-white font-black text-2xl leading-none">RM{plan.price}</p>
-                <p className="text-white/50 text-[10px]">/month</p>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              {plan.perks.map((perk,i)=>(
-                <div key={i} className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-white text-[8px] font-black">✓</span>
-                  </div>
-                  <span className="text-white/80 text-[10px]">{perk}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Compare */}
-          <div className="bg-white/5 px-5 py-3">
-            <div className="flex justify-between text-[9px] text-white/40 font-bold uppercase tracking-wider mb-1">
-              <span>Without plan</span><span>With plan</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-white/50 text-sm line-through">15% commission</span>
-              <span className="text-emerald-400 font-black text-sm">10% commission ✓</span>
-            </div>
-          </div>
-        </motion.div>
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 flex items-center gap-3 mb-4">
-          <span className="text-xl flex-shrink-0">💙</span>
-          <div>
-            <p className="text-blue-300 font-black text-[10px] uppercase tracking-wider">Pay & receive via TNG</p>
-            <p className="text-white/50 text-[10px]">Buyer pays → fee deducted → balance sent to your TNG</p>
-          </div>
-        </div>
-        <button onClick={handleSubscribe} disabled={loading||isSubscribed}
-          className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${loading||isSubscribed?"bg-white/10 text-white/30":"bg-emerald-500 text-white shadow-emerald-900/50"}`}>
-          {loading?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Processing...</>:isSubscribed?"✅ Already Subscribed":t.subscribeCTA}
-        </button>
-        <p className="text-white/20 text-[9px] text-center font-bold uppercase tracking-wider mt-3">{t.autoRenew}</p>
-      </motion.div>
-    </motion.div>
-  );
-}
-
-// ─── VENDOR ONBOARDING ────────────────────────────────────────────────────────
-function VendorOnboarding({onDone}){
-  const t=T.en;
-  const [form,setForm]=useState({shopName:'',area:'',phone:''});
-  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
-  const canDone=form.shopName.trim().length>=2;
-  const handleDone=()=>{
-    const profile={shopName:form.shopName.trim(),area:form.area.trim()||'My Area',phone:form.phone.trim(),joinedAt:new Date().toISOString()};
-    saveVendorProfile(profile);onDone(profile);
-  };
-  return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}}
-      className="fixed inset-0 z-[700] bg-[#0a0f1e] flex flex-col items-center justify-center p-6">
-      <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.1}} className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🏪</div>
-          <h2 className="text-white font-black text-2xl">{t.onboardTitle}</h2>
-          <p className="text-white/40 text-sm mt-2">{t.onboardSub}</p>
-        </div>
-        <div className="space-y-4">
-          {[{k:'shopName',label:t.onboardShopName,ph:t.onboardShopNamePH},{k:'area',label:t.onboardArea,ph:t.onboardAreaPH},{k:'phone',label:t.onboardPhone,ph:t.onboardPhonePH,type:'tel'}].map(f=>(
-            <div key={f.k}>
-              <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">{f.label}</label>
-              <input value={form[f.k]} onChange={e=>upd(f.k,e.target.value)} placeholder={f.ph} type={f.type||'text'}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
             </div>
           ))}
-        </div>
-        <button onClick={handleDone} disabled={!canDone}
-          className="w-full mt-8 bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-emerald-900/50 disabled:opacity-30 active:scale-95 transition-all">
-          {t.onboardDone}
-        </button>
-        <button onClick={()=>onDone({shopName:'My Shop',area:'',phone:'',joinedAt:new Date().toISOString()})}
-          className="w-full mt-3 text-white/20 text-xs font-bold py-2">{t.onboardSkip}</button>
-      </motion.div>
-    </motion.div>
-  );
-}
+      </main>
 
-// ─── VENDOR FLOW ──────────────────────────────────────────────────────────────
-function TrialBanner({subscription,onSubscribe}){
-  if(subscription){
-    return(
-      <motion.button onClick={onSubscribe} whileTap={{scale:0.97}}
-        className={`mx-4 mb-4 bg-gradient-to-r ${SUBSCRIPTION_PLAN.color} border ${SUBSCRIPTION_PLAN.border} rounded-2xl px-4 py-3 flex items-center justify-between w-[calc(100%-2rem)]`}>
-        <div className="flex items-center gap-2">
-          <span className="text-base">✅</span>
-          <div>
-            <p className={`font-black text-xs ${SUBSCRIPTION_PLAN.accent}`}>Subscriber Plan — Active</p>
-            <p className="text-white/40 text-[9px]">10% commission · Tap to manage</p>
-          </div>
-        </div>
-        <span className="text-white/40 text-xs">›</span>
-      </motion.button>
-    );
-  }
-  return(
-    <motion.button onClick={onSubscribe} whileTap={{scale:0.97}}
-      className="mx-4 mb-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl px-4 py-3 flex items-center justify-between w-[calc(100%-2rem)]">
-      <div>
-        <p className="text-indigo-400 font-black text-xs">🎁 Free Trial Active</p>
-        <p className="text-white/30 text-[9px]">15% commission now · Subscribe for 10%</p>
-      </div>
-      <span className="bg-indigo-500 text-white text-[9px] font-black px-3 py-1.5 rounded-xl">RM29.90/mo</span>
-    </motion.button>
-  );
-}
-
-function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription}){
-  const t=T.en;
-  const [step,setStep]=useState(1);
-  const [postType,setPostType]=useState(null);
-  const [template,setTemplate]=useState(null);
-  const [photo,setPhoto]=useState(null);
-  const [uploading,setUploading]=useState(false);
-  const [publishing,setPublishing]=useState(false);
-  const [activePosts,setActivePosts]=useState([]);
-  const [timeMode,setTimeMode]=useState("stock");
-  const [quickHours,setQuickHours]=useState(3);
-  const [form,setForm]=useState({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
-  const [cancelTarget,setCancelTarget]=useState(null);
-  const [showSuccess,setShowSuccess]=useState(false);
-  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
-
-  const commission=subscription?10:15;
-  const computedEnd=timeMode==="stock"?null:timeMode==="hours"?addHours(getNow(),quickHours):"22:00";
-  const canPublish=form.title&&form.price&&photo&&form.halal!==null;
-
-  const handlePhoto=(e)=>{
-    const file=e.target.files&&e.target.files[0];if(!file)return;
-    setUploading(true);
-    const r=new FileReader();
-    r.onloadend=()=>{setPhoto(r.result);setTimeout(()=>setUploading(false),600);};
-    r.readAsDataURL(file);
-  };
-
-  const applyTemplate=(tmpl)=>{setTemplate(tmpl);setForm(p=>({...p,title:tmpl.defaultTitle,desc:tmpl.defaultDesc,price:tmpl.defaultPrice,original:tmpl.defaultOriginal}));setStep(3);};
-
-  const handlePublish=()=>{
-    setPublishing(true);
-    setTimeout(()=>{
-      const post={
-        id:'local_'+Date.now(),vendorId:99,vendorName:vendorMeta?.shopName||"My Shop",
-        title:form.title,desc:form.desc,originalPrice:parseFloat(form.original)||parseFloat(form.price)*1.5,
-        dealPrice:parseFloat(form.price),emoji:template?.emoji||"🍱",image:photo,
-        category:template?.category||"Other",halal:form.halal!==null?form.halal:0,
-        endTime:computedEnd,qty:form.qty?parseInt(form.qty):null,claimed:0,
-        type:postType||"limited",postedAt:Date.now(),vendorSubscribed:!!subscription,
-        freeDeliveryThreshold:null,studentPrice:form.hasStudentPrice&&form.studentPrice?parseFloat(form.studentPrice):null,
-      };
-      setActivePosts(p=>[post,...p]);
-      onNewListing(post);
-      setPublishing(false);setShowSuccess(true);
-      setStep(1);setPostType(null);setTemplate(null);setPhoto(null);setTimeMode("stock");
-      setForm({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
-    },1500);
-  };
-
-  const postTypes=[
-    {id:"limited",icon:"🔥",title:t.surplusType,desc:t.surplusDesc,border:"border-orange-500/30"},
-    {id:"promo",icon:"⚡",title:t.promoType,desc:t.promoDesc,border:"border-blue-500/30"},
-    {id:"special",icon:"🌟",title:t.specialType,desc:t.specialDesc,border:"border-purple-500/30"}
-  ];
-
-  return(
-    <div className="min-h-screen bg-[#0a0f1e] pb-28">
-      <TrialBanner subscription={subscription} onSubscribe={onShowSubscription}/>
-      <div className="sticky top-[60px] z-40 bg-[#0a0f1e]/95 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
-        <div><p className="text-white font-black text-sm">{t.postNewDeal}</p><p className="text-white/30 text-[10px]">Step {step} of 3</p></div>
-        <div className="flex gap-2">
-          {activePosts.length>0&&<div className="bg-emerald-500/20 border border-emerald-500/30 px-3 py-1.5 rounded-xl"><span className="text-emerald-400 text-[10px] font-black">{activePosts.length} {t.activeLabel}</span></div>}
-        </div>
-      </div>
-      <div className="px-4 pt-3"><div className="flex gap-1.5">{[1,2,3].map(s=><div key={s} className={`h-1 flex-1 rounded-full transition-all duration-500 ${s<=step?"bg-emerald-500":"bg-white/10"}`}/>)}</div></div>
-      <div className="px-4 pt-5">
-        <AnimatePresence mode="wait">
-          {step===1&&(
-            <motion.div key="s1" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}}>
-              <h2 className="text-white text-2xl font-black mb-1">{t.whatToPost}</h2>
-              <p className="text-white/40 text-sm mb-5">{t.chooseType}</p>
-              <div className="space-y-3 mb-8">
-                {postTypes.map(type=>(
-                  <motion.button key={type.id} whileTap={{scale:0.97}} onClick={()=>{setPostType(type.id);setStep(2);}}
-                    className={`w-full text-left p-5 rounded-2xl border-2 bg-white/5 ${type.border}`}>
-                    <div className="flex items-center gap-4"><span className="text-3xl">{type.icon}</span><div><h3 className="text-white font-black text-base">{type.title}</h3><p className="text-white/40 text-xs mt-0.5">{type.desc}</p></div></div>
-                  </motion.button>
-                ))}
-              </div>
-              {cancelTarget&&(
-                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 mb-2">
-                  <p className="text-white font-black text-sm mb-3">🗑️ {t.cancelConfirm}</p>
-                  <div className="flex gap-2">
-                    <button onClick={()=>{setActivePosts(p=>p.filter(x=>x.id!==cancelTarget));setCancelTarget(null);}} className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-black text-xs uppercase">{t.cancelYes}</button>
-                    <button onClick={()=>setCancelTarget(null)} className="flex-1 bg-white/10 text-white py-2.5 rounded-xl font-black text-xs uppercase">{t.cancelNo}</button>
-                  </div>
-                </div>
-              )}
-              {activePosts.length>0&&(
-                <div>
-                  <div className="flex items-center gap-2 mb-3"><div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/><p className="text-white font-black text-sm uppercase tracking-wider">{t.liveNow}</p></div>
-                  <div className="space-y-2">
-                    {activePosts.map(l=>(
-                      <div key={l.id} className="bg-white/5 border border-white/10 rounded-2xl p-3 flex gap-3 items-center">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 flex-shrink-0 flex items-center justify-center">{l.image?<img src={l.image} className="w-full h-full object-cover" alt=""/>:<span className="text-xl">{l.emoji}</span>}</div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-white font-black text-sm truncate">{l.title}</h4>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-emerald-400 font-black text-xs">RM{fmtRM(l.dealPrice)}</span>
-                            <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{l.endTime?`Until ${l.endTime}`:t.liveUntilStock}</span>
-                          </div>
-                        </div>
-                        <button onClick={()=>setCancelTarget(l.id)} className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center text-red-400 text-xs">✕</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-          {step===2&&(
-            <motion.div key="s2" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}}>
-              <button onClick={()=>setStep(1)} className="text-white/40 text-xs font-bold mb-5">{t.back}</button>
-              <h2 className="text-white text-2xl font-black mb-1">{t.chooseCategory}</h2>
-              <p className="text-white/40 text-sm mb-5">{t.templateNote}</p>
-              <div className="grid grid-cols-2 gap-3">
-                {FOOD_TEMPLATES.map(tmpl=>(
-                  <motion.button key={tmpl.id} whileTap={{scale:0.95}} onClick={()=>applyTemplate(tmpl)}
-                    className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left hover:border-emerald-500/40 transition-all">
-                    <span className="text-3xl block mb-2">{tmpl.emoji}</span>
-                    <h4 className="text-white font-black text-sm">{tmpl.label}</h4>
-                    <p className="text-white/30 text-[9px]">{tmpl.category}</p>
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-          {step===3&&(
-            <motion.div key="s3" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}}>
-              <button onClick={()=>setStep(2)} className="text-white/40 text-xs font-bold mb-4">{t.back}</button>
-              {/* Photo */}
-              <label className="w-full flex items-center justify-center gap-2 bg-white/10 border border-white/20 py-4 rounded-2xl cursor-pointer active:scale-95 transition-transform mb-5">
-                {uploading?<div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>:<span className="text-lg">{photo?"✅":"📸"}</span>}
-                <span className="text-white font-black text-xs uppercase tracking-widest">{uploading?"Uploading...":photo?"Change Photo":t.snapPhoto}</span>
-                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhoto}/>
-              </label>
-              {photo&&<div className="w-full h-40 rounded-2xl overflow-hidden mb-5"><img src={photo} className="w-full h-full object-cover" alt=""/></div>}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">{t.foodName}</label>
-                  <input value={form.title} onChange={e=>upd("title",e.target.value)} placeholder={t.foodNamePH} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none"/>
-                </div>
-                {/* Halal status */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <label className="text-white/40 text-[9px] font-black uppercase tracking-widest">Halal Status</label>
-                    <span className="text-red-400 text-[9px]">* Required</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[{val:1,icon:"🟢",label:"Halal Certified"},{val:2,icon:"🔵",label:"Muslim-Owned"},{val:3,icon:"🔴",label:"Non-Halal"},{val:0,icon:"⚪",label:"Not Stated"}].map(opt=>{
-                      const sel=form.halal===opt.val;
-                      return(
-                        <button key={opt.val} onClick={()=>upd("halal",opt.val)} type="button"
-                          className={`rounded-xl border-2 p-3 flex items-center gap-2 cursor-pointer transition-all ${sel?"border-emerald-500 bg-emerald-500/20":"border-white/10 bg-white/5"}`}>
-                          <span className="text-xl">{opt.icon}</span>
-                          <p className="font-black text-xs text-left text-white/80">{opt.label}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div><label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">{t.shortDesc}</label><input value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder={t.shortDescPH} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none"/></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">{t.originalPrice}</label><input value={form.original} onChange={e=>upd("original",e.target.value)} type="number" placeholder="0.00" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white/60 text-sm font-bold focus:outline-none"/></div>
-                  <div><label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">{t.dealPrice}</label><input value={form.price} onChange={e=>upd("price",e.target.value)} type="number" placeholder="0.00" className="w-full bg-white/5 border border-emerald-500/40 rounded-xl px-4 py-3 text-emerald-400 text-sm font-black focus:border-emerald-500 focus:outline-none"/></div>
-                </div>
-                {form.price&&(
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-                    <div className="flex justify-between">
-                      <span className="text-white/50 text-xs">{t.youReceive}</span>
-                      <span className="text-emerald-400 font-black">RM{(parseFloat(form.price||0)*(1-commission/100)).toFixed(2)}</span>
-                    </div>
-                    <p className="text-white/20 text-[9px] mt-1">{commission}% fee · Paid to TNG after pickup</p>
-                  </div>
-                )}
-                {/* Time mode */}
-                <div>
-                  <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">{t.timeModeLabel}</label>
-                  <div className="space-y-2 mb-3">
-                    {[{id:"stock",title:t.timeModeStock,desc:t.timeModeStock_desc},{id:"hours",title:t.timeModeHours,desc:t.timeModeHours_desc},{id:"schedule",title:t.timeModeSched,desc:t.timeModeSched_desc}].map(opt=>(
-                      <button key={opt.id} onClick={()=>setTimeMode(opt.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${timeMode===opt.id?"bg-emerald-500/10 border-emerald-500/40":"bg-white/5 border-white/10"}`}>
-                        <p className={`font-black text-xs ${timeMode===opt.id?"text-emerald-400":"text-white/70"}`}>{opt.title}</p>
-                        <p className="text-white/30 text-[9px] mt-0.5">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                  {timeMode==="hours"&&(
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                      <div className="flex gap-2">{[1,2,3,4,6,8].map(h=><button key={h} onClick={()=>setQuickHours(h)} className={`flex-1 py-2 rounded-lg text-[10px] font-black transition-all ${quickHours===h?"bg-emerald-500 text-white":"bg-white/5 text-white/40 border border-white/10"}`}>+{h}h</button>)}</div>
-                    </div>
-                  )}
-                </div>
-                <div><label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">{t.qty}</label><input value={form.qty} onChange={e=>upd("qty",e.target.value)} type="number" placeholder={t.qtyPH} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-bold focus:outline-none"/><p className="text-white/20 text-[9px] mt-1">{t.qtyNote}</p></div>
-              </div>
-              <button onClick={handlePublish} disabled={!canPublish||publishing}
-                className={`w-full mt-6 py-5 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 transition-all ${canPublish&&!publishing?"bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 active:scale-95":"bg-white/10 text-white/30 cursor-not-allowed"}`}>
-                {publishing?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Posting...</>:!photo?t.snapFirst:!form.title?t.fillName:!form.price?t.fillPrice:form.halal===null?"Select Halal Status":t.goLive}
+      {/* ─── CART SHEET SNIPPET ─── */}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white shadow-2xl rounded-t-3xl p-6 z-50 border-t">
+            <h2 className="font-black text-xl mb-4">{t.cart}</h2>
+            
+            {/* Continue Shopping - Same Vendor Feature */}
+            <div className="mt-2 border-t border-dashed pt-4 overflow-hidden">
+              <button className="text-blue-600 font-bold text-sm mb-3">
+                {fill(t.continueShoppingBtn, cart[0].vendorName)}
               </button>
-              <p className="text-white/20 text-[9px] text-center mt-2">{t.tngNote}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <AnimatePresence>
-        {showSuccess&&(
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md flex items-end justify-center" onClick={()=>setShowSuccess(false)}>
-            <motion.div initial={{y:100}} animate={{y:0}} exit={{y:100}} transition={{type:"spring",damping:28}} onClick={e=>e.stopPropagation()} className="w-full max-w-sm bg-[#0d1929] rounded-t-[40px] p-8 pb-12 text-center">
-              <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",delay:0.1}} className="text-6xl mb-4">🎉</motion.div>
-              <h2 className="text-white text-2xl font-black mb-2">{t.postSuccess}</h2>
-              <p className="text-white/50 text-sm mb-6">{t.liveNote}</p>
-              <button onClick={()=>setShowSuccess(false)} className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs">{t.viewDash}</button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── BUYER FEED ───────────────────────────────────────────────────────────────
-function BuyerFeed({vendorListings,activeTab,userLocation,locationHook}){
-  const t=T.en;
-  const [search,setSearch]=useState("");
-  const [catFilter,setCatFilter]=useState("all");
-  const [typeFilter,setTypeFilter]=useState("all");
-  const [cart,setCart]=useState([]);
-  const [showCart,setShowCart]=useState(false);
-  const [differentVendor,setDifferentVendor]=useState(null);  // {item, currentName, newName}
-  const isStudentMode=activeTab==="student";
-
-  const hav=(la1,lo1,la2,lo2)=>{
-    const R=6371;const dL=(la2-la1)*Math.PI/180;const dO=(lo2-lo1)*Math.PI/180;
-    const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;
-    return+(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))).toFixed(1);
-  };
-
-  const allListings=[...vendorListings,...MOCK_LISTINGS].filter((l,i,a)=>a.findIndex(x=>String(x.id)===String(l.id))===i).map(l=>({
-    ...l,
-    distance:userLocation&&MOCK_VENDORS_GEO[l.vendorId]?hav(userLocation.lat,userLocation.lon,MOCK_VENDORS_GEO[l.vendorId].lat,MOCK_VENDORS_GEO[l.vendorId].lon):null,
-  }));
-
-  const cartIds=cart.map(i=>i.id);
-  const currentVendorId=cart.length>0?cart[0].vendorId:null;
-  const cartTotal=cart.reduce((s,i)=>s+i.dealPrice,0);
-
-  const filtered=allListings.filter(l=>{
-    if(isStudentMode)return l.studentPrice!=null;
-    const ms=!search||[l.title,l.desc,l.vendorName,l.category].join(' ').toLowerCase().includes(search.toLowerCase());
-    const mc=catFilter==="all"||l.category===catFilter;
-    const mt=typeFilter==="all"||l.type===typeFilter;
-    return ms&&mc&&mt;
-  });
-
-  const urgentDeals=filtered.filter(l=>!isStudentMode&&l.qty&&(l.qty-l.claimed)<=3&&l.claimed<l.qty);
-  const regular=filtered.filter(l=>!urgentDeals.find(u=>u.id===l.id));
-
-  const attemptAddToCart=(item)=>{
-    if(cartIds.includes(item.id))return;
-    if(item.qty&&item.claimed>=item.qty)return;
-    if(currentVendorId&&item.vendorId!==currentVendorId){
-      const currentName=cart[0]?.vendorName||"current vendor";
-      setDifferentVendor({item,currentName,newName:item.vendorName});
-      return;
-    }
-    setCart(prev=>[...prev,item]);
-  };
-
-  const removeFromCart=(idx)=>setCart(prev=>prev.filter((_,i)=>i!==idx));
-
-  return(
-    <div className="min-h-screen bg-slate-50 pb-28">
-      <LocationPrompt locationHook={locationHook}/>
-      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2">
-        <span className="text-sm flex-shrink-0">⚠️</span>
-        <p className="text-amber-700 text-[10px] font-bold">{t.halalSelfDeclared}</p>
-      </div>
-
-      {!isStudentMode&&(
-        <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
-          <div className="relative mb-2">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
-            {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
-          </div>
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {/* 1. Category Dropdown */}
-            <CategoryDropdown value={catFilter} onChange={setCatFilter}/>
-            <div className="w-px bg-slate-200 flex-shrink-0 h-5"/>
-            {[{id:"all",label:"All"},{id:"limited",label:"🔥 Deals"},{id:"promo",label:"⚡ Flash"},{id:"special",label:"🌟 Special"}].map(f=>(
-              <button key={f.id} onClick={()=>setTypeFilter(f.id)}
-                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex-shrink-0 transition-all ${typeFilter===f.id?"bg-slate-900 text-white":"bg-slate-100 text-slate-500"}`}>{f.label}</button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="px-3 pt-3 pb-6">
-        {isStudentMode&&(
-          <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4 mb-3">
-            <h2 className="font-black text-indigo-900 text-base mb-0.5">{t.studentCornerTitle}</h2>
-            <p className="text-indigo-600 text-xs">{t.studentCornerDesc}</p>
-          </div>
-        )}
-
-        {urgentDeals.length>0&&(
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"/>
-              <h2 className="text-sm font-black text-slate-900">{t.almostGone}</h2>
-              <span className="bg-red-100 text-red-600 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">{urgentDeals.length} left</span>
-            </div>
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-              {urgentDeals.map(l=>(
-                <div key={l.id} className="w-36 flex-shrink-0">
-                  <ListingCard listing={l} onAddToCart={attemptAddToCart} inCart={cartIds.includes(l.id)}
-                    isStudentMode={false}
-                    isLocked={currentVendorId&&l.vendorId!==currentVendorId}
-                    onLockedTap={()=>attemptAddToCart(l)}/>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!isStudentMode&&(
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-black text-slate-900">{search||catFilter!=="all"||typeFilter!=="all"?`${regular.length} results`:t.nearbyDeals}</h2>
-            <span className="text-[10px] text-slate-400">{filtered.length} deals</span>
-          </div>
-        )}
-
-        {regular.length===0&&urgentDeals.length===0?(
-          <div className="text-center py-20">
-            <p className="text-5xl mb-3">{isStudentMode?"🎓":"🍽️"}</p>
-            <p className="text-slate-600 font-black text-base">{isStudentMode?t.studentCornerEmpty:t.noDealsArea}</p>
-            <p className="text-slate-400 text-sm mt-2">{isStudentMode?t.studentCornerEmptySub:fill(t.noDealsAreaSub,userLocation?.area||"your area")}</p>
-          </div>
-        ):(
-          <div className="grid grid-cols-2 gap-2.5">
-            {regular.map(l=>(
-              <ListingCard key={l.id} listing={l} onAddToCart={attemptAddToCart} inCart={cartIds.includes(l.id)}
-                isStudentMode={isStudentMode}
-                isLocked={!!(currentVendorId&&l.vendorId!==currentVendorId)}
-                onLockedTap={()=>attemptAddToCart(l)}/>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Floating cart */}
-      <AnimatePresence>
-        {cart.length>0&&(
-          <motion.div initial={{y:100,opacity:0}} animate={{y:0,opacity:1}} exit={{y:100,opacity:0}}
-            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm">
-            <button onClick={()=>setShowCart(true)}
-              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black flex items-center justify-between px-5 shadow-2xl shadow-slate-900/40 active:scale-95 transition-transform">
-              <div className="flex items-center gap-3">
-                <div className="bg-emerald-500 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs font-black">{cart.length}</div>
-                <span className="text-sm uppercase tracking-widest">{t.cart}</span>
-                <span className="text-slate-400 text-[10px]">· {cart[0]?.vendorName}</span>
+              <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+                {MOCK_LISTINGS
+                  .filter(l => l.vendorId === cart[0].vendorId && !cart.find(c => c.id === l.id))
+                  .map(item => (
+                    <div key={item.id} className="min-w-[150px] bg-gray-50 p-3 rounded-2xl border">
+                      <p className="text-sm font-bold truncate">{item.title}</p>
+                      <p className="text-blue-600 font-bold">RM{fmtRM(item.dealPrice)}</p>
+                      <button onClick={() => addToCart(item)} className="mt-2 w-full py-1 text-xs bg-white border border-blue-600 text-blue-600 rounded-lg font-bold">
+                        + Add
+                      </button>
+                    </div>
+                  ))}
               </div>
-              <span className="text-emerald-400 font-black text-base">RM{fmtRM(cartTotal)}</span>
+            </div>
+
+            <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-lg shadow-lg">
+              {t.checkoutTNG}
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 2. Different vendor modal */}
-      <AnimatePresence>
-        {differentVendor&&(
-          <DifferentVendorModal
-            currentVendorName={differentVendor.currentName}
-            newVendorName={differentVendor.newName}
-            onClear={()=>{setCart([differentVendor.item]);setDifferentVendor(null);}}
-            onKeep={()=>setDifferentVendor(null)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showCart&&(
-          <CartPanel cart={cart} onRemove={removeFromCart} onClose={()=>setShowCart(false)}
-            onCheckout={()=>{setCart([]);setShowCart(false);}}
-            onAdd={attemptAddToCart}
-            allListings={allListings}/>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ─── 4. DESKTOP PHONE FRAME — handled in App export below ────────────────────
-
-// ─── LANG TOGGLE ─────────────────────────────────────────────────────────────
-const LANG_CYCLE={en:"bm",bm:"zh",zh:"en"};
-const LANG_META={en:{flag:"🇬🇧",label:"EN"},bm:{flag:"🇲🇾",label:"BM"},zh:{flag:"🇨🇳",label:"中"}};
-function LangToggle({lang,setLang}){
-  const meta=LANG_META[lang]||LANG_META.en;
-  return(
-    <button onClick={()=>setLang(LANG_CYCLE[lang]||"en")}
-      className="flex items-center gap-1 bg-slate-100 px-2.5 py-1.5 rounded-xl active:scale-95">
-      <span className="text-sm">{meta.flag}</span>
-      <span className="text-[10px] font-black text-slate-600">{meta.label}</span>
-    </button>
-  );
-}
-
-// ─── ROOT ─────────────────────────────────────────────────────────────────────
-function useIsDesktop(){
-  const [isDesktop,setIsDesktop]=useState(()=>typeof window!=='undefined'&&window.innerWidth>=768);
-  useEffect(()=>{
-    const h=()=>setIsDesktop(window.innerWidth>=768);
-    window.addEventListener('resize',h);return()=>window.removeEventListener('resize',h);
-  },[]);
-  return isDesktop;
-}
-
-function AppInner(){
-  const [lang,setLang]=useState("en");
-  const [tab,setTab]=useState("deals");
-  const [showHalalDisclaimer,setShowHalalDisclaimer]=useState(true);
-  const [vendorMeta,setVendorMeta]=useState(()=>getVendorProfile());
-  const [showOnboarding,setShowOnboarding]=useState(false);
-  const [showSubscription,setShowSubscription]=useState(false);
-  const [subscription,setSubscription]=useState(()=>getSubscription());
-  const [vendorListings,setVendorListings]=useState([]);
-  const locationHook=useLocation();
-  const t=T[lang]||T.en;
-
-  useEffect(()=>{if(locationHook.status==='idle')locationHook.request();},[]);
-
-  const handleNewListing=(listing)=>setVendorListings(p=>[listing,...p]);
-
-  return(
-    <div className="max-w-sm mx-auto relative md:max-w-none md:mx-0">
-      <AnimatePresence>
-        {showHalalDisclaimer&&<HalalDisclaimer t={t} onAccept={()=>setShowHalalDisclaimer(false)}/>}
-      </AnimatePresence>
-
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-xl">🛒</span>
-          </div>
-          <div>
-            <h1 className="font-black text-emerald-800 text-base leading-none">Sapot Lokal</h1>
-            <p className="text-slate-400 text-[10px] font-bold">
-              {locationHook.status==='requesting'?'📍 Finding you...':locationHook.loc?.area?`📍 ${locationHook.loc.area}`:'📍 Tap to set area'}
-            </p>
-          </div>
+      {/* ─── VENDOR SUBSCRIPTION SHEET ─── */}
+      {!isSubscribed && (
+        <div className="p-4">
+          <button onClick={() => setShowSubSheet(true)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold">
+            Activate Shop
+          </button>
         </div>
-        <div className="flex items-center gap-1.5">
-          <LangToggle lang={lang} setLang={setLang}/>
-          <div className="flex bg-slate-100 p-1 rounded-xl gap-0.5">
-            <button onClick={()=>setTab("deals")} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="deals"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.buy}</button>
-            <button onClick={()=>setTab("student")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all ${tab==="student"?"bg-white shadow-sm text-indigo-600":"text-slate-400"}`}>🎓</button>
-            <button onClick={()=>{if(!vendorMeta){setShowOnboarding(true);return;}setTab("sell");}} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="sell"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.sell}</button>
-          </div>
-        </div>
-      </header>
+      )}
 
-      <div style={{display:(tab==="deals"||tab==="student")?"block":"none"}}>
-        <BuyerFeed vendorListings={vendorListings} activeTab={tab} userLocation={locationHook.loc} locationHook={locationHook}/>
-      </div>
+      <AnimatePresence>
+        {showSubSheet && (
+          <motion.div 
+            initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+            className="fixed inset-0 z-50 flex items-end"
+          >
+            <div className="absolute inset-0 bg-black/60" onClick={() => setShowSubSheet(false)} />
+            <div className="relative w-full bg-slate-900 text-white rounded-t-[40px] p-8 pb-12 shadow-2xl">
+              <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-8" />
+              <h2 className="text-2xl font-black mb-2">{t.choosePlan}</h2>
+              <p className="text-slate-400 mb-8">{t.choosePlanSub}</p>
 
-      <AnimatePresence mode="wait">
-        {tab==="sell"&&(
-          <motion.div key="sell" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-            <VendorFlow onNewListing={handleNewListing} vendorMeta={vendorMeta} subscription={subscription} onShowSubscription={()=>setShowSubscription(true)}/>
+              <div className="grid gap-4">
+                {SUBSCRIPTION_PLANS.map(plan => (
+                  <button 
+                    key={plan.id}
+                    onClick={() => { setIsSubscribed(true); setShowSubSheet(false); }}
+                    className={`relative overflow-hidden p-6 rounded-3xl bg-gradient-to-br ${plan.color} border border-slate-700 text-left`}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold">{plan.name}</h3>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black">RM{plan.price}</span>
+                          <span className="text-sm opacity-60">/mo</span>
+                        </div>
+                      </div>
+                      {plan.id === 'pro' && <span className="bg-emerald-400 text-emerald-950 text-[10px] font-black px-2 py-1 rounded-full uppercase">Popular</span>}
+                    </div>
+                    <ul className="space-y-2 opacity-80 text-sm">
+                      {plan.perks.map((p, i) => <li key={i}>✓ {p}</li>)}
+                    </ul>
+                  </button>
+                ))}
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 5. Subscription Plans Sheet */}
+      {/* Celebration Screen */}
       <AnimatePresence>
-        {showSubscription&&(
-          <SubscriptionSheet
-            onClose={()=>setShowSubscription(false)}
-            onSubscribe={(plan)=>{setSubscription(getSubscription());}}
-            isSubscribed={!!subscription}
-          />
+        {isSubscribed && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[60] bg-blue-600 flex flex-col items-center justify-center text-white p-8 text-center">
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }} className="text-8xl mb-6">🎉</motion.div>
+            <h2 className="text-4xl font-black mb-4">{t.celebTitle}</h2>
+            <p className="text-xl opacity-90 mb-12">{fill(t.celebSub, "Pro")}</p>
+            <button onClick={() => setIsSubscribed(false)} className="bg-white text-blue-600 px-12 py-4 rounded-2xl font-black text-xl shadow-xl">
+              {t.celebBtn}
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {showOnboarding&&(
-          <VendorOnboarding onDone={(profile)=>{setVendorMeta(profile);setShowOnboarding(false);setTab("sell");}}/>
-        )}
-      </AnimatePresence>
     </div>
   );
-}
-
-export default function App(){
-  const isDesktop=useIsDesktop();
-  if(isDesktop){
-    return(
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-8 relative">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/3 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl"/>
-          <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"/>
-        </div>
-        {/* iPhone-style frame */}
-        <div className="relative flex-shrink-0" style={{width:393,height:852}}>
-          {/* Outer shell */}
-          <div className="absolute inset-0 rounded-[52px] bg-gradient-to-b from-slate-600 via-slate-500 to-slate-600 shadow-[0_60px_120px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.08),inset_0_1px_0_rgba(255,255,255,0.15)]">
-            {/* Volume buttons */}
-            <div className="absolute -left-[3px] top-24 w-[3px] h-8 bg-slate-500 rounded-l-full"/>
-            <div className="absolute -left-[3px] top-36 w-[3px] h-14 bg-slate-500 rounded-l-full"/>
-            <div className="absolute -left-[3px] top-54 w-[3px] h-14 bg-slate-500 rounded-l-full"/>
-            {/* Power button */}
-            <div className="absolute -right-[3px] top-40 w-[3px] h-20 bg-slate-500 rounded-r-full"/>
-            {/* Inner bezel */}
-            <div className="absolute inset-[3px] rounded-[49px] bg-slate-950 overflow-hidden">
-              {/* Screen */}
-              <div className="absolute inset-[2px] rounded-[47px] bg-white overflow-hidden">
-                {/* Dynamic Island */}
-                <div className="absolute top-3.5 left-1/2 -translate-x-1/2 z-[999] w-[126px] h-9 bg-black rounded-[20px] flex items-center justify-between px-3 shadow-xl">
-                  <div className="w-3.5 h-3.5 bg-[#1a1a1a] rounded-full border border-[#333] flex items-center justify-center">
-                    <div className="w-2 h-2 bg-[#0a84ff] rounded-full opacity-70"/>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-[#1a1a1a] rounded-full border border-[#333]"/>
-                    <div className="w-1.5 h-1.5 bg-[#1a1a1a] rounded-full"/>
-                  </div>
-                </div>
-                {/* Scrollable app content */}
-                <div className="absolute inset-0 overflow-auto" style={{borderRadius:'47px'}}>
-                  <div style={{paddingTop:'52px'}}>
-                    <AppInner/>
-                  </div>
-                </div>
-                {/* Home indicator */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-[999] w-32 h-1 bg-black/20 rounded-full pointer-events-none"/>
-                {/* Glare */}
-                <div className="absolute inset-0 rounded-[47px] bg-gradient-to-br from-white/6 via-transparent to-transparent pointer-events-none"/>
-              </div>
-            </div>
-          </div>
-          {/* Frame glare */}
-          <div className="absolute inset-0 rounded-[52px] bg-gradient-to-br from-white/8 via-transparent to-transparent pointer-events-none"/>
-        </div>
-        {/* Side label */}
-        <div className="ml-8 flex flex-col gap-3 opacity-40">
-          <p className="text-white text-sm font-black tracking-wider rotate-0">Sapot Lokal</p>
-          <p className="text-white/50 text-xs">v2.0 · Desktop Preview</p>
-        </div>
-      </div>
-    );
-  }
-  return <AppInner/>;
 }
