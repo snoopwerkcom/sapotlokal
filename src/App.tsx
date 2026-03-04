@@ -869,7 +869,7 @@ function useLocation(){
       'shah alam':{lat:3.0738,lon:101.5183},
       'klang':{lat:3.0449,lon:101.4456},
       'bangsar':{lat:3.1209,lon:101.6538},
-      'mont kiara':{lat:3.1726,lon:101.6529},'mont'kiara':{lat:3.1726,lon:101.6529},
+      'mont kiara':{lat:3.1726,lon:101.6529},'mont kiara':{lat:3.1726,lon:101.6529},
       'chow kit':{lat:3.1696,lon:101.6969},
       'setapak':{lat:3.2000,lon:101.7167},
       'wangsa maju':{lat:3.2052,lon:101.7435},
