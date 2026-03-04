@@ -148,7 +148,7 @@ const T = {
     celebSub:"Your {0} plan is now active.",
     celebBtn:"Start Posting",
     // Categories
-    catAll:"All Deals", catFood:"Food", catDrink:"Drink", catFruit:"Fruit", catBakery:"Bakery", catDessert:"Dessert", catOther:"Other",
+    catAll:"All Deals", catFood:"Food", catDrink:"Drink", catFruit:"Fruit", catBakery:"Bakery", catDessert:"Dessert", catTongSui:"Tong Sui", catOther:"Other",
   },
   bm: {
     appTagline:"Portal Vendor", buy:"Deal", sell:"Jual", studentTab:"🎓 Pelajar",
@@ -258,7 +258,7 @@ const T = {
     choosePlan:"Pilih Pelan Anda", choosePlanSub:"Cuba percuma 60 hari, kemudian langgan",
     currentPlan:"Pelan Semasa", upgradePlan:"Naik Taraf",
     celebTitle:"Selamat datang! 🎉", celebSub:"Pelan {0} anda kini aktif.", celebBtn:"Mula Post",
-    catAll:"Semua Deal", catFood:"Makanan", catDrink:"Minuman", catFruit:"Buah", catBakery:"Bakeri", catDessert:"Pencuci Mulut", catOther:"Lain-lain",
+    catAll:"Semua Deal", catFood:"Makanan", catDrink:"Minuman", catFruit:"Buah", catBakery:"Bakeri", catDessert:"Pencuci Mulut", catTongSui:"Tong Sui", catOther:"Lain-lain",
     shareTitle:"Kongsi Deal", shareWhatsapp:"Kongsi di WhatsApp", shareCopy:"Salin Pautan", shareCopied:"Pautan disalin!",
     shareMsg:"🍱 Tengok deal ni kat Sapot Lokal: {0} dari {1} hanya RM{2}! 👉 {3}",
   },
@@ -370,7 +370,7 @@ const T = {
     choosePlan:"选择您的计划", choosePlanSub:"免费试用60天，然后订阅",
     currentPlan:"当前计划", upgradePlan:"升级",
     celebTitle:"欢迎加入！🎉", celebSub:"您的{0}计划现已激活。", celebBtn:"开始发布",
-    catAll:"全部优惠", catFood:"食物", catDrink:"饮料", catFruit:"水果", catBakery:"面包烘焙", catDessert:"甜点", catOther:"其他",
+    catAll:"全部优惠", catFood:"食物", catDrink:"饮料", catFruit:"水果", catBakery:"面包烘焙", catDessert:"甜点", catTongSui:"糖水", catOther:"其他",
     shareTitle:"分享优惠", shareWhatsapp:"WhatsApp分享", shareCopy:"复制链接", shareCopied:"链接已复制！",
     shareMsg:"🍱 在Sapot Lokal发现好优惠：{0}，来自{1}，只需RM{2}！👉 {3}",
   },
@@ -385,7 +385,8 @@ const FOOD_TEMPLATES = [
   {id:"econ_rice",label:"Economy Rice",emoji:"🍱",defaultTitle:"Nasi Campur Special",defaultDesc:"2 Veg + 1 Main",defaultPrice:"5.50",defaultOriginal:"8.00",category:"Food"},
   {id:"roti",label:"Roti / Bread",emoji:"🥐",defaultTitle:"Assorted Pastry Box",defaultDesc:"Croissant, Danish, Sweet Bun",defaultPrice:"9.90",defaultOriginal:"15.00",category:"Bakery"},
   {id:"drinks",label:"Drinks",emoji:"🧋",defaultTitle:"Drink Bundle",defaultDesc:"Teh Tarik / Milo / Juice",defaultPrice:"2.50",defaultOriginal:"4.00",category:"Drink"},
-  {id:"kuih",label:"Kuih/Dessert",emoji:"🍡",defaultTitle:"Kuih Set",defaultDesc:"Kuih Lapis, Onde-onde, Seri Muka",defaultPrice:"6.00",defaultOriginal:"10.00",category:"Food"},
+  {id:"kuih",label:"Kuih/Dessert",emoji:"🍡",defaultTitle:"Kuih Set",defaultDesc:"Kuih Lapis, Onde-onde, Seri Muka",defaultPrice:"6.00",defaultOriginal:"10.00",category:"Dessert"},
+  {id:"tong_sui",label:"Tong Sui",emoji:"🍮",defaultTitle:"Tong Sui Set",defaultDesc:"Bubur Kacang, Bubur Cha Cha, Tau Fu Fah",defaultPrice:"3.50",defaultOriginal:"5.50",category:"TongSui"},
   {id:"fruit",label:"Fruit",emoji:"🍉",defaultTitle:"Fresh Fruit Pack",defaultDesc:"Seasonal cut fruits",defaultPrice:"5.00",defaultOriginal:"8.00",category:"Fruit"},
   {id:"custom",label:"Custom",emoji:"✏️",defaultTitle:"",defaultDesc:"",defaultPrice:"",defaultOriginal:"",category:"Other"}
 ];
@@ -1352,9 +1353,11 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
 function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const [search,setSearch]=useState("");
   const [catFilter,setCatFilter]=useState("all");
+  const [dealFilter,setDealFilter]=useState("all");
+  const [buyerTab,setBuyerTab]=useState("foods"); // "foods" | "deals"
   const [cart,setCart]=useState([]);
   const [showCart,setShowCart]=useState(false);
-  const [differentVendor,setDifferentVendor]=useState(null);  // {item, currentName, newName}
+  const [differentVendor,setDifferentVendor]=useState(null);
   const isStudentMode=activeTab==="student";
 
   const hav=(la1,lo1,la2,lo2)=>{
@@ -1375,8 +1378,13 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const filtered=allListings.filter(l=>{
     if(isStudentMode)return l.studentPrice!=null;
     const ms=!search||[l.title,l.desc,l.vendorName,l.category].join(' ').toLowerCase().includes(search.toLowerCase());
-    const mc=catFilter==="all"||l.category===catFilter;
-    return ms&&mc;
+    if(buyerTab==="foods"){
+      const mc=catFilter==="all"||l.category===catFilter;
+      return ms&&mc;
+    } else {
+      const md=dealFilter==="all"||l.type===dealFilter;
+      return ms&&md;
+    }
   });
 
   const urgentDeals=filtered.filter(l=>!isStudentMode&&l.qty&&(l.qty-l.claimed)<=3&&l.claimed<l.qty);
@@ -1398,13 +1406,14 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   return(
     <div className="min-h-screen bg-slate-50 pb-28">
       <LocationPrompt locationHook={locationHook} t={t}/>
-      <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2">
-        <span className="text-sm flex-shrink-0">⚠️</span>
+      <div className="bg-amber-50 border-b border-amber-200 px-4 py-1.5 flex items-center gap-2">
+        <span className="text-xs flex-shrink-0">⚠️</span>
         <p className="text-amber-700 text-[10px] font-bold">{t.halalSelfDeclared}</p>
       </div>
 
       {!isStudentMode&&(
         <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
+          {/* Search bar */}
           <div className="relative mb-2">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
             <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
@@ -1412,27 +1421,64 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
               className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
             {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            {[
-              {id:"all",emoji:"🏪",label:t.catAll},
-              {id:"Food",emoji:"🍛",label:t.catFood},
-              {id:"Drink",emoji:"🧋",label:t.catDrink},
-              {id:"Bakery",emoji:"🥐",label:t.catBakery},
-              {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
-              {id:"Fruit",emoji:"🍉",label:t.catFruit},
-              {id:"Other",emoji:"📦",label:t.catOther},
-            ].map(cat=>(
-              <button key={cat.id} onClick={()=>setCatFilter(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
-                  catFilter===cat.id
-                    ?"bg-slate-900 text-white border-slate-900"
-                    :"bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-                }`}>
-                <span className="text-sm leading-none">{cat.emoji}</span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
+          {/* Two main tabs */}
+          <div className="flex gap-2 mb-2">
+            <button onClick={()=>setBuyerTab("foods")}
+              className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              🍽️ All Foods
+            </button>
+            <button onClick={()=>setBuyerTab("deals")}
+              className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-wide transition-all ${buyerTab==="deals"?"bg-orange-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              🔖 Choose Deals
+            </button>
           </div>
+          {/* Foods sub-filter: category pills */}
+          {buyerTab==="foods"&&(
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+              {[
+                {id:"all",emoji:"🍽️",label:"All"},
+                {id:"Food",emoji:"🍛",label:t.catFood},
+                {id:"Drink",emoji:"🧋",label:t.catDrink},
+                {id:"Bakery",emoji:"🥐",label:t.catBakery},
+                {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
+                {id:"TongSui",emoji:"🍮",label:t.catTongSui||"Tong Sui"},
+                {id:"Fruit",emoji:"🍉",label:t.catFruit},
+                {id:"Other",emoji:"📦",label:t.catOther},
+              ].map(cat=>(
+                <button key={cat.id} onClick={()=>setCatFilter(cat.id)}
+                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
+                    catFilter===cat.id
+                      ?"bg-emerald-600 text-white border-emerald-600"
+                      :"bg-white text-slate-600 border-slate-200"
+                  }`}>
+                  <span className="text-sm leading-none">{cat.emoji}</span>
+                  <span>{cat.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Deals sub-filter: deal type pills */}
+          {buyerTab==="deals"&&(
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+              {[
+                {id:"all",emoji:"🔖",label:"All Deals",color:"bg-slate-900"},
+                {id:"promo",emoji:"⚡",label:"Promotion",color:"bg-blue-500"},
+                {id:"limited",emoji:"🔥",label:"Limited",color:"bg-orange-500"},
+                {id:"surplus",emoji:"💰",label:"Surplus",color:"bg-emerald-600"},
+                {id:"special",emoji:"🌟",label:"Special",color:"bg-purple-500"},
+              ].map(d=>(
+                <button key={d.id} onClick={()=>setDealFilter(d.id)}
+                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
+                    dealFilter===d.id
+                      ?`${d.color} text-white border-transparent`
+                      :"bg-white text-slate-600 border-slate-200"
+                  }`}>
+                  <span className="text-sm leading-none">{d.emoji}</span>
+                  <span>{d.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1467,7 +1513,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
 
         {!isStudentMode&&(
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-black text-slate-900">{search||catFilter!=="all"?`${regular.length} results`:t.nearbyDeals}</h2>
+            <h2 className="text-sm font-black text-slate-900">{search||(buyerTab==="foods"&&catFilter!=="all")||(buyerTab==="deals"&&dealFilter!=="all")?`${regular.length} results`:t.nearbyDeals}</h2>
             <span className="text-[10px] text-slate-400">{filtered.length} deals</span>
           </div>
         )}
@@ -1551,6 +1597,104 @@ function LangToggle({lang,setLang}){
   );
 }
 
+// ─── MERCHANT GATE (PIN LOCK) ──────────────────────────────────────────────────
+const MERCHANT_PIN = "1234"; // change this to your real PIN
+const LS_MERCHANT_AUTH = "sapot_merchant_auth";
+
+function getMerchantAuth(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS_MERCHANT_AUTH)||'null');
+    if(!d)return false;
+    // Session valid for 24 hours
+    return (Date.now()-d.at)<86400000;
+  }catch{return false;}
+}
+function saveMerchantAuth(){
+  localStorage.setItem(LS_MERCHANT_AUTH,JSON.stringify({at:Date.now()}));
+}
+function clearMerchantAuth(){
+  localStorage.removeItem(LS_MERCHANT_AUTH);
+}
+
+function MerchantGate({onUnlock,onCancel}){
+  const [pin,setPin]=useState("");
+  const [error,setError]=useState(false);
+  const [shake,setShake]=useState(false);
+
+  const handleDigit=(d)=>{
+    if(pin.length>=4)return;
+    const next=pin+d;
+    setPin(next);
+    setError(false);
+    if(next.length===4){
+      if(next===MERCHANT_PIN){
+        saveMerchantAuth();
+        onUnlock();
+      } else {
+        setShake(true);
+        setError(true);
+        setTimeout(()=>{setPin("");setShake(false);},700);
+      }
+    }
+  };
+
+  const handleDel=()=>{setPin(p=>p.slice(0,-1));setError(false);};
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[800] bg-[#0a0f1e]/98 backdrop-blur-md flex flex-col items-center justify-center p-6">
+      <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.05}}
+        className="w-full max-w-xs text-center">
+        {/* Icon */}
+        <motion.div animate={shake?{x:[-8,8,-8,8,0]}:{x:0}} transition={{duration:0.35}}
+          className={`w-20 h-20 mx-auto rounded-3xl flex items-center justify-center mb-6 ${error?"bg-red-500/20 border-2 border-red-500/40":"bg-emerald-500/20 border-2 border-emerald-500/30"}`}>
+          <span className="text-4xl">{error?"❌":"🏪"}</span>
+        </motion.div>
+        <h2 className="text-white font-black text-2xl mb-1">Merchant Area</h2>
+        <p className="text-white/40 text-sm mb-8">Enter your PIN to continue</p>
+
+        {/* PIN dots */}
+        <div className="flex justify-center gap-4 mb-8">
+          {[0,1,2,3].map(i=>(
+            <motion.div key={i}
+              animate={pin.length>i?{scale:[1.2,1]}:{scale:1}}
+              className={`w-4 h-4 rounded-full border-2 transition-all ${
+                error?"border-red-500 bg-red-500":
+                pin.length>i?"border-emerald-400 bg-emerald-400":"border-white/20 bg-transparent"
+              }`}/>
+          ))}
+        </div>
+        {error&&<p className="text-red-400 text-xs font-bold mb-4 -mt-4">Wrong PIN. Try again.</p>}
+
+        {/* Numpad */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[1,2,3,4,5,6,7,8,9].map(d=>(
+            <motion.button key={d} whileTap={{scale:0.88}}
+              onClick={()=>handleDigit(String(d))}
+              className="bg-white/8 border border-white/10 text-white font-black text-xl py-4 rounded-2xl active:bg-white/20 transition-all">
+              {d}
+            </motion.button>
+          ))}
+          <div/>
+          <motion.button whileTap={{scale:0.88}} onClick={()=>handleDigit("0")}
+            className="bg-white/8 border border-white/10 text-white font-black text-xl py-4 rounded-2xl active:bg-white/20 transition-all">
+            0
+          </motion.button>
+          <motion.button whileTap={{scale:0.88}} onClick={handleDel}
+            className="bg-white/8 border border-white/10 text-white font-black text-xl py-4 rounded-2xl active:bg-white/20 transition-all">
+            ⌫
+          </motion.button>
+        </div>
+
+        <button onClick={onCancel}
+          className="w-full text-white/30 text-xs font-bold py-3 hover:text-white/50 transition-colors">
+          ← Back to Buyer
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 function useIsDesktop(){
   const [isDesktop,setIsDesktop]=useState(()=>typeof window!=='undefined'&&window.innerWidth>=768);
@@ -1570,6 +1714,8 @@ function AppInner(){
   const [showSubscription,setShowSubscription]=useState(false);
   const [subscription,setSubscription]=useState(()=>getSubscription());
   const [vendorListings,setVendorListings]=useState([]);
+  const [showMerchantGate,setShowMerchantGate]=useState(false);
+  const [merchantUnlocked,setMerchantUnlocked]=useState(()=>getMerchantAuth());
   const locationHook=useLocation();
   const t=T[lang]||T.en;
 
@@ -1600,8 +1746,24 @@ function AppInner(){
           <div className="flex bg-slate-100 p-1 rounded-xl gap-0.5">
             <button onClick={()=>setTab("deals")} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="deals"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.buy}</button>
             <button onClick={()=>setTab("student")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all ${tab==="student"?"bg-white shadow-sm text-indigo-600":"text-slate-400"}`}>🎓</button>
-            <button onClick={()=>{if(!vendorMeta){setShowOnboarding(true);return;}setTab("sell");}} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="sell"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.sell}</button>
+            <button onClick={()=>{
+              if(merchantUnlocked){
+                if(!vendorMeta){setShowOnboarding(true);return;}
+                setTab("sell");
+              } else {
+                setShowMerchantGate(true);
+              }
+            }} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 ${tab==="sell"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>
+              {!merchantUnlocked&&<span className="text-[8px]">🔒</span>}
+              {t.sell}
+            </button>
           </div>
+          {/* Merchant logout when on sell tab */}
+          {tab==="sell"&&merchantUnlocked&&(
+            <button onClick={()=>{clearMerchantAuth();setMerchantUnlocked(false);setTab("deals");}}
+              className="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center text-red-400 text-xs font-black"
+              title="Lock merchant page">🔒</button>
+          )}
         </div>
       </header>
 
@@ -1632,6 +1794,21 @@ function AppInner(){
       <AnimatePresence>
         {showOnboarding&&(
           <VendorOnboarding onDone={(profile)=>{setVendorMeta(profile);setShowOnboarding(false);setTab("sell");}} t={t}/>
+        )}
+      </AnimatePresence>
+
+      {/* Merchant PIN Gate */}
+      <AnimatePresence>
+        {showMerchantGate&&(
+          <MerchantGate
+            onUnlock={()=>{
+              setMerchantUnlocked(true);
+              setShowMerchantGate(false);
+              if(!vendorMeta){setShowOnboarding(true);}
+              else{setTab("sell");}
+            }}
+            onCancel={()=>setShowMerchantGate(false)}
+          />
         )}
       </AnimatePresence>
     </div>
