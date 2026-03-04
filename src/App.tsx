@@ -861,9 +861,26 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
     window.open(`https://web.lalamove.com/?utm_source=sapotlokal`,'_blank');
   };
 
-  // After payment success, show ad then receipt
+  // After payment success, auto-save receipt then show ad
   const handlePaymentSuccess=()=>{
     setPaying(false);
+    // ── AUTO-SAVE RECEIPT ──────────────────────────────────────────────────────
+    const receipt={
+      pickupCode,
+      vendorId:cart[0]?.vendorId,
+      vendorName:cart[0]?.vendorName||"Vendor",
+      items:cart.map(i=>({id:i.id,title:i.title,image:i.image,dealPrice:i.dealPrice})),
+      subtotal,
+      deliveryCost,
+      total,
+      deliveryMode,
+      pickupAddr:deliveryMode==="delivery"?pickupAddr:"",
+      dropAddr:deliveryMode==="delivery"?dropAddr:"",
+      mobile:deliveryMode==="delivery"?mobile:"",
+      savedAt:Date.now(),
+    };
+    saveOrder(receipt);
+    // ──────────────────────────────────────────────────────────────────────────
     setShowAdvert(true);
     setTimeout(()=>{setShowAdvert(false);setAdvertDismissed(true);setSuccess(true);},5000);
   };
@@ -1848,6 +1865,173 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
 
 // ─── 4. DESKTOP PHONE FRAME — handled in App export below ────────────────────
 
+// ─── RECEIPTS PAGE ────────────────────────────────────────────────────────────
+function ReceiptsPage({t}){
+  const [orders,setOrders]=useState(()=>getOrders());
+  const [expanded,setExpanded]=useState(null);
+  const [shareMsg,setShareMsg]=useState(null);
+
+  const refresh=()=>setOrders(getOrders());
+
+  const deleteReceipt=(code)=>{
+    const updated=getOrders().filter(o=>o.pickupCode!==code);
+    localStorage.setItem(LS_ORDERS,JSON.stringify(updated));
+    setOrders(updated);
+  };
+
+  const shareWhatsApp=(o)=>{
+    const msg=`🧾 *Sapot Lokal Receipt*\n🏪 ${o.vendorName}\n📦 Code: ${o.pickupCode}\n📅 ${new Date(o.savedAt).toLocaleString('en-MY',{dateStyle:'short',timeStyle:'short'})}\n💰 Total: RM${fmtRM(o.total)}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+  };
+
+  const handleShare=(o)=>{
+    if(navigator.share){
+      navigator.share({title:'Sapot Lokal Receipt',text:`Order ${o.pickupCode} · ${o.vendorName} · RM${fmtRM(o.total)}`}).catch(()=>{});
+    } else {
+      window.print();
+    }
+  };
+
+  if(orders.length===0){
+    return(
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center pb-28 px-6 text-center">
+        <span className="text-6xl mb-4">🧾</span>
+        <h2 className="font-black text-slate-800 text-lg mb-2">No Receipts Yet</h2>
+        <p className="text-slate-400 text-sm">Your receipts will appear here automatically after each order.</p>
+      </div>
+    );
+  }
+
+  return(
+    <div className="min-h-screen bg-slate-50 pb-28">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 px-4 pt-4 pb-3 sticky top-[60px] z-40">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-black text-slate-900 text-base">My Receipts</h2>
+            <p className="text-slate-400 text-[10px] font-bold">{orders.length} order{orders.length!==1?"s":""} saved</p>
+          </div>
+          <span className="text-2xl">🧾</span>
+        </div>
+      </div>
+
+      <div className="px-3 pt-3 space-y-3">
+        {orders.map((o,idx)=>{
+          const isOpen=expanded===o.pickupCode;
+          const date=new Date(o.savedAt);
+          return(
+            <motion.div key={o.pickupCode} layout
+              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+
+              {/* Receipt top bar — always visible */}
+              <button onClick={()=>setExpanded(isOpen?null:o.pickupCode)}
+                className="w-full px-4 py-3.5 flex items-center gap-3 text-left">
+                {/* Merchant icon */}
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-lg">🏪</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-slate-900 text-sm truncate">{o.vendorName}</p>
+                  <p className="text-slate-400 text-[10px] font-bold">
+                    {date.toLocaleDateString('en-MY',{day:'numeric',month:'short',year:'numeric'})} · {date.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'})}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-black text-emerald-600 text-sm">RM{fmtRM(o.total)}</p>
+                  <p className="text-slate-300 text-[9px]">{o.items?.length||0} item{(o.items?.length||0)!==1?"s":""}</p>
+                </div>
+                <motion.span animate={{rotate:isOpen?180:0}} transition={{duration:0.2}} className="text-slate-300 text-[10px] flex-shrink-0 ml-1">▼</motion.span>
+              </button>
+
+              {/* Expanded receipt detail */}
+              <AnimatePresence>
+                {isOpen&&(
+                  <motion.div
+                    initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}}
+                    transition={{duration:0.25,ease:"easeInOut"}}
+                    className="overflow-hidden">
+                    {/* Divider */}
+                    <div className="mx-4 border-t border-dashed border-slate-200"/>
+
+                    {/* Printable receipt body */}
+                    <div id={`receipt-${o.pickupCode}`} className="px-4 pt-3 pb-2">
+                      {/* Green header */}
+                      <div className="bg-emerald-600 rounded-2xl px-4 py-3 text-center mb-3">
+                        <p className="text-emerald-100 text-[8px] font-black uppercase tracking-widest">Sapot Lokal</p>
+                        <p className="text-white font-black text-sm">{o.vendorName}</p>
+                        <p className="text-emerald-200 text-[9px] mt-0.5">{date.toLocaleString('en-MY',{dateStyle:'medium',timeStyle:'short'})}</p>
+                      </div>
+
+                      {/* Pickup code */}
+                      <div className="bg-emerald-50 border-2 border-dashed border-emerald-200 rounded-2xl px-4 py-3 text-center mb-3">
+                        <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">{t.pickupCode}</p>
+                        <p className="text-emerald-600 font-black text-3xl tracking-[8px]">{o.pickupCode}</p>
+                        {o.deliveryMode==="delivery"&&<p className="text-slate-400 text-[8px] mt-1">Show to Lalamove rider</p>}
+                      </div>
+
+                      {/* Delivery info */}
+                      {o.deliveryMode==="delivery"&&o.pickupAddr&&(
+                        <div className="bg-blue-50 border border-blue-200 rounded-2xl px-3 py-2.5 mb-3 space-y-0.5">
+                          <p className="text-blue-600 font-black text-[9px] flex items-center gap-1">🛵 Lalamove Delivery</p>
+                          <p className="text-slate-500 text-[9px]"><span className="font-black">From:</span> {o.pickupAddr}</p>
+                          <p className="text-slate-500 text-[9px]"><span className="font-black">To:</span> {o.dropAddr}</p>
+                          <p className="text-slate-500 text-[9px]"><span className="font-black">Mobile:</span> {o.mobile}</p>
+                        </div>
+                      )}
+
+                      {/* Items */}
+                      <div className="space-y-1.5 mb-3">
+                        {(o.items||[]).map((item,i)=>(
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+                              {item.image&&<img src={item.image} className="w-full h-full object-cover" alt=""/>}
+                            </div>
+                            <span className="flex-1 text-slate-700 text-[10px] font-bold truncate">{item.title}</span>
+                            <span className="font-black text-[10px] text-slate-800 flex-shrink-0">RM{fmtRM(item.dealPrice)}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Totals */}
+                      <div className="border-t border-dashed border-slate-200 pt-2 space-y-1">
+                        <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(o.subtotal)}</span></div>
+                        <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.deliveryFee}</span><span className={`font-bold ${o.deliveryCost===0?"text-emerald-600":""}`}>{o.deliveryCost===0?t.free:`RM${fmtRM(o.deliveryCost)}`}</span></div>
+                        <div className="flex justify-between text-sm pt-1 border-t border-slate-100"><span className="font-black">Total</span><span className="font-black text-emerald-600">RM{fmtRM(o.total)}</span></div>
+                      </div>
+
+                      {/* Footer */}
+                      <p className="text-center text-slate-200 text-[8px] font-bold mt-2 pb-1">Thank you · sapotlokal.com</p>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="px-4 pb-4 grid grid-cols-3 gap-2">
+                      <button onClick={()=>handleShare(o)}
+                        className="flex flex-col items-center justify-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 py-2.5 rounded-2xl font-black text-[9px] uppercase active:scale-95 transition-transform">
+                        <span className="text-base">📥</span>
+                        Save
+                      </button>
+                      <button onClick={()=>shareWhatsApp(o)}
+                        className="flex flex-col items-center justify-center gap-1 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-2xl font-black text-[9px] uppercase active:scale-95 transition-transform">
+                        <span className="text-base">💬</span>
+                        WhatsApp
+                      </button>
+                      <button onClick={()=>deleteReceipt(o.pickupCode)}
+                        className="flex flex-col items-center justify-center gap-1 bg-red-50 border border-red-200 text-red-400 py-2.5 rounded-2xl font-black text-[9px] uppercase active:scale-95 transition-transform">
+                        <span className="text-base">🗑️</span>
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ─── LANG TOGGLE ─────────────────────────────────────────────────────────────
 const LANG_CYCLE={en:"bm",bm:"zh",zh:"en"};
 const LANG_META={en:{flag:"🇬🇧",label:"EN"},bm:{flag:"🇲🇾",label:"BM"},zh:{flag:"🇨🇳",label:"中"}};
@@ -2011,6 +2195,12 @@ function AppInner(){
           <div className="flex bg-slate-100 p-1 rounded-xl gap-0.5">
             <button onClick={()=>setTab("deals")} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="deals"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.buy}</button>
             <button onClick={()=>setTab("student")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all ${tab==="student"?"bg-white shadow-sm text-indigo-600":"text-slate-400"}`}>🎓</button>
+            <button onClick={()=>setTab("receipts")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all relative ${tab==="receipts"?"bg-white shadow-sm text-amber-600":"text-slate-400"}`}>
+              🧾
+              {getOrders().length>0&&tab!=="receipts"&&(
+                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">{getOrders().length}</span>
+              )}
+            </button>
             <button onClick={()=>{
               if(merchantUnlocked){
                 if(!vendorMeta){setShowOnboarding(true);return;}
@@ -2035,6 +2225,14 @@ function AppInner(){
       <div style={{display:(tab==="deals"||tab==="student")?"block":"none"}}>
         <BuyerFeed vendorListings={vendorListings} activeTab={tab} userLocation={locationHook.loc} locationHook={locationHook} t={t}/>
       </div>
+
+      <AnimatePresence mode="wait">
+        {tab==="receipts"&&(
+          <motion.div key="receipts" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
+            <ReceiptsPage t={t}/>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence mode="wait">
         {tab==="sell"&&(
