@@ -2253,21 +2253,7 @@ function BuyerFeed({vendorListings,activeTab,notifQueue,onNotifView,t,userLocati
             onCheckout={(info)=>{setOrderConfirmed(info);setCart([]);setShowCart(false);}} onAdd={addToCart} allListings={allListings} t={t}/>
         )}
       </AnimatePresence>
-      {/* Vendor onboarding — first time on Sell tab */}
-      <AnimatePresence>
-        {showOnboarding&&(
-          <VendorOnboarding t={t} onDone={(profile)=>{
-            setVendorMeta(profile);
-            setShowOnboarding(false);
-            setTab("sell");
-          }}/>
-        )}
-      </AnimatePresence>
 
-      {/* Order history sheet */}
-      <AnimatePresence>
-        {showOrders&&<OrderHistorySheet t={t} onClose={()=>setShowOrders(false)}/>}
-      </AnimatePresence>
     </div>
   );
 }
@@ -2911,6 +2897,19 @@ export default function App(){
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {showOnboarding&&(
+          <VendorOnboarding t={t} onDone={(profile)=>{
+            setVendorMeta(profile);
+            setShowOnboarding(false);
+            setTab("sell");
+          }}/>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showOrders&&<OrderHistorySheet t={t} onClose={()=>setShowOrders(false)}/>}
+      </AnimatePresence>
 
     </div>
   );
