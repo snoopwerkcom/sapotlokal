@@ -555,59 +555,51 @@ function LocationPrompt({locationHook,t}){
   const {status,request,setManual,manualArea,setManualArea,loc}=locationHook;
   const [showManual,setShowManual]=useState(false);
 
-  if(status==='ok'&&loc&&!showManual){
-    return(
-      <div className="mx-4 mt-2 mb-1 bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span>📍</span>
-          <p className="text-emerald-700 font-black text-xs">Near <span className="text-emerald-600">{loc.area}</span></p>
-        </div>
-        <button onClick={()=>setShowManual(true)} className="text-emerald-600 text-[10px] font-black bg-emerald-100 px-2.5 py-1 rounded-lg">Change</button>
-      </div>
-    );
-  }
-
-  if(status==='requesting') return(
-    <div className="mx-4 mt-2 mb-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 flex items-center gap-3">
-      <div className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin flex-shrink-0"/>
-      <p className="text-slate-500 text-xs font-bold">Finding your location...</p>
-    </div>
-  );
-
   if(showManual) return(
-    <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}
-      className="mx-4 mt-2 mb-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
-      <p className="font-black text-sm text-slate-800 mb-1">Search deals in another area?</p>
-      <p className="text-slate-400 text-xs mb-3">e.g. Puchong, SS15 Subang, Chow Kit</p>
-      <input value={manualArea} onChange={e=>setManualArea(e.target.value)} placeholder="Type area name..." autoFocus
-        className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-emerald-500 focus:outline-none mb-3"
-        onKeyDown={e=>{if(e.key==='Enter'&&manualArea.trim())setManual(manualArea.trim());}}/>
-      <div className="flex gap-2">
-        <button onClick={()=>setShowManual(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl font-black text-xs">Cancel</button>
+    <motion.div initial={{opacity:0,y:-6}} animate={{opacity:1,y:0}}
+      className="mx-3 mt-1.5 mb-1 bg-white border border-slate-200 rounded-2xl shadow-sm p-3">
+      <div className="flex gap-2 items-center">
+        <input value={manualArea} onChange={e=>setManualArea(e.target.value)} placeholder="e.g. Puchong, Subang..." autoFocus
+          className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:border-emerald-500 focus:outline-none"
+          onKeyDown={e=>{if(e.key==='Enter'&&manualArea.trim()){setManual(manualArea.trim());setShowManual(false);}}}/>
+        <button onClick={()=>setShowManual(false)} className="text-slate-400 text-xs font-black px-2 py-2">X</button>
         <button onClick={()=>{if(manualArea.trim()){setManual(manualArea.trim());setShowManual(false);}}}
           disabled={!manualArea.trim()}
-          className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase disabled:opacity-40">
-          Show Deals →
+          className="bg-emerald-500 text-white px-3 py-2 rounded-xl font-black text-xs uppercase disabled:opacity-40">
+          Go
         </button>
       </div>
     </motion.div>
   );
 
-  return(
-    <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}}
-      className="mx-4 mt-2 mb-1 bg-white border border-amber-200 rounded-2xl shadow-sm p-4">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">📍</div>
-        <div>
-          <p className="font-black text-sm text-slate-800">{t.locationDenied}</p>
-          <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{t.locationDeniedDesc}</p>
+  if(status==='ok'&&loc){
+    return(
+      <div className="mx-3 mt-1.5 mb-1 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm">📍</span>
+          <p className="text-emerald-700 font-black text-[11px]">{loc.area}</p>
         </div>
+        <button onClick={()=>setShowManual(true)} className="text-emerald-600 text-[10px] font-black bg-emerald-100 px-2 py-0.5 rounded-lg">{t.changeLocation||"Change"}</button>
       </div>
-      <div className="flex gap-2">
-        <button onClick={request} className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase">📍 Try Again</button>
-        <button onClick={()=>setShowManual(true)} className="flex-1 bg-slate-900 text-white py-2.5 rounded-xl font-black text-xs uppercase">✏️ Type Area</button>
+    );
+  }
+
+  if(status==='requesting') return(
+    <div className="mx-3 mt-1.5 mb-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 flex items-center gap-2">
+      <div className="w-3.5 h-3.5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin flex-shrink-0"/>
+      <p className="text-slate-500 text-[11px] font-bold">{t.locating||"Finding your location..."}</p>
+    </div>
+  );
+
+  return(
+    <div className="mx-3 mt-1.5 mb-1 flex gap-2">
+      <div className="flex-1 bg-amber-50 border border-amber-200 rounded-xl px-3 py-1.5 flex items-center gap-1.5 min-w-0">
+        <span className="text-sm flex-shrink-0">📍</span>
+        <p className="text-amber-700 font-black text-[11px] truncate">{t.locationDenied}</p>
       </div>
-    </motion.div>
+      <button onClick={request} className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-black text-[10px] uppercase flex-shrink-0">Try</button>
+      <button onClick={()=>setShowManual(true)} className="bg-slate-900 text-white px-3 py-1.5 rounded-xl font-black text-[10px] uppercase flex-shrink-0">Type</button>
+    </div>
   );
 }
 
@@ -1360,7 +1352,6 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
 function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const [search,setSearch]=useState("");
   const [catFilter,setCatFilter]=useState("all");
-  const [typeFilter,setTypeFilter]=useState("all");
   const [cart,setCart]=useState([]);
   const [showCart,setShowCart]=useState(false);
   const [differentVendor,setDifferentVendor]=useState(null);  // {item, currentName, newName}
@@ -1385,8 +1376,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
     if(isStudentMode)return l.studentPrice!=null;
     const ms=!search||[l.title,l.desc,l.vendorName,l.category].join(' ').toLowerCase().includes(search.toLowerCase());
     const mc=catFilter==="all"||l.category===catFilter;
-    const mt=typeFilter==="all"||l.type===typeFilter;
-    return ms&&mc&&mt;
+    return ms&&mc;
   });
 
   const urgentDeals=filtered.filter(l=>!isStudentMode&&l.qty&&(l.qty-l.claimed)<=3&&l.claimed<l.qty);
@@ -1422,13 +1412,25 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
               className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
             {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            {/* 1. Category Dropdown */}
-            <CategoryDropdown value={catFilter} onChange={setCatFilter} t={t}/>
-            <div className="w-px bg-slate-200 flex-shrink-0 h-5"/>
-            {[{id:"all",label:"All"},{id:"limited",label:"🔥 Deals"},{id:"promo",label:"⚡ Flash"},{id:"special",label:"🌟 Special"}].map(f=>(
-              <button key={f.id} onClick={()=>setTypeFilter(f.id)}
-                className={`whitespace-nowrap px-3 py-1.5 rounded-full text-[10px] font-black uppercase flex-shrink-0 transition-all ${typeFilter===f.id?"bg-slate-900 text-white":"bg-slate-100 text-slate-500"}`}>{f.label}</button>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            {[
+              {id:"all",emoji:"🏪",label:t.catAll},
+              {id:"Food",emoji:"🍛",label:t.catFood},
+              {id:"Drink",emoji:"🧋",label:t.catDrink},
+              {id:"Bakery",emoji:"🥐",label:t.catBakery},
+              {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
+              {id:"Fruit",emoji:"🍉",label:t.catFruit},
+              {id:"Other",emoji:"📦",label:t.catOther},
+            ].map(cat=>(
+              <button key={cat.id} onClick={()=>setCatFilter(cat.id)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
+                  catFilter===cat.id
+                    ?"bg-slate-900 text-white border-slate-900"
+                    :"bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}>
+                <span className="text-sm leading-none">{cat.emoji}</span>
+                <span>{cat.label}</span>
+              </button>
             ))}
           </div>
         </div>
@@ -1465,7 +1467,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
 
         {!isStudentMode&&(
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-black text-slate-900">{search||catFilter!=="all"||typeFilter!=="all"?`${regular.length} results`:t.nearbyDeals}</h2>
+            <h2 className="text-sm font-black text-slate-900">{search||catFilter!=="all"?`${regular.length} results`:t.nearbyDeals}</h2>
             <span className="text-[10px] text-slate-400">{filtered.length} deals</span>
           </div>
         )}
