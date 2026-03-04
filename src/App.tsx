@@ -1866,7 +1866,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
 // ─── 4. DESKTOP PHONE FRAME — handled in App export below ────────────────────
 
 // ─── RECEIPTS PAGE ────────────────────────────────────────────────────────────
-function ReceiptsPage({t}){
+function ReceiptsPage({t, onBack}){
   const [orders,setOrders]=useState(()=>getOrders());
   const [expanded,setExpanded]=useState(null);
   const [shareMsg,setShareMsg]=useState(null);
@@ -1895,23 +1895,37 @@ function ReceiptsPage({t}){
   if(orders.length===0){
     return(
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center pb-28 px-6 text-center">
-        <span className="text-6xl mb-4">🧾</span>
+        <motion.span initial={{scale:0,rotate:-20}} animate={{scale:1,rotate:0}} transition={{type:"spring",stiffness:300,damping:15}}
+          className="text-6xl mb-4 block">🧾</motion.span>
         <h2 className="font-black text-slate-800 text-lg mb-2">No Receipts Yet</h2>
-        <p className="text-slate-400 text-sm">Your receipts will appear here automatically after each order.</p>
+        <p className="text-slate-400 text-sm mb-6">Your receipts appear here automatically after each order.</p>
+        <motion.button whileTap={{scale:0.95}} onClick={onBack}
+          className="flex items-center gap-2 bg-emerald-500 text-white px-6 py-3 rounded-2xl font-black text-sm shadow-lg shadow-emerald-100 active:scale-95">
+          <span>🛍️</span> Start Shopping
+        </motion.button>
       </div>
     );
   }
 
   return(
-    <div className="min-h-screen bg-slate-50 pb-28">
-      {/* Header */}
+    <div className="min-h-screen bg-slate-50 pb-32">
+      {/* Page header with back button */}
       <div className="bg-white border-b border-slate-100 px-4 pt-4 pb-3 sticky top-[60px] z-40">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-black text-slate-900 text-base">My Receipts</h2>
-            <p className="text-slate-400 text-[10px] font-bold">{orders.length} order{orders.length!==1?"s":""} saved</p>
+          <div className="flex items-center gap-2.5">
+            <motion.button whileTap={{scale:0.88}} onClick={onBack}
+              className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 active:bg-slate-200 transition-colors">
+              <span className="text-sm">←</span>
+            </motion.button>
+            <div>
+              <h2 className="font-black text-slate-900 text-base leading-none">My Receipts</h2>
+              <p className="text-slate-400 text-[10px] font-bold mt-0.5">{orders.length} order{orders.length!==1?"s":""} saved automatically</p>
+            </div>
           </div>
-          <span className="text-2xl">🧾</span>
+          <motion.span
+            animate={{rotate:[0,-10,10,-6,6,0]}}
+            transition={{duration:0.6,delay:0.3,ease:"easeInOut"}}
+            className="text-2xl">🧾</motion.span>
         </div>
       </div>
 
@@ -2028,6 +2042,23 @@ function ReceiptsPage({t}){
           );
         })}
       </div>
+
+      {/* Floating Continue Shopping bar */}
+      <motion.div
+        initial={{y:80,opacity:0}} animate={{y:0,opacity:1}} transition={{type:"spring",damping:22,stiffness:260,delay:0.2}}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-32px)] max-w-sm">
+        <motion.button
+          whileTap={{scale:0.96}}
+          onClick={onBack}
+          className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-emerald-200 active:bg-emerald-600 transition-colors">
+          <motion.span
+            animate={{x:[-2,2,-2]}}
+            transition={{duration:1.2,repeat:Infinity,ease:"easeInOut"}}
+            className="text-xl">🛍️</motion.span>
+          Continue Shopping
+          <span className="text-emerald-200 text-base">→</span>
+        </motion.button>
+      </motion.div>
     </div>
   );
 }
@@ -2196,9 +2227,18 @@ function AppInner(){
             <button onClick={()=>setTab("deals")} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="deals"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.buy}</button>
             <button onClick={()=>setTab("student")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all ${tab==="student"?"bg-white shadow-sm text-indigo-600":"text-slate-400"}`}>🎓</button>
             <button onClick={()=>setTab("receipts")} className={`px-2 py-1.5 rounded-lg text-[10px] font-black transition-all relative ${tab==="receipts"?"bg-white shadow-sm text-amber-600":"text-slate-400"}`}>
-              🧾
+              <motion.span
+                animate={tab!=="receipts"&&getOrders().length>0
+                  ?{rotate:[0,-15,15,-10,10,-5,5,0],scale:[1,1.2,1.2,1.15,1.15,1.1,1.1,1]}
+                  :{rotate:0,scale:1}}
+                transition={{duration:0.7,ease:"easeInOut",repeat:Infinity,repeatDelay:2.5}}
+                className="inline-block text-base leading-none">🧾</motion.span>
               {getOrders().length>0&&tab!=="receipts"&&(
-                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">{getOrders().length}</span>
+                <motion.span
+                  initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",stiffness:400,damping:12}}
+                  className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">
+                  {getOrders().length}
+                </motion.span>
               )}
             </button>
             <button onClick={()=>{
@@ -2228,8 +2268,8 @@ function AppInner(){
 
       <AnimatePresence mode="wait">
         {tab==="receipts"&&(
-          <motion.div key="receipts" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-            <ReceiptsPage t={t}/>
+          <motion.div key="receipts" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} transition={{duration:0.2}}>
+            <ReceiptsPage t={t} onBack={()=>setTab("deals")}/>
           </motion.div>
         )}
       </AnimatePresence>
