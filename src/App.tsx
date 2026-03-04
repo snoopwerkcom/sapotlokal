@@ -808,11 +808,38 @@ function ContinueShoppingBar({vendorId,vendorName,allListings,cart,onAdd,t}){
   );
 }
 
+// ─── ADVERT COUNTDOWN ─────────────────────────────────────────────────────────
+function AdvertCountdown({seconds,onDone}){
+  const [left,setLeft]=useState(seconds);
+  useEffect(()=>{
+    if(left<=0){onDone();return;}
+    const id=setTimeout(()=>setLeft(l=>l-1),1000);
+    return()=>clearTimeout(id);
+  },[left]);
+  return(
+    <div className="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center relative">
+      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="13" fill="none" stroke="#e2e8f0" strokeWidth="2.5"/>
+        <circle cx="16" cy="16" r="13" fill="none" stroke="#f97316" strokeWidth="2.5"
+          strokeDasharray={`${(left/seconds)*81.7} 81.7`} strokeLinecap="round"/>
+      </svg>
+      <span className="text-[10px] font-black text-slate-600 relative z-10">{left}</span>
+    </div>
+  );
+}
+
 function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
   const [deliveryMode,setDeliveryMode]=useState("pickup");
   const [paying,setPaying]=useState(false);
   const [success,setSuccess]=useState(false);
   const [pickupCode]=useState(()=>Math.random().toString(36).slice(2,8).toUpperCase());
+  // Lalamove fields
+  const [pickupAddr,setPickupAddr]=useState("");
+  const [dropAddr,setDropAddr]=useState("");
+  const [mobile,setMobile]=useState("");
+  const [lalamoveReady,setLalamoveReady]=useState(false);
+  const [showAdvert,setShowAdvert]=useState(false);
+  const [advertDismissed,setAdvertDismissed]=useState(false);
 
   const subtotal=cart.reduce((s,i)=>s+i.dealPrice,0);
   const currentVendor=cart[0]||null;
@@ -822,38 +849,210 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
   const deliveryCost=deliveryMode==="pickup"?0:(freeUnlocked?0:DELIVERY_FEE);
   const total=subtotal+deliveryCost;
 
+  // Validate Lalamove form
+  useEffect(()=>{
+    setLalamoveReady(deliveryMode==="delivery"?(pickupAddr.trim().length>5&&dropAddr.trim().length>5&&mobile.trim().length>=10):true);
+  },[deliveryMode,pickupAddr,dropAddr,mobile]);
+
+  // Open Lalamove deep-link with prefilled data
+  const openLalamove=()=>{
+    const msg=`Sapot Lokal Delivery%0APickup: ${encodeURIComponent(pickupAddr)}%0ADrop: ${encodeURIComponent(dropAddr)}%0AMobile: ${mobile}%0AOrder: ${cart.map(i=>i.title).join(', ')}`;
+    // Try to open Lalamove app; fallback to web
+    window.open(`https://web.lalamove.com/?utm_source=sapotlokal`,'_blank');
+  };
+
+  // After payment success, show ad then receipt
+  const handlePaymentSuccess=()=>{
+    setPaying(false);
+    setShowAdvert(true);
+    setTimeout(()=>{setShowAdvert(false);setAdvertDismissed(true);setSuccess(true);},5000);
+  };
+
+  // MOCK AD DATA — replace with real ad from DB/CMS
+  const MOCK_AD={
+    type:"image", // "image" | "video"
+    imageUrl:"https://picsum.photos/seed/sapotad1/600/300",
+    videoUrl:"", // e.g. "https://cdn.example.com/ad.mp4"
+    title:"Sponsored",
+    brand:"KFC Malaysia",
+    cta:"Order Now",
+    ctaUrl:"https://kfc.com.my",
+  };
+
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
       className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md flex items-end justify-center"
-      onClick={!success?onClose:undefined}>
+      onClick={(!success&&!showAdvert)?onClose:undefined}>
       <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}}
         transition={{type:"spring",damping:28,stiffness:280}}
         onClick={e=>e.stopPropagation()}
         className="w-full max-w-sm bg-white rounded-t-[36px] overflow-hidden max-h-[92vh] flex flex-col">
         <AnimatePresence mode="wait">
-          {success?(
-            <motion.div key="ok" initial={{opacity:0}} animate={{opacity:1}} className="flex flex-col overflow-y-auto max-h-[88vh]">
-              <div className="p-7 pb-4 text-center">
-                <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",delay:0.1}} className="text-6xl mb-3">🎉</motion.div>
-                <h2 className="font-black text-2xl mb-1">{t.orderPlaced}</h2>
-                <p className="text-slate-500 text-sm">{t.pickupNote}</p>
+
+          {/* ── AD INTERSTITIAL (Future Upgrade) ── */}
+          {showAdvert&&!advertDismissed&&(
+            <motion.div key="ad" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              className="flex flex-col overflow-y-auto max-h-[88vh]">
+              {/* Future upgrade badge */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📢</span>
+                  <div>
+                    <p className="font-black text-xs text-slate-800">{MOCK_AD.brand}</p>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{MOCK_AD.title}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-amber-100 text-amber-600 text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-wider">Future Upgrade</span>
+                  <AdvertCountdown seconds={5} onDone={()=>{setShowAdvert(false);setAdvertDismissed(true);setSuccess(true);}}/>
+                </div>
               </div>
-              <div className="mx-5 bg-emerald-50 border-2 border-emerald-200 border-dashed rounded-2xl p-5 mb-4 text-center">
-                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{t.pickupCode}</p>
-                <p className="text-emerald-600 font-black text-4xl tracking-[8px]">{pickupCode}</p>
+              {/* Ad content */}
+              <div className="mx-4 mt-4 rounded-2xl overflow-hidden bg-slate-100 relative">
+                {MOCK_AD.type==="video"&&MOCK_AD.videoUrl?(
+                  <video src={MOCK_AD.videoUrl} autoPlay muted playsInline className="w-full h-48 object-cover"/>
+                ):(
+                  <img src={MOCK_AD.imageUrl} alt={MOCK_AD.brand} className="w-full h-48 object-cover"/>
+                )}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                  <p className="text-white font-black text-sm">{MOCK_AD.brand}</p>
+                </div>
               </div>
-              <div className="mx-5 bg-slate-50 rounded-2xl p-4 mb-4 space-y-1.5">
-                <div className="flex justify-between text-xs"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(subtotal)}</span></div>
-                <div className="flex justify-between text-xs"><span className="text-slate-400">{t.deliveryFee}</span><span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryCost===0?t.free:`RM${fmtRM(deliveryCost)}`}</span></div>
-                <div className="h-px bg-slate-200"/>
-                <div className="flex justify-between text-sm"><span className="font-black">{t.total}</span><span className="font-black text-emerald-600 text-base">RM{fmtRM(total)}</span></div>
+              <div className="px-4 mt-3 mb-2">
+                <a href={MOCK_AD.ctaUrl} target="_blank" rel="noreferrer"
+                  className="block w-full bg-slate-900 text-white text-center py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-transform">
+                  {MOCK_AD.cta} →
+                </a>
               </div>
-              <div className="mx-5 mb-8 mt-4">
-                <button onClick={()=>{onCheckout({pickupCode});onClose();}}
-                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs">{t.goPickup}</button>
+              <p className="text-center text-slate-300 text-[9px] font-bold pb-4">Your receipt is ready — ad closes in a moment</p>
+              {/* Ad slot placeholder notice */}
+              <div className="mx-4 mb-4 bg-amber-50 border border-amber-200 border-dashed rounded-2xl p-3 flex gap-2 items-start">
+                <span className="text-base flex-shrink-0">🔮</span>
+                <div>
+                  <p className="text-amber-700 font-black text-[10px]">Ad Slot — Future Upgrade</p>
+                  <p className="text-amber-600 text-[9px] leading-relaxed">This space will show paid video or image ads from sponsors after each order. Revenue shared with Sapot Lokal platform.</p>
+                </div>
               </div>
             </motion.div>
-          ):(
+          )}
+
+          {/* ── RECEIPT / ORDER CONFIRMED ── */}
+          {success&&(
+            <motion.div key="ok" initial={{opacity:0}} animate={{opacity:1}} className="flex flex-col overflow-y-auto max-h-[88vh]">
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",delay:0.1}} className="text-3xl">🎉</motion.div>
+                  <div>
+                    <h2 className="font-black text-lg leading-none">{t.orderPlaced}</h2>
+                    <p className="text-slate-400 text-[10px] mt-0.5">{deliveryMode==="delivery"?"Lalamove will be notified":t.pickupNote}</p>
+                  </div>
+                </div>
+                <button onClick={()=>{onCheckout({pickupCode});onClose();}}
+                  className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 text-sm font-black">✕</button>
+              </div>
+
+              {/* Printable receipt card */}
+              <div id="sapot-receipt" className="mx-4 mt-4 bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
+                {/* Receipt header */}
+                <div className="bg-emerald-600 px-5 py-4 text-center">
+                  <p className="text-emerald-100 text-[9px] font-black uppercase tracking-widest mb-0.5">Sapot Lokal</p>
+                  <p className="text-white font-black text-base">{currentVendor?.vendorName||"Vendor"}</p>
+                  <p className="text-emerald-200 text-[10px] mt-0.5">{new Date().toLocaleString('en-MY',{dateStyle:'medium',timeStyle:'short'})}</p>
+                </div>
+                {/* Pickup code */}
+                <div className="px-5 py-4 border-b border-dashed border-slate-200 text-center">
+                  <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1">{t.pickupCode}</p>
+                  <p className="text-emerald-600 font-black text-4xl tracking-[10px]">{pickupCode}</p>
+                  {deliveryMode==="delivery"&&<p className="text-slate-400 text-[9px] mt-1">Show to your Lalamove rider</p>}
+                </div>
+                {/* Delivery info */}
+                {deliveryMode==="delivery"&&(
+                  <div className="px-5 py-3 border-b border-dashed border-slate-200 bg-blue-50">
+                    <p className="text-blue-600 font-black text-[10px] mb-1.5 flex items-center gap-1">🛵 Lalamove Delivery</p>
+                    <p className="text-slate-600 text-[9px]"><span className="font-black">From:</span> {pickupAddr}</p>
+                    <p className="text-slate-600 text-[9px] mt-0.5"><span className="font-black">To:</span> {dropAddr}</p>
+                    <p className="text-slate-600 text-[9px] mt-0.5"><span className="font-black">Mobile:</span> {mobile}</p>
+                  </div>
+                )}
+                {/* Items */}
+                <div className="px-5 py-3 space-y-2 border-b border-dashed border-slate-200">
+                  {cart.map((item,i)=>(
+                    <div key={i} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                          <img src={item.image} className="w-full h-full object-cover" alt=""/>
+                        </div>
+                        <span className="text-slate-700 text-[10px] font-bold truncate">{item.title}</span>
+                      </div>
+                      <span className="font-black text-[10px] text-slate-800 flex-shrink-0">RM{fmtRM(item.dealPrice)}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Totals */}
+                <div className="px-5 py-3 space-y-1.5 border-b border-dashed border-slate-200">
+                  <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(subtotal)}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.deliveryFee}</span><span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryCost===0?t.free:`RM${fmtRM(deliveryCost)}`}</span></div>
+                  <div className="flex justify-between text-sm pt-1 border-t border-slate-100 mt-1"><span className="font-black">Total</span><span className="font-black text-emerald-600">RM{fmtRM(total)}</span></div>
+                </div>
+                {/* Ad placeholder */}
+                <div className="mx-4 my-3 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 relative h-20">
+                  <img src={MOCK_AD.imageUrl} alt="Ad" className="w-full h-full object-cover opacity-40"/>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xl mb-0.5">📺</span>
+                    <p className="font-black text-slate-500 text-[9px]">Ad Space · Future Upgrade</p>
+                  </div>
+                  <span className="absolute top-1.5 right-1.5 bg-amber-400 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full">FUTURE</span>
+                </div>
+                {/* Footer */}
+                <div className="px-5 pb-4 text-center">
+                  <p className="text-slate-300 text-[8px] font-bold">Thank you for using Sapot Lokal 🛒</p>
+                  <p className="text-slate-200 text-[8px]">sapotlokal.com</p>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="px-4 mt-4 mb-3 grid grid-cols-2 gap-2">
+                {/* Save as image / screenshot */}
+                <button onClick={()=>{
+                  // Use native share if available, else print
+                  if(navigator.share){
+                    navigator.share({title:'My Sapot Lokal Receipt',text:`Order ${pickupCode} from ${currentVendor?.vendorName} — RM${fmtRM(total)}`})
+                      .catch(()=>{});
+                  } else {
+                    window.print();
+                  }
+                }}
+                  className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-emerald-100">
+                  <span className="text-base">📥</span>
+                  Save Receipt
+                </button>
+                {/* Share via WhatsApp */}
+                <button onClick={()=>{
+                  const msg=`🧾 *Sapot Lokal Receipt*\n🏪 ${currentVendor?.vendorName}\n📦 Order: ${pickupCode}\n💰 Total: RM${fmtRM(total)}\n📅 ${new Date().toLocaleString('en-MY',{dateStyle:'short',timeStyle:'short'})}`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+                }}
+                  className="flex items-center justify-center gap-2 bg-[#25D366] text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-green-100">
+                  <span className="text-base">💬</span>
+                  Share WA
+                </button>
+              </div>
+              {/* Download hint */}
+              <p className="text-center text-slate-300 text-[9px] font-bold px-5 mb-3">
+                {navigator.share?"Tap Save to share receipt via your phone":"Tap Save to print or screenshot this receipt"}
+              </p>
+
+              {/* Done button */}
+              <div className="px-4 mb-8">
+                <button onClick={()=>{onCheckout({pickupCode});onClose();}}
+                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-transform">{t.goPickup}</button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── CART VIEW ── */}
+          {!success&&!showAdvert&&(
             <motion.div key="cart" className="flex flex-col flex-1 overflow-hidden">
               <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-slate-100 flex-shrink-0">
                 <h2 className="font-black text-xl">{t.cart}</h2>
@@ -868,14 +1067,18 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
               ):(
                 <>
                   <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                    {/* Single vendor banner */}
+                    {/* Single vendor lock banner */}
                     {currentVendor&&(
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 flex items-center gap-2">
-                        <span className="text-base">🏪</span>
-                        <div>
-                          <p className="text-emerald-700 font-black text-xs">{t.orderingFrom}</p>
-                          <p className="text-emerald-800 font-black text-sm">{currentVendor.vendorName}</p>
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-base">🏪</span>
+                          <div className="flex-1">
+                            <p className="text-emerald-700 font-black text-xs">{t.orderingFrom}</p>
+                            <p className="text-emerald-800 font-black text-sm">{currentVendor.vendorName}</p>
+                          </div>
+                          <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg">1 Merchant Only</span>
                         </div>
+                        <p className="text-emerald-600 text-[9px] leading-relaxed">Items from other merchants need a separate order. Tap 🔒 on other items to switch.</p>
                       </div>
                     )}
                     {/* Free delivery progress */}
@@ -908,7 +1111,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                         <button onClick={()=>onRemove(idx)} className="text-slate-300 hover:text-red-400 text-xs font-bold flex-shrink-0">{t.removeItem}</button>
                       </motion.div>
                     ))}
-                    {/* 3. Continue shopping from same vendor */}
+                    {/* Continue shopping from same vendor */}
                     {currentVendor&&(
                       <ContinueShoppingBar
                         vendorId={currentVendor.vendorId}
@@ -920,35 +1123,97 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                       />
                     )}
                   </div>
+
+                  {/* ── CHECKOUT FOOTER ── */}
                   <div className="px-5 pb-8 pt-4 border-t border-slate-100 flex-shrink-0 space-y-4 bg-white">
+                    {/* Delivery mode selector */}
                     <div className="grid grid-cols-2 gap-2">
-                      {[{id:"pickup",icon:"🚶",title:t.selfPickup,desc:"Free"},{id:"delivery",icon:"🛵",title:t.delivery,desc:freeUnlocked?"Vendor pays":t.deliveryDesc,badge:freeUnlocked?t.free:null}].map(opt=>(
-                        <button key={opt.id} onClick={()=>setDeliveryMode(opt.id)}
-                          className={`p-3 rounded-2xl border-2 text-left transition-all ${deliveryMode===opt.id?"border-emerald-500 bg-emerald-50":"border-slate-100 bg-slate-50"}`}>
-                          <div className="text-xl mb-1">{opt.icon}</div>
-                          <p className={`font-black text-[11px] ${deliveryMode===opt.id?"text-emerald-700":"text-slate-700"}`}>{opt.title}</p>
-                          <p className="text-[9px] text-slate-400 mt-0.5">{opt.desc}</p>
-                          {opt.badge&&<span className="text-[8px] font-black text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mt-1 inline-block">{opt.badge}!</span>}
-                        </button>
-                      ))}
+                      <button onClick={()=>setDeliveryMode("pickup")}
+                        className={`p-3 rounded-2xl border-2 text-left transition-all ${deliveryMode==="pickup"?"border-emerald-500 bg-emerald-50":"border-slate-100 bg-slate-50"}`}>
+                        <div className="text-xl mb-1">🚶</div>
+                        <p className={`font-black text-[11px] ${deliveryMode==="pickup"?"text-emerald-700":"text-slate-700"}`}>{t.selfPickup}</p>
+                        <p className="text-[9px] text-slate-400 mt-0.5">Free</p>
+                      </button>
+                      <button onClick={()=>setDeliveryMode("delivery")}
+                        className={`p-3 rounded-2xl border-2 text-left transition-all ${deliveryMode==="delivery"?"border-blue-500 bg-blue-50":"border-slate-100 bg-slate-50"}`}>
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-xl">🛵</span>
+                          <span className="text-[8px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase">Lalamove</span>
+                        </div>
+                        <p className={`font-black text-[11px] ${deliveryMode==="delivery"?"text-blue-700":"text-slate-700"}`}>{t.delivery}</p>
+                        <p className="text-[9px] text-slate-400 mt-0.5">{freeUnlocked?"Vendor pays":`RM${fmtRM(DELIVERY_FEE)}`}</p>
+                        {freeUnlocked&&<span className="text-[8px] font-black text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full mt-1 inline-block">{t.free}!</span>}
+                      </button>
                     </div>
+
+                    {/* Lalamove address form */}
+                    {deliveryMode==="delivery"&&(
+                      <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}}
+                        className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-base">🛵</span>
+                          <p className="font-black text-blue-700 text-xs">Lalamove Delivery Details</p>
+                        </div>
+                        <div>
+                          <label className="text-blue-600 text-[9px] font-black uppercase tracking-wider block mb-1">📍 Pickup Address (Merchant)</label>
+                          <input value={pickupAddr} onChange={e=>setPickupAddr(e.target.value)}
+                            placeholder={`e.g. ${currentVendor?.vendorName||"Vendor"}, Jalan Puchong...`}
+                            className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-blue-500 focus:outline-none text-slate-700 placeholder:text-slate-300"/>
+                        </div>
+                        <div>
+                          <label className="text-blue-600 text-[9px] font-black uppercase tracking-wider block mb-1">📦 Drop-off Address (You)</label>
+                          <input value={dropAddr} onChange={e=>setDropAddr(e.target.value)}
+                            placeholder="e.g. Unit 5-3, Sri Tiara, Puchong..."
+                            className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-blue-500 focus:outline-none text-slate-700 placeholder:text-slate-300"/>
+                        </div>
+                        <div>
+                          <label className="text-blue-600 text-[9px] font-black uppercase tracking-wider block mb-1">📱 Mobile No. (Rider Contact)</label>
+                          <input value={mobile} onChange={e=>setMobile(e.target.value)} type="tel"
+                            placeholder="e.g. 0123456789"
+                            className="w-full bg-white border border-blue-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-blue-500 focus:outline-none text-slate-700 placeholder:text-slate-300"/>
+                        </div>
+                        <button onClick={openLalamove}
+                          disabled={!(pickupAddr.trim().length>5&&dropAddr.trim().length>5&&mobile.trim().length>=10)}
+                          className="w-full bg-[#F7941D] text-white py-3 rounded-xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-40 shadow-md shadow-orange-200">
+                          <span className="text-base">🛵</span>
+                          Open Lalamove →
+                        </button>
+                        <p className="text-blue-400 text-[9px] text-center">Your details will be sent to Lalamove for booking</p>
+                      </motion.div>
+                    )}
+
+                    {/* Order total */}
                     <div className="bg-slate-50 rounded-2xl px-4 py-3 space-y-1.5">
                       <div className="flex justify-between text-xs"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(subtotal)}</span></div>
                       <div className="flex justify-between text-xs"><span className="text-slate-400">{t.deliveryFee}</span>
-                        <span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryMode==="pickup"?t.free:deliveryCost===0?`${t.free} 🎉`:`RM${fmtRM(deliveryCost)}`}</span>
+                        <span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>
+                          {deliveryMode==="pickup"?t.free:deliveryCost===0?`${t.free} 🎉`:`RM${fmtRM(deliveryCost)}`}
+                        </span>
                       </div>
                       <div className="h-px bg-slate-200"/>
                       <div className="flex justify-between text-sm"><span className="font-black">{t.total}</span><span className="font-black text-emerald-600 text-base">RM{fmtRM(total)}</span></div>
                     </div>
-                    <button onClick={()=>{setPaying(true);setTimeout(()=>{setPaying(false);setSuccess(true);},1800);}} disabled={paying}
-                      className="w-full bg-[#1a6ef5] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-blue-200">
+
+                    {/* Pay button */}
+                    <button
+                      onClick={()=>{
+                        if(!lalamoveReady)return;
+                        setPaying(true);
+                        setTimeout(handlePaymentSuccess,1800);
+                      }}
+                      disabled={paying||!lalamoveReady}
+                      className="w-full bg-[#1a6ef5] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg shadow-blue-200 disabled:opacity-50">
                       {paying?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>{t.processingTNG}</>:t.checkoutTNG}
                     </button>
+                    {deliveryMode==="delivery"&&!lalamoveReady&&(
+                      <p className="text-slate-400 text-[9px] text-center font-bold">Fill in delivery details above to continue</p>
+                    )}
                   </div>
                 </>
               )}
             </motion.div>
           )}
+
         </AnimatePresence>
       </motion.div>
     </motion.div>
@@ -1873,4 +2138,25 @@ export default function App(){
     );
   }
   return <AppInner/>;
+}
+
+// ── PRINT STYLES injected once ────────────────────────────────────────────────
+if(typeof document!=='undefined'&&!document.getElementById('sapot-print-styles')){
+  const s=document.createElement('style');
+  s.id='sapot-print-styles';
+  s.textContent=`
+    @media print {
+      body > *:not(#sapot-print-root) { display: none !important; }
+      #sapot-receipt {
+        display: block !important;
+        position: fixed; top: 0; left: 0; right: 0;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-inside: avoid;
+      }
+      @page { margin: 10mm; size: A5; }
+    }
+  `;
+  document.head.appendChild(s);
 }
