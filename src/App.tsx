@@ -404,17 +404,17 @@ const MOCK_VENDORS_GEO = {
 };
 
 const MOCK_LISTINGS = [
-  {id:1,vendorId:1,vendorName:"Warung Mak Teh",freeDeliveryThreshold:20,studentPrice:2.00,title:"Nasi Lemak Bungkus",desc:"Egg, Sambal, Anchovies",originalPrice:5.00,dealPrice:3.00,emoji:"🍛",image:"https://picsum.photos/seed/nasilemak1/800/600",category:"Food",halal:1,endTime:"21:00",qty:18,claimed:6,type:"limited",reheat:"none",postedAt:Date.now()-60000*20,vendorSubscribed:true},
-  {id:2,vendorId:1,vendorName:"Warung Mak Teh",freeDeliveryThreshold:20,studentPrice:1.50,title:"Teh Tarik Large",desc:"Fresh, thick teh tarik",originalPrice:3.50,dealPrice:2.00,emoji:"🧋",image:"https://picsum.photos/seed/tehtarik/800/600",category:"Drink",halal:1,endTime:"21:00",qty:null,claimed:0,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:true},
-  {id:3,vendorId:2,vendorName:"Bakeri Fariz",freeDeliveryThreshold:30,studentPrice:7.50,title:"Assorted Pastry Box",desc:"Croissant, Danish Almond, Chocolate Bun",originalPrice:15.00,dealPrice:9.90,emoji:"🥐",image:"https://picsum.photos/seed/pastrybox1/800/600",category:"Bakery",halal:1,endTime:"20:30",qty:10,claimed:9,type:"limited",reheat:"oven",postedAt:Date.now()-60000*45,vendorSubscribed:true},
-  {id:4,vendorId:3,vendorName:"Uncle Lim Kopitiam",freeDeliveryThreshold:null,studentPrice:null,title:"Drink Bundle",desc:"Teh Tarik + Milo Ais + Lime Juice",originalPrice:9.00,dealPrice:5.50,emoji:"🧋",image:"https://picsum.photos/seed/drinks1/800/600",category:"Drink",halal:2,endTime:"22:00",qty:null,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:false},
-  {id:5,vendorId:4,vendorName:"Pak Din Gerai",freeDeliveryThreshold:25,studentPrice:3.50,title:"Economy Rice",desc:"2 Veg + 1 Main of your choice",originalPrice:8.00,dealPrice:5.00,emoji:"🍱",image:"https://picsum.photos/seed/nasicamp1/800/600",category:"Food",halal:1,endTime:"14:30",qty:20,claimed:14,type:"promo",reheat:"microwave",postedAt:Date.now()-60000*5,vendorSubscribed:false},
-  {id:6,vendorId:5,vendorName:"Kuih Mak Jah",freeDeliveryThreshold:20,studentPrice:5.00,title:"Traditional Kuih Set",desc:"Kuih Lapis, Onde-onde, Seri Muka",originalPrice:12.00,dealPrice:7.00,emoji:"🍡",image:"https://picsum.photos/seed/kuih1/800/600",category:"Food",halal:1,endTime:"18:00",qty:8,claimed:5,type:"special",reheat:"none",postedAt:Date.now()-60000*60,vendorSubscribed:true},
-  {id:7,vendorId:6,vendorName:"Restoran Maju Jaya",freeDeliveryThreshold:35,studentPrice:6.00,title:"Honey Chicken (New!)",desc:"New recipe — try it and give feedback",originalPrice:14.00,dealPrice:8.00,emoji:"🍗",image:"https://picsum.photos/seed/ayampercik/800/600",category:"Food",halal:1,endTime:"20:00",qty:15,claimed:2,type:"special",reheat:"oven",postedAt:Date.now()-60000*15,vendorSubscribed:true},
-  {id:8,vendorId:7,vendorName:"Mat Zin Mee Goreng",freeDeliveryThreshold:20,studentPrice:2.50,title:"Mamak Fried Noodles",desc:"Spicy, crispy, fresh from the wok",originalPrice:7.00,dealPrice:4.00,emoji:"🍜",image:"https://picsum.photos/seed/meegoreng/800/600",category:"Food",halal:1,endTime:"23:00",qty:30,claimed:8,type:"limited",reheat:"none",postedAt:Date.now()-60000*8,vendorSubscribed:false},
-  {id:9,vendorId:8,vendorName:"Kepong Home Kitchen",freeDeliveryThreshold:25,studentPrice:null,title:"Char Kuey Teow",desc:"High wok heat, big prawns",originalPrice:9.00,dealPrice:5.50,emoji:"🍳",image:"https://picsum.photos/seed/ckt/800/600",category:"Food",halal:0,endTime:"21:30",qty:12,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*25,vendorSubscribed:true},
-  {id:10,vendorId:9,vendorName:"PJ Kopitiam",freeDeliveryThreshold:30,studentPrice:3.00,title:"Kopitiam Breakfast Set",desc:"Toast + Egg + Coffee",originalPrice:10.00,dealPrice:6.50,emoji:"☕",image:"https://picsum.photos/seed/kopitiam/800/600",category:"Drink",halal:0,endTime:"11:00",qty:20,claimed:7,type:"promo",reheat:"none",postedAt:Date.now()-60000*40,vendorSubscribed:false},
-  {id:11,vendorId:4,vendorName:"Pak Din Gerai",freeDeliveryThreshold:25,studentPrice:null,title:"Fresh Watermelon Pack",desc:"1kg cut watermelon, chilled",originalPrice:7.00,dealPrice:4.50,emoji:"🍉",image:"https://picsum.photos/seed/watermelon/800/600",category:"Fruit",halal:1,endTime:"18:00",qty:15,claimed:2,type:"limited",reheat:"none",postedAt:Date.now()-60000*12,vendorSubscribed:false},
+  {id:1,vendorId:1,vendorName:"Warung Mak Teh",vendorPhone:"60123456789",freeDeliveryThreshold:20,studentPrice:2.00,title:"Nasi Lemak Bungkus",desc:"Egg, Sambal, Anchovies",originalPrice:5.00,dealPrice:3.00,emoji:"🍛",image:"https://picsum.photos/seed/nasilemak1/800/600",category:"Food",halal:1,endTime:"21:00",qty:18,claimed:6,type:"limited",reheat:"none",postedAt:Date.now()-60000*20,vendorSubscribed:true},
+  {id:2,vendorId:1,vendorName:"Warung Mak Teh",vendorPhone:"60123456789",freeDeliveryThreshold:20,studentPrice:1.50,title:"Teh Tarik Large",desc:"Fresh, thick teh tarik",originalPrice:3.50,dealPrice:2.00,emoji:"🧋",image:"https://picsum.photos/seed/tehtarik/800/600",category:"Drink",halal:1,endTime:"21:00",qty:null,claimed:0,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:true},
+  {id:3,vendorId:2,vendorName:"Bakeri Fariz",vendorPhone:"60197654321",freeDeliveryThreshold:30,studentPrice:7.50,title:"Assorted Pastry Box",desc:"Croissant, Danish Almond, Chocolate Bun",originalPrice:15.00,dealPrice:9.90,emoji:"🥐",image:"https://picsum.photos/seed/pastrybox1/800/600",category:"Bakery",halal:1,endTime:"20:30",qty:10,claimed:9,type:"limited",reheat:"oven",postedAt:Date.now()-60000*45,vendorSubscribed:true},
+  {id:4,vendorId:3,vendorName:"Uncle Lim Kopitiam",vendorPhone:"60112233445",freeDeliveryThreshold:null,studentPrice:null,title:"Drink Bundle",desc:"Teh Tarik + Milo Ais + Lime Juice",originalPrice:9.00,dealPrice:5.50,emoji:"🧋",image:"https://picsum.photos/seed/drinks1/800/600",category:"Drink",halal:2,endTime:"22:00",qty:null,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:false},
+  {id:5,vendorId:4,vendorName:"Pak Din Gerai",vendorPhone:"60169988776",freeDeliveryThreshold:25,studentPrice:3.50,title:"Economy Rice",desc:"2 Veg + 1 Main of your choice",originalPrice:8.00,dealPrice:5.00,emoji:"🍱",image:"https://picsum.photos/seed/nasicamp1/800/600",category:"Food",halal:1,endTime:"14:30",qty:20,claimed:14,type:"promo",reheat:"microwave",postedAt:Date.now()-60000*5,vendorSubscribed:false},
+  {id:6,vendorId:5,vendorName:"Kuih Mak Jah",vendorPhone:"60133344556",freeDeliveryThreshold:20,studentPrice:5.00,title:"Traditional Kuih Set",desc:"Kuih Lapis, Onde-onde, Seri Muka",originalPrice:12.00,dealPrice:7.00,emoji:"🍡",image:"https://picsum.photos/seed/kuih1/800/600",category:"Food",halal:1,endTime:"18:00",qty:8,claimed:5,type:"special",reheat:"none",postedAt:Date.now()-60000*60,vendorSubscribed:true},
+  {id:7,vendorId:6,vendorName:"Restoran Maju Jaya",vendorPhone:"60144455667",freeDeliveryThreshold:35,studentPrice:6.00,title:"Honey Chicken (New!)",desc:"New recipe — try it and give feedback",originalPrice:14.00,dealPrice:8.00,emoji:"🍗",image:"https://picsum.photos/seed/ayampercik/800/600",category:"Food",halal:1,endTime:"20:00",qty:15,claimed:2,type:"special",reheat:"oven",postedAt:Date.now()-60000*15,vendorSubscribed:true},
+  {id:8,vendorId:7,vendorName:"Mat Zin Mee Goreng",vendorPhone:"60155566778",freeDeliveryThreshold:20,studentPrice:2.50,title:"Mamak Fried Noodles",desc:"Spicy, crispy, fresh from the wok",originalPrice:7.00,dealPrice:4.00,emoji:"🍜",image:"https://picsum.photos/seed/meegoreng/800/600",category:"Food",halal:1,endTime:"23:00",qty:30,claimed:8,type:"limited",reheat:"none",postedAt:Date.now()-60000*8,vendorSubscribed:false},
+  {id:9,vendorId:8,vendorName:"Kepong Home Kitchen",vendorPhone:"60166677889",freeDeliveryThreshold:25,studentPrice:null,title:"Char Kuey Teow",desc:"High wok heat, big prawns",originalPrice:9.00,dealPrice:5.50,emoji:"🍳",image:"https://picsum.photos/seed/ckt/800/600",category:"Food",halal:0,endTime:"21:30",qty:12,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*25,vendorSubscribed:true},
+  {id:10,vendorId:9,vendorName:"PJ Kopitiam",vendorPhone:"60177788990",freeDeliveryThreshold:30,studentPrice:3.00,title:"Kopitiam Breakfast Set",desc:"Toast + Egg + Coffee",originalPrice:10.00,dealPrice:6.50,emoji:"☕",image:"https://picsum.photos/seed/kopitiam/800/600",category:"Drink",halal:0,endTime:"11:00",qty:20,claimed:7,type:"promo",reheat:"none",postedAt:Date.now()-60000*40,vendorSubscribed:false},
+  {id:11,vendorId:4,vendorName:"Pak Din Gerai",vendorPhone:"60169988776",freeDeliveryThreshold:25,studentPrice:null,title:"Fresh Watermelon Pack",desc:"1kg cut watermelon, chilled",originalPrice:7.00,dealPrice:4.50,emoji:"🍉",image:"https://picsum.photos/seed/watermelon/800/600",category:"Fruit",halal:1,endTime:"18:00",qty:15,claimed:2,type:"limited",reheat:"none",postedAt:Date.now()-60000*12,vendorSubscribed:false},
 ];
 
 const MOCK_PAST_POSTS = [
@@ -768,6 +768,147 @@ function DifferentVendorModal({currentVendorName,newVendorName,onClear,onKeep,t}
   );
 }
 
+// ─── ORDER TO COOK ────────────────────────────────────────────────────────────
+function OrderToCook({allListings,t}){
+  // Get unique vendors from listings
+  const vendors=[...new Map(allListings.map(l=>[l.vendorId,{
+    vendorId:l.vendorId,vendorName:l.vendorName,vendorPhone:l.vendorPhone||""
+  }])).values()];
+
+  const [selectedVendor,setSelectedVendor]=useState(null);
+  const [foodName,setFoodName]=useState("");
+  const [qty,setQty]=useState("1");
+  const [notes,setNotes]=useState("");
+  const [pickupTime,setPickupTime]=useState("");
+  const [sent,setSent]=useState(false);
+
+  const canSend=selectedVendor&&foodName.trim().length>2;
+
+  const sendOrder=()=>{
+    if(!canSend)return;
+    const vendor=vendors.find(v=>v.vendorId===selectedVendor);
+    const msg=`👨‍🍳 *Order to Cook — Sapot Lokal*\n\n`+
+      `🏪 To: *${vendor.vendorName}*\n`+
+      `🍽️ Food: *${foodName.trim()}*\n`+
+      `📦 Qty: ${qty}\n`+
+      (pickupTime?`⏰ Ready by: ${pickupTime}\n`:"")+
+      (notes?`📝 Notes: ${notes.trim()}\n`:"")+
+      `\n_Sent via Sapot Lokal — please confirm this order and share your price._`;
+
+    const phone=vendor.vendorPhone||"";
+    if(phone){
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+    } else {
+      // Fallback: open WhatsApp without a number (user picks contact)
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+    setSent(true);
+    setTimeout(()=>setSent(false),4000);
+  };
+
+  return(
+    <div className="px-3 pt-3 pb-28">
+      {/* Explainer banner */}
+      <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}}
+        className="bg-purple-50 border border-purple-200 rounded-2xl p-4 mb-4 flex gap-3">
+        <span className="text-2xl flex-shrink-0">👨‍🍳</span>
+        <div>
+          <p className="font-black text-purple-800 text-sm">Order to Cook</p>
+          <p className="text-purple-600 text-[10px] leading-relaxed mt-0.5">
+            Message a merchant to cook a specific dish for you. Great for special requests, bulk orders, or dishes not listed as a deal. Merchant will confirm and quote a price via WhatsApp.
+          </p>
+        </div>
+      </motion.div>
+
+      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-4 space-y-4">
+        {/* Step 1 — Pick merchant */}
+        <div>
+          <label className="text-slate-500 text-[9px] font-black uppercase tracking-widest block mb-2">
+            1 · Choose Merchant
+          </label>
+          <div className="flex flex-col gap-2 max-h-40 overflow-y-auto no-scrollbar">
+            {vendors.map(v=>(
+              <button key={v.vendorId} onClick={()=>setSelectedVendor(v.vendorId)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border-2 text-left transition-all active:scale-95 ${
+                  selectedVendor===v.vendorId
+                    ?"border-purple-500 bg-purple-50"
+                    :"border-slate-100 bg-slate-50"
+                }`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${selectedVendor===v.vendorId?"bg-purple-100":"bg-slate-100"}`}>
+                  <span className="text-base">🏪</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`font-black text-xs truncate ${selectedVendor===v.vendorId?"text-purple-800":"text-slate-700"}`}>{v.vendorName}</p>
+                  {v.vendorPhone?<p className="text-slate-400 text-[9px]">WhatsApp available</p>:<p className="text-slate-300 text-[9px]">Manual WA</p>}
+                </div>
+                {selectedVendor===v.vendorId&&<span className="text-purple-500 font-black text-sm flex-shrink-0">✓</span>}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Step 2 — Food details */}
+        <div>
+          <label className="text-slate-500 text-[9px] font-black uppercase tracking-widest block mb-2">
+            2 · What do you want cooked?
+          </label>
+          <input value={foodName} onChange={e=>setFoodName(e.target.value)}
+            placeholder="e.g. Nasi Goreng Kampung, Ayam Masak Merah, Laksa..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-purple-400 focus:outline-none text-slate-700 placeholder:text-slate-300 mb-2"/>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-slate-400 text-[9px] font-bold block mb-1">Quantity (pax / packs)</label>
+              <input value={qty} onChange={e=>setQty(e.target.value)} type="number" min="1"
+                placeholder="1"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:border-purple-400 focus:outline-none"/>
+            </div>
+            <div>
+              <label className="text-slate-400 text-[9px] font-bold block mb-1">Ready by (optional)</label>
+              <input value={pickupTime} onChange={e=>setPickupTime(e.target.value)} type="time"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold focus:border-purple-400 focus:outline-none"/>
+            </div>
+          </div>
+        </div>
+
+        {/* Step 3 — Notes */}
+        <div>
+          <label className="text-slate-500 text-[9px] font-black uppercase tracking-widest block mb-2">
+            3 · Special notes (optional)
+          </label>
+          <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2}
+            placeholder="e.g. Less spicy, no onion, extra gravy, halal only..."
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold focus:border-purple-400 focus:outline-none resize-none text-slate-700 placeholder:text-slate-300"/>
+        </div>
+
+        {/* Send button */}
+        <motion.button
+          whileTap={{scale:0.96}}
+          onClick={sendOrder}
+          disabled={!canSend}
+          className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg ${
+            sent?"bg-emerald-500 shadow-emerald-100":canSend?"bg-[#25D366] shadow-green-100 active:scale-95":"bg-slate-200 text-slate-400 shadow-none"
+          } text-white`}>
+          {sent?(
+            <><span className="text-base">✅</span> Message Sent!</>
+          ):(
+            <><span className="text-base">💬</span> Send via WhatsApp</>
+          )}
+        </motion.button>
+        {!canSend&&<p className="text-center text-slate-300 text-[9px] font-bold">Pick a merchant and enter food name to continue</p>}
+
+        {/* Info box */}
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex gap-2">
+          <span className="text-base flex-shrink-0">💡</span>
+          <div>
+            <p className="text-amber-700 font-black text-[9px]">How it works</p>
+            <p className="text-amber-600 text-[9px] leading-relaxed">Your request opens WhatsApp directly to the merchant. They'll reply to confirm, share the price, and let you know when it's ready. Payment is arranged directly with the merchant.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ContinueShoppingBar({vendorId,vendorName,allListings,cart,onAdd,t}){
   const cartIds=cart.map(i=>i.id);
   const moreItems=allListings.filter(l=>l.vendorId===vendorId&&!cartIds.includes(l.id)&&!(l.qty&&l.claimed>=l.qty)).slice(0,6);
@@ -880,6 +1021,17 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
       savedAt:Date.now(),
     };
     saveOrder(receipt);
+    // ── NOTIFY MERCHANT VIA WHATSAPP ──────────────────────────────────────────
+    // In production: replace vendorPhone with real number from vendor profile DB
+    const vendorPhone=cart[0]?.vendorPhone||""; // e.g. "60123456789"
+    if(vendorPhone){
+      const items=cart.map(i=>`• ${i.title} — RM${fmtRM(i.dealPrice)}`).join('\n');
+      const deliveryInfo=deliveryMode==="delivery"
+        ?`\n🛵 *Lalamove Delivery*\nPickup: ${pickupAddr}\nDrop: ${dropAddr}\nContact: ${mobile}`
+        :"\n🚶 *Self-Pickup*";
+      const waMsg=`🧾 *New Order — Sapot Lokal*\n📦 Code: *${pickupCode}*\n\n${items}\n\n💰 Total: RM${fmtRM(total)}${deliveryInfo}\n\n_Please prepare the order. Buyer will show pickup code._`;
+      window.open(`https://wa.me/${vendorPhone}?text=${encodeURIComponent(waMsg)}`,'_blank');
+    }
     // ──────────────────────────────────────────────────────────────────────────
     setShowAdvert(true);
     setTimeout(()=>{setShowAdvert(false);setAdvertDismissed(true);setSuccess(true);},5000);
@@ -1659,6 +1811,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
 
   const filtered=allListings.filter(l=>{
     if(isStudentMode)return l.studentPrice!=null;
+    if(buyerTab==="cook")return false; // cook tab has its own component
     const ms=!search||[l.title,l.desc,l.vendorName,l.category].join(' ').toLowerCase().includes(search.toLowerCase());
     if(buyerTab==="foods"){
       const mc=catFilter==="all"||l.category===catFilter;
@@ -1703,15 +1856,19 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
               className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
             {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
           </div>
-          {/* Two main tabs */}
-          <div className="flex gap-2 mb-2">
+          {/* Three main tabs */}
+          <div className="flex gap-1.5 mb-2">
             <button onClick={()=>setBuyerTab("foods")}
-              className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               🍽️ All Foods
             </button>
             <button onClick={()=>setBuyerTab("deals")}
-              className={`flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-wide transition-all ${buyerTab==="deals"?"bg-orange-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-              🔖 Choose Deals
+              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="deals"?"bg-orange-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              🔖 Deals
+            </button>
+            <button onClick={()=>setBuyerTab("cook")}
+              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="cook"?"bg-purple-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              👨‍🍳 Cook
             </button>
           </div>
           {/* Foods sub-filter: category pills */}
@@ -1764,7 +1921,12 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
         </div>
       )}
 
-      <div className="px-3 pt-3 pb-6">
+      {/* ── ORDER TO COOK TAB ── */}
+      {buyerTab==="cook"&&!isStudentMode&&(
+        <OrderToCook allListings={allListings} t={t}/>
+      )}
+
+      <div className="px-3 pt-3 pb-6" style={{display:buyerTab==="cook"?"none":"block"}}>
         {isStudentMode&&(
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4 mb-3">
             <h2 className="font-black text-indigo-900 text-base mb-0.5">{t.studentCornerTitle}</h2>
