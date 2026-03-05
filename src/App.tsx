@@ -1193,17 +1193,10 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
       savedAt:Date.now(),
     };
     saveOrder(receipt);
-    // ── NOTIFY MERCHANT VIA WHATSAPP ──────────────────────────────────────────
-    // In production: replace vendorPhone with real number from vendor profile DB
-    const vendorPhone=cart[0]?.vendorPhone||""; // e.g. "60123456789"
-    if(vendorPhone){
-      const items=cart.map(i=>`• ${i.title} — RM${fmtRM(i.dealPrice)}`).join('\n');
-      const deliveryInfo=deliveryMode==="delivery"
-        ?`\n🛵 *Lalamove Delivery*\nPickup: ${pickupAddr}\nDrop: ${dropAddr}\nContact: ${mobile}`
-        :"\n🚶 *Self-Pickup*";
-      const waMsg=`🧾 *New Order — Sapot Lokal*\n📦 Code: *${pickupCode}*\n\n${items}\n\n💰 Total: RM${fmtRM(total)}${deliveryInfo}\n\n_Please prepare the order. Buyer will show pickup code._`;
-      window.open(`https://wa.me/${vendorPhone}?text=${encodeURIComponent(waMsg)}`,'_blank');
-    }
+    // ── MERCHANT NOTIFICATION ─────────────────────────────────────────────────
+    // Receipt is saved automatically above. Merchant notification via WhatsApp
+    // can be triggered manually by the buyer from the receipt using Share WhatsApp button.
+    // Auto-open removed: receipt panel already shows the order details clearly.
     // ──────────────────────────────────────────────────────────────────────────
     setShowAdvert(true);
     setTimeout(()=>{setShowAdvert(false);setAdvertDismissed(true);setSuccess(true);},5000);
@@ -1376,7 +1369,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                 }}
                   className="flex items-center justify-center gap-2 bg-[#25D366] text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-green-100">
                   <span className="text-base">💬</span>
-                  Share WA
+                  WhatsApp
                 </button>
               </div>
               {/* Download hint */}
@@ -1539,14 +1532,22 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                     {currentVendor&&(()=>{
                       const moreDeals=allListings.filter(l=>l.vendorId===currentVendor.vendorId&&!cartIds.includes(String(l.id))&&!(l.qty&&l.claimed>=l.qty));
                       const moreMenu=getVendorMenu(currentVendor.vendorId).filter(m=>m.available!==false&&!cartIds.includes("menu_"+m.id));
-                      const total=moreDeals.length+moreMenu.length;
-                      if(!total)return null;
+                      const moreCount=moreDeals.length+moreMenu.length;
+                      const vThreshold=currentVendor.freeDeliveryThreshold;
+                      const amountToFreeDelivery=vThreshold&&subtotal<vThreshold?fmtRM(vThreshold-subtotal):null;
+                      if(!moreCount&&!amountToFreeDelivery)return null;
                       return(
-                        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-                          <span className="text-xl flex-shrink-0">🛒</span>
+                        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-start gap-3">
+                          <span className="text-xl flex-shrink-0 mt-0.5">🛒</span>
                           <div className="flex-1">
-                            <p className="font-black text-amber-800 text-xs">{currentVendor.vendorName} has {total} more item{total!==1?"s":""}</p>
-                            <p className="text-amber-600 text-[10px]">Scroll up to add more before checkout</p>
+                            {amountToFreeDelivery&&(
+                              <p className="font-black text-amber-800 text-xs">Add RM{amountToFreeDelivery} more for free delivery! 🚗</p>
+                            )}
+                            {moreCount>0&&(
+                              <p className={`text-amber-700 text-[10px] ${amountToFreeDelivery?"mt-0.5":"font-black text-xs"}`}>
+                                {currentVendor.vendorName} has {moreCount} more item{moreCount!==1?"s":""} — scroll up or check the 📋 Menu tab
+                              </p>
+                            )}
                           </div>
                         </div>
                       );
