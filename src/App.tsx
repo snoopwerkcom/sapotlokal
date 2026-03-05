@@ -1155,6 +1155,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
 
   const subtotal=cart.reduce((s,i)=>s+i.dealPrice,0);
   const currentVendor=cart[0]||null;
+  const cartIds=cart.map(i=>String(i.id));
   const threshold=currentVendor?.freeDeliveryThreshold;
   const toGo=threshold?Math.max(0,threshold-subtotal):null;
   const freeUnlocked=threshold&&subtotal>=threshold;
@@ -2022,7 +2023,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
     distance:userLocation&&MOCK_VENDORS_GEO[l.vendorId]?hav(userLocation.lat,userLocation.lon,MOCK_VENDORS_GEO[l.vendorId].lat,MOCK_VENDORS_GEO[l.vendorId].lon):null,
   }));
 
-  const cartIds=cart.map(i=>i.id);
+  const cartIds=cart.map(i=>String(i.id));
   const currentVendorId=cart.length>0?cart[0].vendorId:null;
   const cartTotal=cart.reduce((s,i)=>s+i.dealPrice,0);
 
@@ -2043,7 +2044,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const regular=filtered.filter(l=>!urgentDeals.find(u=>u.id===l.id));
 
   const attemptAddToCart=(item)=>{
-    if(cartIds.includes(item.id))return;
+    if(cartIds.includes(String(item.id)))return;
     if(item.qty&&item.claimed>=item.qty)return;
     if(currentVendorId&&item.vendorId!==currentVendorId){
       const currentName=cart[0]?.vendorName||"current vendor";
