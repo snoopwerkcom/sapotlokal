@@ -922,7 +922,7 @@ function MenuBrowse({allListings,onAddToCart,cart,t}){
 }
 
 // ─── VENDOR MENU MANAGER (sell side) ──────────────────────────────────────────
-function VendorMenuManager({vendorId,t}){
+function VendorMenuManager({vendorId,t,onDone}){
   const [items,setItems]=React.useState(()=>getVendorMenu(vendorId));
   const [showAdd,setShowAdd]=React.useState(false);
   const [form,setForm]=React.useState({name:"",price:"",cat:"Food",desc:""});
@@ -939,6 +939,8 @@ function VendorMenuManager({vendorId,t}){
     saveVendorMenu(vendorId,updated);
     setForm({name:"",price:"",cat:"Food",desc:""});
     setShowAdd(false);
+    // After saving menu item, nudge merchant to post it as a deal
+    if(onDone) onDone();
   };
 
   const toggleAvail=(id)=>{
@@ -1000,6 +1002,9 @@ function VendorMenuManager({vendorId,t}){
               <button onClick={()=>setShowAdd(false)}
                 className="flex-1 bg-white/10 text-white/60 py-2.5 rounded-xl font-black text-xs uppercase">Cancel</button>
             </div>
+            {form.name.trim()&&form.price&&(
+              <p className="text-white/30 text-[9px] text-center">After saving, you'll be taken to Post Deal to promote this item with a discount 🔥</p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -1755,6 +1760,7 @@ function TrialBanner({subscription,onSubscribe}){
 
 function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t}){
   const [vendorFlowTab,setVendorFlowTab]=useState("deals"); // "deals" | "menu"
+  const [postDealNudge,setPostDealNudge]=useState(false);
   const [step,setStep]=useState(1);
   const [postType,setPostType]=useState(null);
   const [template,setTemplate]=useState(null);
@@ -1817,10 +1823,12 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
       {/* Sell tab switcher: Post Deal | My Menu */}
       <div className="sticky top-[60px] z-40 bg-[#0a0f1e]/95 backdrop-blur-md border-b border-white/10 px-4 py-3">
         <div className="flex gap-2 mb-1">
-          <button onClick={()=>setVendorFlowTab("deals")}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="deals"?"bg-emerald-500 text-white":"bg-white/10 text-white/40"}`}>
-            ⚡ Post Deal
-          </button>
+          <motion.button onClick={()=>setVendorFlowTab("deals")}
+            animate={postDealNudge?{scale:[1,1.06,1,1.06,1],boxShadow:["0 0 0px #10b981","0 0 18px #10b981","0 0 0px #10b981"]}:{}}
+            transition={{duration:0.5,repeat:postDealNudge?3:0}}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="deals"?"bg-emerald-500 text-white":`bg-white/10 text-white/40 ${postDealNudge?"ring-2 ring-emerald-400 ring-offset-1 ring-offset-[#0a0f1e]":""}`}`}>
+            ⚡ Post Deal{postDealNudge&&<span className="ml-1 text-emerald-300">← Now!</span>}
+          </motion.button>
           <button onClick={()=>setVendorFlowTab("menu")}
             className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="menu"?"bg-purple-500 text-white":"bg-white/10 text-white/40"}`}>
             🍽️ My Menu
@@ -1838,7 +1846,13 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
 
       {/* My Menu tab */}
       {vendorFlowTab==="menu"&&(
-        <VendorMenuManager vendorId={vendorId} t={t}/>
+        <VendorMenuManager vendorId={vendorId} t={t} onDone={()=>{
+          setVendorFlowTab("deals");
+          setStep(1);
+          setShowSuccess(false);
+          setPostDealNudge(true);
+          setTimeout(()=>setPostDealNudge(false),3000);
+        }}/>
       )}
 
       {/* Post Deal tab */}
@@ -2002,6 +2016,158 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
   );
 }
 
+// ─── SIDE ORDER POPUP ─────────────────────────────────────────────────────────
+function SideOrderPopup({popup,cart,onAdd,onCheckout,onClose,allListings}){
+  const cartIds=cart.map(i=>String(i.id));
+  const subtotal=cart.reduce((s,i)=>s+i.dealPrice,0);
+  const {vendorId,vendorName,threshold,moreDeals,moreMenu}=popup;
+
+  const toFreeDelivery=threshold&&subtotal<threshold?parseFloat((threshold-subtotal).toFixed(2)):null;
+  const freeUnlocked=threshold&&subtotal>=threshold;
+  const catEmoji={Food:"🍛",Drink:"🧋",Bakery:"🥐",Dessert:"🍡",TongSui:"🍮",Fruit:"🍉",Other:"📦"};
+
+  // Live-recalculate which items are still addable (cart changes as user adds)
+  const currentCartIds=cart.map(i=>String(i.id));
+  const availableDeals=moreDeals.filter(l=>!currentCartIds.includes(String(l.id)));
+  const availableMenu=moreMenu.filter(m=>!currentCartIds.includes("menu_"+m.id));
+  const hasItems=availableDeals.length>0||availableMenu.length>0;
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-sm flex items-end justify-center"
+      onClick={onClose}>
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}}
+        transition={{type:"spring",damping:28,stiffness:280}}
+        onClick={e=>e.stopPropagation()}
+        className="w-full max-w-sm bg-white rounded-t-[32px] overflow-hidden max-h-[80vh] flex flex-col">
+
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 bg-slate-200 rounded-full"/>
+        </div>
+
+        {/* Header */}
+        <div className="px-5 pt-2 pb-3 flex-shrink-0">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-black text-slate-900 text-base">🛒 Added to cart!</p>
+              <p className="text-slate-500 text-xs mt-0.5">Want to add sides from <span className="font-black text-slate-700">{vendorName}</span>?</p>
+            </div>
+            <button onClick={onClose} className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 text-xs mt-0.5">✕</button>
+          </div>
+
+          {/* Free delivery progress bar */}
+          {threshold&&(
+            <div className={`mt-3 rounded-2xl px-3 py-2.5 ${freeUnlocked?"bg-emerald-50 border border-emerald-200":"bg-blue-50 border border-blue-200"}`}>
+              {freeUnlocked?(
+                <p className="text-emerald-700 font-black text-xs">🎉 Free delivery unlocked! (RM{fmtRM(threshold)} reached)</p>
+              ):(
+                <>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <p className="text-blue-700 font-black text-[10px]">🚗 Add RM{fmtRM(toFreeDelivery)} more for free delivery</p>
+                    <p className="text-blue-500 text-[9px] font-bold">RM{fmtRM(subtotal)} / RM{fmtRM(threshold)}</p>
+                  </div>
+                  <div className="w-full bg-blue-200 h-2 rounded-full overflow-hidden">
+                    <motion.div className="bg-blue-500 h-full rounded-full"
+                      initial={{width:0}}
+                      animate={{width:`${Math.min((subtotal/threshold)*100,100)}%`}}
+                      transition={{duration:0.6,ease:"easeOut"}}/>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Items scroll area */}
+        {hasItems&&(
+          <div className="flex-1 overflow-y-auto px-5 pb-3 space-y-4">
+            {/* More deals from same vendor */}
+            {availableDeals.length>0&&(
+              <div>
+                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-2">🔥 Deals from {vendorName}</p>
+                <div className="space-y-2">
+                  {availableDeals.slice(0,4).map(item=>{
+                    const inCart=currentCartIds.includes(String(item.id));
+                    return(
+                      <div key={item.id} className="flex items-center gap-3 bg-slate-50 rounded-2xl p-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-200">
+                          <img src={item.image} className="w-full h-full object-cover" alt=""/>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-slate-800 text-sm truncate">{item.title}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-emerald-600 font-black text-sm">RM{fmtRM(item.dealPrice)}</p>
+                            {item.originalPrice>item.dealPrice&&<p className="text-slate-300 text-[10px] line-through">RM{fmtRM(item.originalPrice)}</p>}
+                          </div>
+                        </div>
+                        <motion.button whileTap={{scale:0.88}} onClick={()=>!inCart&&onAdd(item)} disabled={inCart}
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0 shadow-sm ${inCart?"bg-emerald-100 text-emerald-600":"bg-slate-900 text-white"}`}>
+                          {inCart?"✓":"+"}
+                        </motion.button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {/* Menu items from same vendor */}
+            {availableMenu.length>0&&(
+              <div>
+                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-2">📋 Menu from {vendorName}</p>
+                <div className="space-y-2">
+                  {availableMenu.slice(0,4).map(item=>{
+                    const cartKey="menu_"+item.id;
+                    const inCart=currentCartIds.includes(cartKey);
+                    return(
+                      <div key={item.id} className="flex items-center gap-3 bg-slate-50 rounded-2xl p-3">
+                        <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0 text-2xl">
+                          {catEmoji[item.cat]||"🍽️"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-slate-800 text-sm truncate">{item.name}</p>
+                          {item.desc&&<p className="text-slate-400 text-[10px] truncate">{item.desc}</p>}
+                          <p className="text-emerald-600 font-black text-sm">RM{fmtRM(item.price)}</p>
+                        </div>
+                        <motion.button whileTap={{scale:0.88}} onClick={()=>!inCart&&onAdd({
+                          id:cartKey,vendorId,vendorName,vendorPhone:"",
+                          title:item.name,desc:item.desc||"",
+                          dealPrice:item.price,originalPrice:item.price,
+                          image:"",category:item.cat,halal:1,
+                          freeDeliveryThreshold:threshold||null,
+                          studentPrice:null,qty:null,claimed:0,type:"menu",
+                        })} disabled={inCart}
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0 shadow-sm ${inCart?"bg-emerald-100 text-emerald-600":"bg-purple-600 text-white"}`}>
+                          {inCart?"✓":"+"}
+                        </motion.button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {!hasItems&&(
+          <div className="px-5 pb-4 text-center text-slate-400 text-sm">All available items added ✓</div>
+        )}
+
+        {/* Footer buttons */}
+        <div className="px-5 pb-8 pt-3 border-t border-slate-100 flex-shrink-0 grid grid-cols-2 gap-2">
+          <button onClick={onClose}
+            className="py-3.5 rounded-2xl border-2 border-slate-200 font-black text-slate-600 text-xs uppercase tracking-wide active:scale-95 transition-transform">
+            Continue Adding
+          </button>
+          <motion.button whileTap={{scale:0.96}} onClick={onCheckout}
+            className="py-3.5 rounded-2xl bg-slate-900 text-white font-black text-xs uppercase tracking-wide shadow-lg">
+            Checkout →
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ─── BUYER FEED ───────────────────────────────────────────────────────────────
 function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const [search,setSearch]=useState("");
@@ -2011,6 +2177,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const [cart,setCart]=useState([]);
   const [showCart,setShowCart]=useState(false);
   const [differentVendor,setDifferentVendor]=useState(null);
+  const [sideOrderPopup,setSideOrderPopup]=useState(null); // {vendorId, vendorName, threshold}
   const isStudentMode=activeTab==="student";
 
   const hav=(la1,lo1,la2,lo2)=>{
@@ -2052,7 +2219,27 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
       setDifferentVendor({item,currentName,newName:item.vendorName});
       return;
     }
-    setCart(prev=>[...prev,item]);
+    setCart(prev=>{
+      const updated=[...prev,item];
+      // After adding, check if vendor has menu or more deals + free delivery threshold
+      const vendorMenu=getVendorMenu(item.vendorId);
+      const updatedIds=updated.map(i=>String(i.id));
+      const moreDeals=allListings.filter(l=>l.vendorId===item.vendorId&&!updatedIds.includes(String(l.id))&&!(l.qty&&l.claimed>=l.qty));
+      const moreMenu=vendorMenu.filter(m=>m.available!==false&&!updatedIds.includes("menu_"+m.id));
+      const hasMore=moreDeals.length>0||moreMenu.length>0;
+      const threshold=item.freeDeliveryThreshold;
+      // Show popup if vendor has more items OR has a free delivery threshold
+      if(hasMore||threshold){
+        setTimeout(()=>setSideOrderPopup({
+          vendorId:item.vendorId,
+          vendorName:item.vendorName,
+          threshold,
+          moreDeals,
+          moreMenu,
+        }),300);
+      }
+      return updated;
+    });
   };
 
   const removeFromCart=(idx)=>setCart(prev=>prev.filter((_,i)=>i!==idx));
@@ -2238,6 +2425,20 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
             onAdd={attemptAddToCart}
             allListings={allListings}
             t={t}/>
+        )}
+      </AnimatePresence>
+
+      {/* Side order popup — appears after adding to cart */}
+      <AnimatePresence>
+        {sideOrderPopup&&!showCart&&(
+          <SideOrderPopup
+            popup={sideOrderPopup}
+            cart={cart}
+            onAdd={attemptAddToCart}
+            onCheckout={()=>{setSideOrderPopup(null);setShowCart(true);}}
+            onClose={()=>setSideOrderPopup(null)}
+            allListings={allListings}
+          />
         )}
       </AnimatePresence>
     </div>
