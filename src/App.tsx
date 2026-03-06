@@ -401,6 +401,7 @@ const MOCK_VENDORS_GEO = {
   7:{lat:3.1319,lon:101.6841,area:"KLCC"},
   8:{lat:3.2068,lon:101.5987,area:"Kepong"},
   9:{lat:3.1073,lon:101.6370,area:"Petaling Jaya"},
+  99:{lat:3.0696,lon:101.5989,area:"Puchong"}, // local merchant (this app's vendor)
 };
 
 const MOCK_LISTINGS = [
@@ -921,122 +922,140 @@ function MenuBrowse({allListings,onAddToCart,cart,t}){
   );
 }
 
-// ─── VENDOR MENU MANAGER (sell side) ──────────────────────────────────────────
+// ─── ADD MENU ITEMS FORM — numbered rows, save all at once ───────────────────
+function AddMenuItemsForm({defaultName,defaultCat,onSave,onSkip}){
+  const cats=["Food","Drink","Bakery","Dessert","TongSui","Fruit","Other"];
+  const catEmoji={Food:"🍛",Drink:"🧋",Bakery:"🥐",Dessert:"🍡",TongSui:"🍮",Fruit:"🍉",Other:"📦"};
+  const newRow=(o={})=>({uid:Date.now()+Math.random(),name:"",price:"",cat:"Food",desc:"",...o});
+  const [rows,setRows]=React.useState([newRow({name:defaultName||"",cat:defaultCat||"Food"})]);
+
+  const upd=(uid,k,v)=>setRows(r=>r.map(row=>row.uid===uid?{...row,[k]:v}:row));
+  const addRow=()=>setRows(r=>[...r,newRow()]);
+  const removeRow=(uid)=>setRows(r=>r.length>1?r.filter(row=>row.uid!==uid):r);
+  const valid=rows.filter(r=>r.name.trim()&&r.price&&parseFloat(r.price)>0);
+
+  const handleSave=()=>{
+    const items=valid.map(r=>({
+      id:Date.now().toString()+Math.random().toString(36).slice(2,5),
+      name:r.name.trim(),price:parseFloat(r.price),
+      cat:r.cat,desc:r.desc.trim(),available:true,
+    }));
+    onSave(items);
+  };
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",flex:1,overflow:"hidden"}}>
+      <div className="px-5 pt-5 pb-3 border-b border-white/10 flex-shrink-0">
+        <p className="text-white font-black text-base">Add to My Menu 🍽️</p>
+        <p className="text-white/30 text-[10px] mt-0.5">Fill numbered rows — add as many as you need, then save all at once.</p>
+      </div>
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {rows.map((row,idx)=>(
+          <div key={row.uid} className="border border-white/10 rounded-2xl p-3 space-y-2">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">{idx+1}</div>
+              <p className="text-white/40 text-[9px] font-black uppercase tracking-widest flex-1">Item {idx+1}</p>
+              {rows.length>1&&<button onClick={()=>removeRow(row.uid)} className="w-5 h-5 bg-red-500/20 rounded-full flex items-center justify-center text-red-400 text-[9px]">✕</button>}
+            </div>
+            <input value={row.name} onChange={e=>upd(row.uid,"name",e.target.value)}
+              placeholder="Item name e.g. Nasi Lemak *"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 text-[10px] font-bold">RM</span>
+                <input value={row.price} onChange={e=>upd(row.uid,"price",e.target.value)} type="number" step="0.50" placeholder="Price *"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-2 py-2 text-white text-xs font-black focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+              </div>
+              <select value={row.cat} onChange={e=>upd(row.uid,"cat",e.target.value)}
+                className="bg-white/10 border border-white/10 rounded-xl px-2 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                {cats.map(c=><option key={c} value={c} className="bg-slate-900">{catEmoji[c]} {c}</option>)}
+              </select>
+            </div>
+            <input value={row.desc} onChange={e=>upd(row.uid,"desc",e.target.value)}
+              placeholder="Description (optional)"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+          </div>
+        ))}
+        <button onClick={addRow}
+          className="w-full border-2 border-dashed border-white/15 rounded-2xl py-3 flex items-center justify-center gap-2 text-white/30 font-black text-xs hover:border-white/30 hover:text-white/50 transition-all">
+          + Add Row {rows.length+1}
+        </button>
+      </div>
+      <div className="px-4 pb-8 pt-3 border-t border-white/10 flex-shrink-0 space-y-2">
+        <motion.button whileTap={{scale:0.97}} onClick={handleSave} disabled={!valid.length}
+          className={`w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${valid.length?"bg-emerald-500 text-white shadow-lg shadow-emerald-900/50":"bg-white/5 text-white/20"}`}>
+          ✅ Save {valid.length} Item{valid.length!==1?"s":""} to Menu
+        </motion.button>
+        <button onClick={onSkip} className="w-full py-2 text-white/20 font-black text-[10px] uppercase">Skip for now</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── VENDOR MENU MANAGER (My Menu tab) ────────────────────────────────────────
 function VendorMenuManager({vendorId,t,onDone}){
   const [items,setItems]=React.useState(()=>getVendorMenu(vendorId));
   const [showAdd,setShowAdd]=React.useState(false);
-  const [form,setForm]=React.useState({name:"",price:"",cat:"Food",desc:""});
-  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
-
-  const cats=["Food","Drink","Bakery","Dessert","TongSui","Fruit","Other"];
   const catEmoji={Food:"🍛",Drink:"🧋",Bakery:"🥐",Dessert:"🍡",TongSui:"🍮",Fruit:"🍉",Other:"📦"};
 
-  const addItem=()=>{
-    if(!form.name.trim()||!form.price)return;
-    const newItem={id:Date.now().toString(),name:form.name.trim(),price:parseFloat(form.price),cat:form.cat,desc:form.desc.trim(),available:true};
-    const updated=[...items,newItem];
+  const handleSave=(newItems)=>{
+    const updated=[...items,...newItems];
     setItems(updated);
     saveVendorMenu(vendorId,updated);
-    setForm({name:"",price:"",cat:"Food",desc:""});
     setShowAdd(false);
-    // After saving menu item, nudge merchant to post it as a deal
     if(onDone) onDone();
   };
+  const toggleAvail=(id)=>{const u=items.map(i=>i.id===id?{...i,available:!i.available}:i);setItems(u);saveVendorMenu(vendorId,u);};
+  const deleteItem=(id)=>{const u=items.filter(i=>i.id!==id);setItems(u);saveVendorMenu(vendorId,u);};
 
-  const toggleAvail=(id)=>{
-    const updated=items.map(i=>i.id===id?{...i,available:!i.available}:i);
-    setItems(updated);saveVendorMenu(vendorId,updated);
-  };
-
-  const deleteItem=(id)=>{
-    const updated=items.filter(i=>i.id!==id);
-    setItems(updated);saveVendorMenu(vendorId,updated);
-  };
+  if(showAdd) return(
+    <div style={{height:"calc(100vh - 130px)",display:"flex",flexDirection:"column"}}>
+      <AddMenuItemsForm defaultName="" defaultCat="Food" onSave={handleSave} onSkip={()=>setShowAdd(false)}/>
+    </div>
+  );
 
   return(
     <div className="px-4 pt-3 pb-28">
       <div className="flex items-center justify-between mb-4">
         <div>
           <p className="text-white font-black text-base">My Menu</p>
-          <p className="text-white/30 text-[10px]">{items.length} items · Buyers can order directly from this menu</p>
+          <p className="text-white/30 text-[10px]">{items.length} item{items.length!==1?"s":""} · Buyers order directly from here</p>
         </div>
         <motion.button whileTap={{scale:0.95}} onClick={()=>setShowAdd(true)}
           className="bg-emerald-500 text-white px-3 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-900/50">
-          <span>+</span> Add Item
+          + Add Items
         </motion.button>
       </div>
 
-      {/* Add item form */}
-      <AnimatePresence>
-        {showAdd&&(
-          <motion.div initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10}}
-            className="bg-white/5 border border-white/20 rounded-2xl p-4 mb-4 space-y-3">
-            <p className="text-white font-black text-sm">New Menu Item</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="col-span-2">
-                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1">Item Name *</label>
-                <input value={form.name} onChange={e=>upd("name",e.target.value)} placeholder="e.g. Nasi Lemak"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none"/>
-              </div>
-              <div>
-                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1">Price (RM) *</label>
-                <input value={form.price} onChange={e=>upd("price",e.target.value)} type="number" step="0.50" placeholder="0.00"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm font-black focus:border-emerald-500 focus:outline-none"/>
-              </div>
-              <div>
-                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1">Category</label>
-                <select value={form.cat} onChange={e=>upd("cat",e.target.value)}
-                  className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none">
-                  {cats.map(c=><option key={c} value={c} className="bg-slate-900">{catEmoji[c]} {c}</option>)}
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1">Description (optional)</label>
-                <input value={form.desc} onChange={e=>upd("desc",e.target.value)} placeholder="e.g. with egg and sambal"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm font-bold focus:border-emerald-500 focus:outline-none"/>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={addItem} disabled={!form.name.trim()||!form.price}
-                className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase disabled:opacity-30">Add to Menu</button>
-              <button onClick={()=>setShowAdd(false)}
-                className="flex-1 bg-white/10 text-white/60 py-2.5 rounded-xl font-black text-xs uppercase">Cancel</button>
-            </div>
-            {form.name.trim()&&form.price&&(
-              <p className="text-white/30 text-[9px] text-center">After saving, you'll be taken to Post Deal to promote this item with a discount 🔥</p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {items.length===0?(
-        <div className="text-center py-12">
+        <div className="text-center py-16">
           <p className="text-5xl mb-3">🍽️</p>
           <p className="text-white/40 font-black">No menu items yet</p>
-          <p className="text-white/20 text-xs mt-1">Add items so buyers can order from your full menu</p>
+          <p className="text-white/20 text-xs mt-1 mb-5">Buyers can order from your menu anytime</p>
+          <button onClick={()=>setShowAdd(true)} className="bg-emerald-500 text-white px-5 py-3 rounded-2xl font-black text-xs uppercase shadow-lg shadow-emerald-900/50">
+            + Add Your First Items
+          </button>
         </div>
       ):(
         <div className="space-y-2">
-          {items.map(item=>(
-            <div key={item.id} className={`bg-white/5 border ${item.available?"border-white/10":"border-white/5 opacity-50"} rounded-2xl px-4 py-3 flex items-center gap-3`}>
-              <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center text-lg flex-shrink-0">
-                {catEmoji[item.cat]||"🍽️"}
-              </div>
+          {items.map((item,idx)=>(
+            <div key={item.id} className={`bg-white/5 border ${item.available?"border-white/10":"border-white/5 opacity-40"} rounded-2xl px-3 py-3 flex items-center gap-3`}>
+              <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center text-[10px] font-black text-white/40 flex-shrink-0">{idx+1}</div>
+              <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-base flex-shrink-0">{catEmoji[item.cat]||"🍽️"}</div>
               <div className="flex-1 min-w-0">
-                <p className={`font-black text-sm truncate ${item.available?"text-white":"text-white/40"}`}>{item.name}</p>
-                <div className="flex items-center gap-2">
+                <p className={`font-black text-sm truncate ${item.available?"text-white":"text-white/30"}`}>{item.name}</p>
+                <div className="flex items-center gap-1.5">
                   <p className="text-emerald-400 font-black text-xs">RM{fmtRM(item.price)}</p>
-                  <span className="text-white/20 text-[9px]">·</span>
+                  <span className="text-white/20 text-[8px]">·</span>
                   <p className="text-white/30 text-[9px]">{item.cat}</p>
+                  {item.desc&&<><span className="text-white/20 text-[8px]">·</span><p className="text-white/20 text-[9px] truncate max-w-[80px]">{item.desc}</p></>}
                 </div>
-                {item.desc&&<p className="text-white/25 text-[9px] truncate">{item.desc}</p>}
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button onClick={()=>toggleAvail(item.id)}
-                  className={`text-[9px] font-black px-2 py-1 rounded-lg transition-all ${item.available?"bg-emerald-500/20 text-emerald-400":"bg-white/10 text-white/30"}`}>
+                <button onClick={()=>toggleAvail(item.id)} className={`text-[9px] font-black px-2 py-1 rounded-lg ${item.available?"bg-emerald-500/20 text-emerald-400":"bg-white/10 text-white/30"}`}>
                   {item.available?"ON":"OFF"}
                 </button>
-                <button onClick={()=>deleteItem(item.id)} className="w-7 h-7 bg-red-500/15 rounded-lg flex items-center justify-center text-red-400 text-xs">✕</button>
+                <button onClick={()=>deleteItem(item.id)} className="w-6 h-6 bg-red-500/15 rounded-lg flex items-center justify-center text-red-400 text-[9px]">✕</button>
               </div>
             </div>
           ))}
@@ -1045,7 +1064,6 @@ function VendorMenuManager({vendorId,t,onDone}){
     </div>
   );
 }
-
 
 function ContinueShoppingBar({vendorId,vendorName,allListings,cart,onAdd,t}){
   const cartIds=cart.map(i=>String(i.id));
@@ -1758,7 +1776,7 @@ function TrialBanner({subscription,onSubscribe}){
   );
 }
 
-function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t}){
+function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubscription,t}){
   const [vendorFlowTab,setVendorFlowTab]=useState("deals"); // "deals" | "menu"
   const [postDealNudge,setPostDealNudge]=useState(false);
   const [step,setStep]=useState(1);
@@ -1773,6 +1791,8 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
   const [form,setForm]=useState({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
   const [cancelTarget,setCancelTarget]=useState(null);
   const [showSuccess,setShowSuccess]=useState(false);
+  const [showAddMenu,setShowAddMenu]=useState(false);
+  const [lastPosted,setLastPosted]=useState(null);
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
 
   const vendorId=99; // In production use real vendorId from auth
@@ -1798,14 +1818,17 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
         vendorPhone:vendorMeta?.phone||"",
         title:form.title,desc:form.desc,originalPrice:parseFloat(form.original)||parseFloat(form.price)*1.5,
         dealPrice:parseFloat(form.price),emoji:template?.emoji||"🍱",image:photo,
-        category:template?.category||"Other",halal:form.halal!==null?form.halal:0,
+        category:template?.category||"Food",halal:form.halal!==null?form.halal:0,
         endTime:computedEnd,qty:form.qty?parseInt(form.qty):null,claimed:0,
         type:postType||"limited",postedAt:Date.now(),vendorSubscribed:!!subscription,
         freeDeliveryThreshold:null,studentPrice:form.hasStudentPrice&&form.studentPrice?parseFloat(form.studentPrice):null,
       };
       setActivePosts(p=>[post,...p]);
       onNewListing(post);
-      setPublishing(false);setShowSuccess(true);
+      setLastPosted(post);
+      setPublishing(false);
+      setShowSuccess(true);
+      setShowAddMenu(false);
       setStep(1);setPostType(null);setTemplate(null);setPhoto(null);setTimeMode("stock");
       setForm({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
     },1500);
@@ -2002,12 +2025,53 @@ function VendorFlow({onNewListing,vendorMeta,subscription,onShowSubscription,t})
       )} {/* end vendorFlowTab==="deals" */}
       <AnimatePresence>
         {showSuccess&&(
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md flex items-end justify-center" onClick={()=>setShowSuccess(false)}>
-            <motion.div initial={{y:100}} animate={{y:0}} exit={{y:100}} transition={{type:"spring",damping:28}} onClick={e=>e.stopPropagation()} className="w-full max-w-sm bg-[#0d1929] rounded-t-[40px] p-8 pb-12 text-center">
-              <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",delay:0.1}} className="text-6xl mb-4">🎉</motion.div>
-              <h2 className="text-white text-2xl font-black mb-2">{t.postSuccess}</h2>
-              <p className="text-white/50 text-sm mb-6">{t.liveNote}</p>
-              <button onClick={()=>setShowSuccess(false)} className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs">{t.viewDash}</button>
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+            className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-md flex items-end justify-center">
+            <motion.div initial={{y:100}} animate={{y:0}} exit={{y:100}}
+              transition={{type:"spring",damping:28}} onClick={e=>e.stopPropagation()}
+              className="w-full max-w-sm bg-[#0d1929] rounded-t-[40px] overflow-hidden"
+              style={{maxHeight:"92vh",display:"flex",flexDirection:"column"}}>
+
+              {!showAddMenu ? (
+                /* ── Step A: Celebrate + ask about menu ── */
+                <div className="p-8 pb-10 text-center">
+                  <motion.div initial={{scale:0}} animate={{scale:[0,1.2,1]}} transition={{type:"spring",delay:0.1}} className="text-6xl mb-4">🎉</motion.div>
+                  <h2 className="text-white text-2xl font-black mb-1">{t.postSuccess}</h2>
+                  <p className="text-white/50 text-sm mb-5">{t.liveNote}</p>
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-5 text-left">
+                    <p className="text-white font-black text-sm mb-1">🍽️ Add this to your menu?</p>
+                    <p className="text-white/30 text-xs leading-relaxed">Buyers can browse and order from your menu anytime — not just when a deal is live.</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button onClick={()=>{setShowSuccess(false);if(onPostDone)onPostDone();}}
+                      className="py-3.5 rounded-2xl border border-white/20 text-white/40 font-black text-xs uppercase">
+                      Skip
+                    </button>
+                    <motion.button whileTap={{scale:0.96}} onClick={()=>setShowAddMenu(true)}
+                      className="py-3.5 rounded-2xl bg-purple-500 text-white font-black text-xs uppercase shadow-lg shadow-purple-900/50">
+                      Yes, Add to Menu →
+                    </motion.button>
+                  </div>
+                  <button onClick={()=>{setShowSuccess(false);if(onPostDone)onPostDone();}}
+                    className="w-full mt-3 py-2.5 rounded-2xl bg-emerald-500/20 text-emerald-400 font-black text-xs uppercase tracking-wide">
+                    👁️ View My Post in Feed →
+                  </button>
+                </div>
+              ) : (
+                /* ── Step B: Numbered menu add form ── */
+                <AddMenuItemsForm
+                  defaultName={lastPosted?.title||""}
+                  defaultCat={lastPosted?.category||"Food"}
+                  onSave={(newItems)=>{
+                    const existing=getVendorMenu(vendorId);
+                    saveVendorMenu(vendorId,[...existing,...newItems]);
+                    setShowSuccess(false);
+                    setShowAddMenu(false);
+                    if(onPostDone)onPostDone();
+                  }}
+                  onSkip={()=>{setShowSuccess(false);setShowAddMenu(false);if(onPostDone)onPostDone();}}
+                />
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -2179,6 +2243,15 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   const [differentVendor,setDifferentVendor]=useState(null);
   const [sideOrderPopup,setSideOrderPopup]=useState(null); // {vendorId, vendorName, threshold}
   const isStudentMode=activeTab==="student";
+
+  // When merchant posts a new deal, reset filters so it's guaranteed visible
+  useEffect(()=>{
+    if(vendorListings.length>0){
+      setBuyerTab("foods");
+      setCatFilter("all");
+      setSearch("");
+    }
+  },[vendorListings.length]);
 
   const hav=(la1,lo1,la2,lo2)=>{
     const R=6371;const dL=(la2-la1)*Math.PI/180;const dO=(lo2-lo1)*Math.PI/180;
@@ -2783,7 +2856,14 @@ function AppInner(){
 
   useEffect(()=>{if(locationHook.status==='idle')locationHook.request();},[]);
 
-  const handleNewListing=(listing)=>setVendorListings(p=>[listing,...p]);
+  const handleNewListing=(listing)=>{
+    setVendorListings(p=>[listing,...p]);
+  };
+
+  const handlePostDone=()=>{
+    // After merchant finishes post flow (dismissed success modal), show them buyer feed
+    setTab("deals");
+  };
 
   return(
     <div className="max-w-sm mx-auto relative md:max-w-none md:mx-0">
@@ -2859,7 +2939,7 @@ function AppInner(){
       <AnimatePresence mode="wait">
         {tab==="sell"&&(
           <motion.div key="sell" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
-            <VendorFlow onNewListing={handleNewListing} vendorMeta={vendorMeta} subscription={subscription} onShowSubscription={()=>setShowSubscription(true)} t={t}/>
+            <VendorFlow onNewListing={handleNewListing} onPostDone={handlePostDone} vendorMeta={vendorMeta} subscription={subscription} onShowSubscription={()=>setShowSubscription(true)} t={t}/>
           </motion.div>
         )}
       </AnimatePresence>
