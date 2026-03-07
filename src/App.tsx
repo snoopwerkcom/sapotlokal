@@ -450,11 +450,19 @@ const halalBadge = (h)=>{
 function useCountdown(endTime){
   const [left, setLeft]=useState("");
   useEffect(()=>{
-    if(!endTime){setLeft("While stock lasts");return;}
+    if(!endTime){setLeft("Live");return;}
     const calc=()=>{
-      const now=new Date();const p=endTime.split(":").map(Number);
-      const end=new Date();end.setHours(p[0],p[1],0,0);
-      if(end<now){setLeft("Expired");return;}
+      const now=new Date();
+      // endTime can be "HH:MM" string OR ms timestamp number
+      let end;
+      if(typeof endTime==="number"){
+        end=new Date(endTime);
+      } else {
+        const p=endTime.split(":").map(Number);
+        end=new Date();end.setHours(p[0],p[1],0,0);
+        // if end time is earlier than now it means next-day edge — treat as expired for today
+      }
+      if(end<=now){setLeft("Expired");return;}
       const d=end-now;const hh=Math.floor(d/3600000);const mm=Math.floor((d%3600000)/60000);
       setLeft(hh>0?`${hh}h ${mm}m left`:`${mm} min left`);
     };
@@ -1011,17 +1019,41 @@ function AddMenuItemsForm({defaultName,defaultCat,onSave,onSkip}){
 function VendorMenuManager({vendorId,t,onDone}){
   const [items,setItems]=React.useState(()=>getVendorMenu(vendorId));
   const [showAdd,setShowAdd]=React.useState(false);
+  const [editingId,setEditingId]=React.useState(null); // id of item being edited
+  const [editForm,setEditForm]=React.useState({}); // {name,price,cat,desc,image}
+  const cats=["Food","Drink","Bakery","Dessert","TongSui","Fruit","Other"];
   const catEmoji={Food:"🍛",Drink:"🧋",Bakery:"🥐",Dessert:"🍡",TongSui:"🍮",Fruit:"🍉",Other:"📦"};
+
+  const persist=(updated)=>{setItems(updated);saveVendorMenu(vendorId,updated);};
 
   const handleSave=(newItems)=>{
     const updated=[...items,...newItems];
-    setItems(updated);
-    saveVendorMenu(vendorId,updated);
+    persist(updated);
     setShowAdd(false);
     if(onDone) onDone();
   };
-  const toggleAvail=(id)=>{const u=items.map(i=>i.id===id?{...i,available:!i.available}:i);setItems(u);saveVendorMenu(vendorId,u);};
-  const deleteItem=(id)=>{const u=items.filter(i=>i.id!==id);setItems(u);saveVendorMenu(vendorId,u);};
+
+  const startEdit=(item)=>{
+    setEditingId(item.id);
+    setEditForm({name:item.name,price:String(item.price),cat:item.cat,desc:item.desc||"",image:item.image||""});
+  };
+
+  const saveEdit=(id)=>{
+    if(!editForm.name.trim()||!editForm.price) return;
+    const updated=items.map(i=>i.id===id?{...i,name:editForm.name.trim(),price:parseFloat(editForm.price),cat:editForm.cat,desc:editForm.desc.trim(),image:editForm.image}:i);
+    persist(updated);
+    setEditingId(null);
+  };
+
+  const handleEditPhoto=(e)=>{
+    const file=e.target.files&&e.target.files[0];if(!file)return;
+    const r=new FileReader();
+    r.onloadend=()=>setEditForm(p=>({...p,image:r.result}));
+    r.readAsDataURL(file);
+  };
+
+  const toggleAvail=(id)=>{persist(items.map(i=>i.id===id?{...i,available:!i.available}:i));};
+  const deleteItem=(id)=>{persist(items.filter(i=>i.id!==id));if(editingId===id)setEditingId(null);};
 
   if(showAdd) return(
     <div style={{height:"calc(100vh - 130px)",display:"flex",flexDirection:"column"}}>
@@ -1031,10 +1063,10 @@ function VendorMenuManager({vendorId,t,onDone}){
 
   return(
     <div className="px-4 pt-3 pb-28">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
           <p className="text-white font-black text-base">My Menu</p>
-          <p className="text-white/30 text-[10px]">{items.length} item{items.length!==1?"s":""} · Buyers order directly from here</p>
+          <p className="text-white/30 text-[10px]">{items.length} item{items.length!==1?"s":""} · No expiry — live until you remove</p>
         </div>
         <motion.button whileTap={{scale:0.95}} onClick={()=>setShowAdd(true)}
           className="bg-emerald-500 text-white px-3 py-2 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-900/50">
@@ -1053,32 +1085,84 @@ function VendorMenuManager({vendorId,t,onDone}){
         </div>
       ):(
         <div className="space-y-2">
+          <AnimatePresence>
           {items.map((item,idx)=>(
-            <div key={item.id} className={`bg-white/5 border ${item.available?"border-white/10":"border-white/5 opacity-40"} rounded-2xl px-3 py-3 flex items-center gap-3`}>
-              <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center text-[10px] font-black text-white/40 flex-shrink-0">{idx+1}</div>
-              <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 flex items-center justify-center">
-                {item.image
-                  ?<img src={item.image} className="w-full h-full object-cover" alt=""/>
-                  :<span className="text-base">{catEmoji[item.cat]||"🍽️"}</span>
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`font-black text-sm truncate ${item.available?"text-white":"text-white/30"}`}>{item.name}</p>
-                <div className="flex items-center gap-1.5">
-                  <p className="text-emerald-400 font-black text-xs">RM{fmtRM(item.price)}</p>
-                  <span className="text-white/20 text-[8px]">·</span>
-                  <p className="text-white/30 text-[9px]">{item.cat}</p>
-                  {item.desc&&<><span className="text-white/20 text-[8px]">·</span><p className="text-white/20 text-[9px] truncate max-w-[80px]">{item.desc}</p></>}
+            <motion.div key={item.id} layout initial={{opacity:0,y:-6}} animate={{opacity:1,y:0}} exit={{opacity:0,x:-20}}>
+              {editingId===item.id?(
+                /* ── EDIT MODE ── */
+                <div className="border-2 border-emerald-500/40 bg-emerald-500/5 rounded-2xl p-3 space-y-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0">{idx+1}</div>
+                    <p className="text-emerald-400 font-black text-[10px] uppercase tracking-widest flex-1">Editing</p>
+                    <button onClick={()=>setEditingId(null)} className="text-white/30 text-[10px] font-black">Cancel</button>
+                  </div>
+                  {/* Photo edit */}
+                  <label className={`flex items-center gap-2 cursor-pointer rounded-xl border px-3 py-2 transition-all ${editForm.image?"border-emerald-500/40 bg-emerald-500/10":"border-white/10 bg-white/5"}`}>
+                    {editForm.image
+                      ?<><img src={editForm.image} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt=""/><span className="text-emerald-400 font-black text-[10px] flex-1">Photo ✓</span><span className="text-white/30 text-[9px]">tap to change</span></>
+                      :<><span className="text-base">📷</span><span className="text-white/30 font-black text-[10px]">Add photo</span></>
+                    }
+                    <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleEditPhoto}/>
+                  </label>
+                  <input value={editForm.name} onChange={e=>setEditForm(p=>({...p,name:e.target.value}))}
+                    placeholder="Item name *"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none"/>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30 text-[10px] font-bold">RM</span>
+                      <input value={editForm.price} onChange={e=>setEditForm(p=>({...p,price:e.target.value}))} type="number" step="0.50"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-2 py-2 text-white text-xs font-black focus:border-emerald-500 focus:outline-none"/>
+                    </div>
+                    <select value={editForm.cat} onChange={e=>setEditForm(p=>({...p,cat:e.target.value}))}
+                      className="bg-white/10 border border-white/10 rounded-xl px-2 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                      {cats.map(c=><option key={c} value={c} className="bg-slate-900">{catEmoji[c]} {c}</option>)}
+                    </select>
+                  </div>
+                  <input value={editForm.desc} onChange={e=>setEditForm(p=>({...p,desc:e.target.value}))}
+                    placeholder="Description (optional)"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none"/>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={()=>saveEdit(item.id)} disabled={!editForm.name.trim()||!editForm.price}
+                      className="flex-1 bg-emerald-500 text-white py-2.5 rounded-xl font-black text-xs uppercase disabled:opacity-30">
+                      Save Changes
+                    </button>
+                    <button onClick={()=>deleteItem(item.id)}
+                      className="px-4 bg-red-500/20 text-red-400 py-2.5 rounded-xl font-black text-xs uppercase">
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button onClick={()=>toggleAvail(item.id)} className={`text-[9px] font-black px-2 py-1 rounded-lg ${item.available?"bg-emerald-500/20 text-emerald-400":"bg-white/10 text-white/30"}`}>
-                  {item.available?"ON":"OFF"}
-                </button>
-                <button onClick={()=>deleteItem(item.id)} className="w-6 h-6 bg-red-500/15 rounded-lg flex items-center justify-center text-red-400 text-[9px]">✕</button>
-              </div>
-            </div>
+              ):(
+                /* ── VIEW MODE ── */
+                <div className={`bg-white/5 border ${item.available?"border-white/10":"border-white/5 opacity-40"} rounded-2xl px-3 py-3 flex items-center gap-3`}>
+                  <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center text-[10px] font-black text-white/40 flex-shrink-0">{idx+1}</div>
+                  <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 flex items-center justify-center">
+                    {item.image
+                      ?<img src={item.image} className="w-full h-full object-cover" alt=""/>
+                      :<span className="text-base">{catEmoji[item.cat]||"🍽️"}</span>
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0" onClick={()=>startEdit(item)} style={{cursor:"pointer"}}>
+                    <p className={`font-black text-sm truncate ${item.available?"text-white":"text-white/30"}`}>{item.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-emerald-400 font-black text-xs">RM{fmtRM(item.price)}</p>
+                      <span className="text-white/20 text-[8px]">·</span>
+                      <p className="text-white/30 text-[9px]">{item.cat}</p>
+                    </div>
+                    {item.desc&&<p className="text-white/20 text-[9px] truncate">{item.desc}</p>}
+                    <p className="text-white/15 text-[8px] mt-0.5">tap to edit</p>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button onClick={()=>toggleAvail(item.id)} className={`text-[9px] font-black px-2 py-1 rounded-lg ${item.available?"bg-emerald-500/20 text-emerald-400":"bg-white/10 text-white/30"}`}>
+                      {item.available?"ON":"OFF"}
+                    </button>
+                    <button onClick={()=>deleteItem(item.id)} className="w-6 h-6 bg-red-500/15 rounded-lg flex items-center justify-center text-red-400 text-[9px]">✕</button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
     </div>
@@ -1799,6 +1883,25 @@ function TrialBanner({subscription,onSubscribe}){
   );
 }
 
+// ─── ACTIVE POST BADGE ────────────────────────────────────────────────────────
+function ActivePostBadge({post}){
+  const [label,setLabel]=React.useState("");
+  React.useEffect(()=>{
+    const calc=()=>{
+      if(!post.endTime){setLabel("🟢 Live");return;}
+      const now=Date.now();
+      const end=typeof post.endTime==="number"?post.endTime:Date.now();
+      if(end<=now){setLabel("🔴 Expired");return;}
+      const d=end-now;
+      const hh=Math.floor(d/3600000);const mm=Math.floor((d%3600000)/60000);
+      const timeStr=new Date(end).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+      setLabel(hh>0?`⏱ Until ${timeStr}`:`⏱ ${mm}m left`);
+    };
+    calc();const id=setInterval(calc,30000);return()=>clearInterval(id);
+  },[post.endTime]);
+  return <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{label}</span>;
+}
+
 function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubscription,t}){
   const [vendorFlowTab,setVendorFlowTab]=useState("deals"); // "deals" | "menu"
   const [postDealNudge,setPostDealNudge]=useState(false);
@@ -1809,8 +1912,6 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
   const [uploading,setUploading]=useState(false);
   const [publishing,setPublishing]=useState(false);
   const [activePosts,setActivePosts]=useState([]);
-  const [timeMode,setTimeMode]=useState("stock");
-  const [quickHours,setQuickHours]=useState(3);
   const [form,setForm]=useState({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
   const [cancelTarget,setCancelTarget]=useState(null);
   const [showSuccess,setShowSuccess]=useState(false);
@@ -1820,7 +1921,11 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
 
   const vendorId=99; // In production use real vendorId from auth
   const commission=15; // Fixed 15% platform commission
-  const computedEnd=timeMode==="stock"?null:timeMode==="hours"?addHours(getNow(),quickHours):"22:00";
+  // Time window: null=auto 12hr, or {from:"HH:MM", to:"HH:MM"}
+  const [timeWindow,setTimeWindow]=useState(null); // null = use default 12hr
+  const [customFrom,setCustomFrom]=useState(""); // e.g. "11:00"
+  const [customTo,setCustomTo]=useState("");     // e.g. "14:00"
+  // computedEnd: if custom set use today's end time as ms timestamp, else postedAt+12h (set at publish time)
   const canPublish=form.title&&form.price&&photo&&form.halal!==null;
 
   const handlePhoto=(e)=>{
@@ -1842,7 +1947,17 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
         title:form.title,desc:form.desc,originalPrice:parseFloat(form.original)||parseFloat(form.price)*1.5,
         dealPrice:parseFloat(form.price),emoji:template?.emoji||"🍱",image:photo,
         category:template?.category||"Food",halal:form.halal!==null?form.halal:0,
-        endTime:computedEnd,qty:form.qty?parseInt(form.qty):null,claimed:0,
+        endTime:(()=>{
+          const now=new Date();
+          if(timeWindow==="custom"&&customTo){
+            const [h,m]=customTo.split(":").map(Number);
+            const t=new Date();t.setHours(h,m,0,0);
+            // if the to-time is already past for today, it expires now (edge case)
+            return t>now?t.getTime():now.getTime();
+          }
+          // default: 12 hours from posting
+          return Date.now()+12*60*60*1000;
+        })(),qty:form.qty?parseInt(form.qty):null,claimed:0,
         type:postType||"limited",postedAt:Date.now(),vendorSubscribed:false,
         freeDeliveryThreshold:null,studentPrice:form.hasStudentPrice&&form.studentPrice?parseFloat(form.studentPrice):null,
       };
@@ -1852,7 +1967,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
       setPublishing(false);
       setShowSuccess(true);
       setShowAddMenu(false);
-      setStep(1);setPostType(null);setTemplate(null);setPhoto(null);setTimeMode("stock");
+      setStep(1);setPostType(null);setTemplate(null);setPhoto(null);setTimeWindow(null);setCustomFrom("");setCustomTo("");
       setForm({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
     },1500);
   };
@@ -1939,7 +2054,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
                           <h4 className="text-white font-black text-sm truncate">{l.title}</h4>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-emerald-400 font-black text-xs">RM{fmtRM(l.dealPrice)}</span>
-                            <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{l.endTime?`Until ${l.endTime}`:t.liveUntilStock}</span>
+                            <ActivePostBadge post={l}/>
                           </div>
                         </div>
                         <button onClick={()=>setCancelTarget(l.id)} className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center text-red-400 text-xs">✕</button>
@@ -2015,21 +2130,47 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
                     <p className="text-white/20 text-[9px] mt-1">{commission}% fee · Paid to TNG after pickup</p>
                   </div>
                 )}
-                {/* Time mode */}
+                {/* Time window picker */}
                 <div>
-                  <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">{t.timeModeLabel}</label>
-                  <div className="space-y-2 mb-3">
-                    {[{id:"stock",title:t.timeModeStock,desc:t.timeModeStock_desc},{id:"hours",title:t.timeModeHours,desc:t.timeModeHours_desc},{id:"schedule",title:t.timeModeSched,desc:t.timeModeSched_desc}].map(opt=>(
-                      <button key={opt.id} onClick={()=>setTimeMode(opt.id)}
-                        className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${timeMode===opt.id?"bg-emerald-500/10 border-emerald-500/40":"bg-white/5 border-white/10"}`}>
-                        <p className={`font-black text-xs ${timeMode===opt.id?"text-emerald-400":"text-white/70"}`}>{opt.title}</p>
-                        <p className="text-white/30 text-[9px] mt-0.5">{opt.desc}</p>
+                  <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-2">⏱ Live Duration</label>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    {[
+                      {id:null,  icon:"🕛", label:"12 hrs", sub:"Auto taken down"},
+                      {id:"custom",icon:"🕐", label:"Set time", sub:"Pick start → end"},
+                    ].map(opt=>(
+                      <button key={String(opt.id)} type="button" onClick={()=>setTimeWindow(opt.id)}
+                        className={`text-left px-3 py-2.5 rounded-xl border-2 transition-all ${timeWindow===opt.id?"border-amber-400 bg-amber-400/10":"border-white/10 bg-white/5"}`}>
+                        <p className={`font-black text-xs ${timeWindow===opt.id?"text-amber-300":"text-white/70"}`}>{opt.icon} {opt.label}</p>
+                        <p className="text-white/25 text-[9px]">{opt.sub}</p>
                       </button>
                     ))}
                   </div>
-                  {timeMode==="hours"&&(
-                    <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                      <div className="flex gap-2">{[1,2,3,4,6,8].map(h=><button key={h} onClick={()=>setQuickHours(h)} className={`flex-1 py-2 rounded-lg text-[10px] font-black transition-all ${quickHours===h?"bg-emerald-500 text-white":"bg-white/5 text-white/40 border border-white/10"}`}>+{h}h</button>)}</div>
+                  {timeWindow===null&&(
+                    <div className="bg-white/5 border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2">
+                      <span className="text-sm">⏰</span>
+                      <p className="text-white/30 text-[9px]">Post will auto-expire <span className="text-amber-300 font-black">12 hours</span> after going live</p>
+                    </div>
+                  )}
+                  {timeWindow==="custom"&&(
+                    <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-white/30 text-[9px] font-black uppercase mb-1">From</p>
+                          <input type="time" value={customFrom} onChange={e=>setCustomFrom(e.target.value)}
+                            className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-black focus:border-amber-400 focus:outline-none"/>
+                        </div>
+                        <div>
+                          <p className="text-white/30 text-[9px] font-black uppercase mb-1">Until</p>
+                          <input type="time" value={customTo} onChange={e=>setCustomTo(e.target.value)}
+                            className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-black focus:border-amber-400 focus:outline-none"/>
+                        </div>
+                      </div>
+                      {customFrom&&customTo&&(
+                        <p className="text-amber-300 font-black text-[9px]">🟡 Live {customFrom} → auto taken down at {customTo}</p>
+                      )}
+                      {customTo&&!customFrom&&(
+                        <p className="text-white/25 text-[9px]">From time optional — post goes live immediately</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -2285,7 +2426,21 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
     return+(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))).toFixed(1);
   };
 
-  const allListings=[...vendorListings,...MOCK_LISTINGS].filter((l,i,a)=>a.findIndex(x=>String(x.id)===String(l.id))===i).map(l=>({
+  const allListings=[...vendorListings,...MOCK_LISTINGS]
+    .filter((l,i,a)=>a.findIndex(x=>String(x.id)===String(l.id))===i)
+    .filter(l=>{
+      // Auto-remove expired posts from feed
+      if(!l.endTime) return true; // no expiry set — always show (legacy mock data)
+      if(typeof l.endTime==="string"){
+        // "HH:MM" string — check if today's time has passed
+        const now=new Date();const p=l.endTime.split(":").map(Number);
+        const end=new Date();end.setHours(p[0],p[1],0,0);
+        return end>now;
+      }
+      // ms timestamp
+      return l.endTime>Date.now();
+    })
+    .map(l=>({
     ...l,
     distance:userLocation&&MOCK_VENDORS_GEO[l.vendorId]?hav(userLocation.lat,userLocation.lon,MOCK_VENDORS_GEO[l.vendorId].lat,MOCK_VENDORS_GEO[l.vendorId].lon):null,
   }));
