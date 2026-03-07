@@ -442,8 +442,7 @@ const stockPct = (qty,claimed)=>qty?Math.min(Math.round((claimed/qty)*100),100):
 const dealTag = (type)=>({limited:{label:"🔥 Limited",bg:"bg-orange-500"},promo:{label:"⚡ Flash",bg:"bg-blue-500"},special:{label:"🌟 Special",bg:"bg-purple-500"}})[type]||{label:"🔥 Limited",bg:"bg-orange-500"};
 const fill = (str,...vals)=>vals.reduce((s,v,i)=>s.replace(`{${i}}`,v),str);
 const halalBadge = (h)=>{
-  if(h===1)return{label:"Halal ✓",bg:"bg-emerald-500"};
-  if(h===2)return{label:"Muslim",bg:"bg-blue-500"};
+  if(h===1||h===2)return{label:"Halal",bg:"bg-emerald-500"};
   if(h===3)return{label:"Non-Halal",bg:"bg-slate-500"};
   return null;
 };
@@ -894,8 +893,11 @@ function MenuBrowse({allListings,onAddToCart,cart,t}){
                       const inCart=cartIds.includes(cartKey);
                       return(
                         <div key={item.id} className="bg-white rounded-2xl border border-slate-100 px-4 py-3 flex items-center gap-3 shadow-sm">
-                          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
-                            {catEmoji[item.cat]||"🍽️"}
+                          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 flex items-center justify-center text-xl">
+                            {item.image
+                              ?<img src={item.image} className="w-full h-full object-cover" alt=""/>
+                              :<span>{catEmoji[item.cat]||"🍽️"}</span>
+                            }
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-black text-slate-800 text-sm truncate">{item.name}</p>
@@ -926,7 +928,7 @@ function MenuBrowse({allListings,onAddToCart,cart,t}){
 function AddMenuItemsForm({defaultName,defaultCat,onSave,onSkip}){
   const cats=["Food","Drink","Bakery","Dessert","TongSui","Fruit","Other"];
   const catEmoji={Food:"🍛",Drink:"🧋",Bakery:"🥐",Dessert:"🍡",TongSui:"🍮",Fruit:"🍉",Other:"📦"};
-  const newRow=(o={})=>({uid:Date.now()+Math.random(),name:"",price:"",cat:"Food",desc:"",...o});
+  const newRow=(o={})=>({uid:Date.now()+Math.random(),name:"",price:"",cat:"Food",desc:"",image:"",...o});
   const [rows,setRows]=React.useState([newRow({name:defaultName||"",cat:defaultCat||"Food"})]);
 
   const upd=(uid,k,v)=>setRows(r=>r.map(row=>row.uid===uid?{...row,[k]:v}:row));
@@ -938,7 +940,7 @@ function AddMenuItemsForm({defaultName,defaultCat,onSave,onSkip}){
     const items=valid.map(r=>({
       id:Date.now().toString()+Math.random().toString(36).slice(2,5),
       name:r.name.trim(),price:parseFloat(r.price),
-      cat:r.cat,desc:r.desc.trim(),available:true,
+      cat:r.cat,desc:r.desc.trim(),image:r.image||"",available:true,
     }));
     onSave(items);
   };
@@ -974,6 +976,19 @@ function AddMenuItemsForm({defaultName,defaultCat,onSave,onSkip}){
             <input value={row.desc} onChange={e=>upd(row.uid,"desc",e.target.value)}
               placeholder="Description (optional)"
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-emerald-500 focus:outline-none placeholder:text-white/20"/>
+            {/* Photo per row */}
+            <label className={`flex items-center gap-2 cursor-pointer rounded-xl border px-3 py-2 transition-all ${row.image?"border-emerald-500/40 bg-emerald-500/10":"border-white/10 bg-white/5"}`}>
+              {row.image
+                ?<><img src={row.image} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" alt=""/><span className="text-emerald-400 font-black text-[10px] flex-1">Photo added ✓</span><span className="text-white/20 text-[9px]">tap to change</span></>
+                :<><span className="text-base">📷</span><span className="text-white/30 font-black text-[10px]">Add photo (optional)</span></>
+              }
+              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={e=>{
+                const file=e.target.files&&e.target.files[0];if(!file)return;
+                const r2=new FileReader();
+                r2.onloadend=()=>upd(row.uid,"image",r2.result);
+                r2.readAsDataURL(file);
+              }}/>
+            </label>
           </div>
         ))}
         <button onClick={addRow}
@@ -1041,7 +1056,12 @@ function VendorMenuManager({vendorId,t,onDone}){
           {items.map((item,idx)=>(
             <div key={item.id} className={`bg-white/5 border ${item.available?"border-white/10":"border-white/5 opacity-40"} rounded-2xl px-3 py-3 flex items-center gap-3`}>
               <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center text-[10px] font-black text-white/40 flex-shrink-0">{idx+1}</div>
-              <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-base flex-shrink-0">{catEmoji[item.cat]||"🍽️"}</div>
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 flex items-center justify-center">
+                {item.image
+                  ?<img src={item.image} className="w-full h-full object-cover" alt=""/>
+                  :<span className="text-base">{catEmoji[item.cat]||"🍽️"}</span>
+                }
+              </div>
               <div className="flex-1 min-w-0">
                 <p className={`font-black text-sm truncate ${item.available?"text-white":"text-white/30"}`}>{item.name}</p>
                 <div className="flex items-center gap-1.5">
@@ -1123,8 +1143,11 @@ function ContinueShoppingBar({vendorId,vendorName,allListings,cart,onAdd,t}){
             const inCart=cartIds.includes("menu_"+item.id);
             return(
               <div key={"m"+item.id} className="flex-shrink-0 w-28 bg-white rounded-xl overflow-hidden border border-purple-100 shadow-sm">
-                <div className="w-full h-20 bg-purple-50 flex items-center justify-center text-3xl">
-                  {catEmoji[item.cat]||"🍽️"}
+                <div className="w-full h-20 bg-purple-50 flex items-center justify-center text-3xl overflow-hidden">
+                  {item.image
+                    ?<img src={item.image} className="w-full h-full object-cover" alt=""/>
+                    :<span>{catEmoji[item.cat]||"🍽️"}</span>
+                  }
                 </div>
                 <div className="p-1.5">
                   <p className="font-black text-[9px] text-slate-800 truncate">{item.name}</p>
@@ -1796,7 +1819,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
 
   const vendorId=99; // In production use real vendorId from auth
-  const commission=subscription?10:15;
+  const commission=15; // Fixed 15% platform commission
   const computedEnd=timeMode==="stock"?null:timeMode==="hours"?addHours(getNow(),quickHours):"22:00";
   const canPublish=form.title&&form.price&&photo&&form.halal!==null;
 
@@ -1820,7 +1843,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
         dealPrice:parseFloat(form.price),emoji:template?.emoji||"🍱",image:photo,
         category:template?.category||"Food",halal:form.halal!==null?form.halal:0,
         endTime:computedEnd,qty:form.qty?parseInt(form.qty):null,claimed:0,
-        type:postType||"limited",postedAt:Date.now(),vendorSubscribed:!!subscription,
+        type:postType||"limited",postedAt:Date.now(),vendorSubscribed:false,
         freeDeliveryThreshold:null,studentPrice:form.hasStudentPrice&&form.studentPrice?parseFloat(form.studentPrice):null,
       };
       setActivePosts(p=>[post,...p]);
@@ -1842,7 +1865,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
 
   return(
     <div className="min-h-screen bg-[#0a0f1e] pb-28">
-      <TrialBanner subscription={subscription} onSubscribe={onShowSubscription}/>
+      {/* TrialBanner removed — subscription model discontinued */}
       {/* Sell tab switcher: Post Deal | My Menu */}
       <div className="sticky top-[60px] z-40 bg-[#0a0f1e]/95 backdrop-blur-md border-b border-white/10 px-4 py-3">
         <div className="flex gap-2 mb-1">
@@ -1966,7 +1989,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
                     <span className="text-red-400 text-[9px]">* Required</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {[{val:1,icon:"🟢",label:"Halal Certified"},{val:2,icon:"🔵",label:"Muslim-Owned"},{val:3,icon:"🔴",label:"Non-Halal"},{val:0,icon:"⚪",label:"Not Stated"}].map(opt=>{
+                    {[{val:1,icon:"🟢",label:"Halal"},{val:3,icon:"🔴",label:"Non-Halal"}].map(opt=>{
                       const sel=form.halal===opt.val;
                       return(
                         <button key={opt.val} onClick={()=>upd("halal",opt.val)} type="button"
@@ -2185,8 +2208,11 @@ function SideOrderPopup({popup,cart,onAdd,onCheckout,onClose,allListings}){
                     const inCart=currentCartIds.includes(cartKey);
                     return(
                       <div key={item.id} className="flex items-center gap-3 bg-slate-50 rounded-2xl p-3">
-                        <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0 text-2xl">
-                          {catEmoji[item.cat]||"🍽️"}
+                        <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0 text-2xl overflow-hidden">
+                          {item.image
+                            ?<img src={item.image} className="w-full h-full object-cover" alt=""/>
+                            :<span>{catEmoji[item.cat]||"🍽️"}</span>
+                          }
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-black text-slate-800 text-sm truncate">{item.name}</p>
