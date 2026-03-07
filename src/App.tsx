@@ -436,8 +436,14 @@ const SUBSCRIPTION_PLAN = {
 const fmtRM = v=>{const n=parseFloat(v);return isNaN(n)?"0.00":n.toFixed(2);};
 const savingsPct = (o,s)=>{const ov=parseFloat(o),sv=parseFloat(s);if(!ov||!sv||ov<=sv)return null;return Math.round(((ov-sv)/ov)*100);};
 const getNow = ()=>new Date().toTimeString().slice(0,5);
+const timeAgo = (ts)=>{
+  const diff=Date.now()-ts;
+  if(diff<60000)return'just now';
+  if(diff<3600000)return Math.floor(diff/60000)+'m ago';
+  if(diff<86400000)return Math.floor(diff/3600000)+'h ago';
+  return Math.floor(diff/86400000)+'d ago';
+};
 const addHours = (time,hrs)=>{var p=time.split(":");var h=parseInt(p[0]);var m=parseInt(p[1]);var t=h*60+m+hrs*60;return String(Math.floor(t/60)%24).padStart(2,"0")+":"+String(t%60).padStart(2,"0");};
-const timeAgo = (ts)=>{const m=Math.floor((Date.now()-ts)/60000);if(m<1)return"Just now";if(m<60)return`${m}m ago`;return`${Math.floor(m/60)}h ago`;};
 const stockPct = (qty,claimed)=>qty?Math.min(Math.round((claimed/qty)*100),100):null;
 const dealTag = (type)=>({limited:{label:"🔥 Limited",bg:"bg-orange-500"},promo:{label:"⚡ Flash",bg:"bg-blue-500"},special:{label:"🌟 Special",bg:"bg-purple-500"}})[type]||{label:"🔥 Limited",bg:"bg-orange-500"};
 const fill = (str,...vals)=>vals.reduce((s,v,i)=>s.replace(`{${i}}`,v),str);
@@ -478,6 +484,10 @@ const LS_SUB = 'sapot_subscription';
 const LS_LAT = 'sapot_lat';
 const LS_LON = 'sapot_lon';
 const LS_AREA = 'sapot_area';
+const LS_RATINGS = 'sapot_ratings';
+const LS_NOTIFS = 'sapot_notifications';
+const LS_VENDOR_PROFILE_EXT = 'sapot_vendor_profile_ext';
+const LS_BOOSTS = 'sapot_boosts';
 
 function getVendorProfile(){try{return JSON.parse(localStorage.getItem(LS_VENDOR)||'null');}catch{return null;}}
 function saveVendorProfile(p){localStorage.setItem(LS_VENDOR,JSON.stringify(p));}
@@ -485,6 +495,89 @@ function getSubscription(){try{return JSON.parse(localStorage.getItem(LS_SUB)||'
 function saveSubscription(s){localStorage.setItem(LS_SUB,JSON.stringify(s));}
 function getOrders(){try{return JSON.parse(localStorage.getItem(LS_ORDERS)||'[]');}catch{return[];}}
 function saveOrder(o){const e=getOrders();localStorage.setItem(LS_ORDERS,JSON.stringify([o,...e].slice(0,20)));}
+
+// ─── RATINGS ─────────────────────────────────────────────────────────────────
+function getAllRatings(){try{return JSON.parse(localStorage.getItem(LS_RATINGS)||'{}');}catch{return{};}}
+function getVendorRatings(vendorId){return getAllRatings()[String(vendorId)]||[];}
+function addReview(vendorId,review){
+  const all=getAllRatings();
+  const existing=all[String(vendorId)]||[];
+  all[String(vendorId)]=[review,...existing].slice(0,50);
+  localStorage.setItem(LS_RATINGS,JSON.stringify(all));
+}
+function avgStars(vendorId){
+  const reviews=getVendorRatings(vendorId);
+  if(!reviews.length)return null;
+  return(reviews.reduce((s,r)=>s+r.stars,0)/reviews.length);
+}
+(function seedDemoReviews(){
+  const all=getAllRatings();
+  if(all['1'])return;
+  const DEMO_REVIEWS={
+    '1':[
+      {id:'r1a',vendorId:1,stars:5,comment:"Always fresh and generous portion!",buyerName:"Aisha R.",createdAt:Date.now()-86400000*2},
+      {id:'r1b',vendorId:1,stars:4,comment:"Fast pickup, nasi lemak was great",buyerName:"Jun Wei",createdAt:Date.now()-86400000*5},
+      {id:'r1c',vendorId:1,stars:5,comment:"Best teh tarik in Puchong!",buyerName:"Priya S.",createdAt:Date.now()-86400000*7},
+    ],
+    '2':[
+      {id:'r2a',vendorId:2,stars:5,comment:"Croissants are legit buttery and flaky",buyerName:"Marcus T.",createdAt:Date.now()-86400000*1},
+      {id:'r2b',vendorId:2,stars:4,comment:"Good value for pastry boxes",buyerName:"Lina H.",createdAt:Date.now()-86400000*3},
+    ],
+    '3':[
+      {id:'r3a',vendorId:3,stars:4,comment:"Wonton mee dry style is perfect",buyerName:"David C.",createdAt:Date.now()-86400000*4},
+    ],
+    '4':[
+      {id:'r4a',vendorId:4,stars:5,comment:"Best economy rice near here!",buyerName:"Rahim A.",createdAt:Date.now()-86400000*1},
+      {id:'r4b',vendorId:4,stars:3,comment:"Queue was long but worth it",buyerName:"Siti N.",createdAt:Date.now()-86400000*6},
+    ],
+    '5':[
+      {id:'r5a',vendorId:5,stars:5,comment:"Onde-onde melts in your mouth",buyerName:"Mei Ling",createdAt:Date.now()-86400000*2},
+    ],
+  };
+  localStorage.setItem(LS_RATINGS,JSON.stringify(DEMO_REVIEWS));
+})();
+
+// Seed a welcome notification if none exist
+(function seedWelcomeNotif(){
+  if(getNotifications().length>0)return;
+  addNotification({type:'welcome',title:'Welcome to Sapot Lokal! 🎉',body:'Fresh deals from local vendors near you. Tap a deal to order!',icon:'🛒'});
+  addNotification({type:'deal_alert',title:'New deal: Nasi Lemak Box Set',body:'RM8 from Mak Teh Kitchen — only 5 left!',icon:'🍚'});
+  addNotification({type:'deal_alert',title:'Flash deal ending soon!',body:'Croissant Bundle RM12 expires at 3pm',icon:'🥐'});
+})();
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+function getNotifications(){try{return JSON.parse(localStorage.getItem(LS_NOTIFS)||'[]');}catch{return[];}}
+function saveNotifications(notifs){localStorage.setItem(LS_NOTIFS,JSON.stringify(notifs.slice(0,50)));}
+function addNotification(notif){
+  const existing=getNotifications();
+  const n={id:Date.now().toString()+Math.random(),read:false,createdAt:Date.now(),...notif};
+  saveNotifications([n,...existing]);
+  return n;
+}
+function markAllRead(){saveNotifications(getNotifications().map(n=>({...n,read:true})));}
+function unreadCount(){return getNotifications().filter(n=>!n.read).length;}
+
+// ─── VENDOR EXTENDED PROFILE ──────────────────────────────────────────────────
+function getVendorProfileExt(){try{return JSON.parse(localStorage.getItem(LS_VENDOR_PROFILE_EXT)||'null');}catch{return null;}}
+function saveVendorProfileExt(p){localStorage.setItem(LS_VENDOR_PROFILE_EXT,JSON.stringify(p));}
+
+// ─── BOOSTS / SPONSORED ──────────────────────────────────────────────────────
+const BOOST_PLANS=[
+  {id:'b1',label:'2-Hour Boost',hours:2,priceRM:5,badge:'⚡ Boosted',color:'bg-amber-500'},
+  {id:'b2',label:'6-Hour Spotlight',hours:6,priceRM:12,badge:'🌟 Spotlight',color:'bg-purple-500'},
+  {id:'b3',label:'24-Hour Featured',hours:24,priceRM:20,badge:'👑 Featured',color:'bg-orange-500'},
+];
+function getBoosts(){try{return JSON.parse(localStorage.getItem(LS_BOOSTS)||'{}');}catch{return{};}}
+function isListingBoosted(listingId){
+  const b=getBoosts()[String(listingId)];
+  if(!b)return null;
+  if(b.expiresAt<Date.now())return null;
+  return b;
+}
+function saveBoost(listingId,record){
+  const all=getBoosts();all[String(listingId)]=record;
+  localStorage.setItem(LS_BOOSTS,JSON.stringify(all));
+}
 
 // ─── VENDOR MENUS ─────────────────────────────────────────────────────────────
 const LS_MENUS = 'sapot_vendor_menus'; // { [vendorId]: MenuItem[] }
@@ -523,6 +616,565 @@ function saveVendorMenu(vendorId,items){const all=getAllMenus();all[String(vendo
 })();
 
 // ─── LOCATION HOOK ────────────────────────────────────────────────────────────
+
+// ─── PUSH NOTIFICATION SYSTEM ────────────────────────────────────────────────
+function useNotifications(){
+  const [notifs,setNotifs]=useState(()=>getNotifications());
+  const [showPanel,setShowPanel]=useState(false);
+  const [permState,setPermState]=useState(()=>{
+    if(typeof Notification==='undefined')return'unavailable';
+    return Notification.permission;
+  });
+  const refresh=()=>setNotifs(getNotifications());
+  const requestPush=async()=>{
+    if(typeof Notification==='undefined')return;
+    if(Notification.permission==='granted'){setPermState('granted');return;}
+    const result=await Notification.requestPermission();
+    setPermState(result);
+    if(result==='granted'){
+      addNotification({type:'system',title:'Notifications enabled!',body:"You'll get alerts when new deals go live near you.",icon:'🔔'});
+      refresh();
+    }
+  };
+  const push=(notif)=>{
+    const n=addNotification(notif);refresh();
+    if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+      try{new Notification(notif.title,{body:notif.body});}catch(e){}
+    }
+    return n;
+  };
+  const markRead=()=>{markAllRead();refresh();};
+  const unread=notifs.filter(n=>!n.read).length;
+  return{notifs,unread,showPanel,setShowPanel,requestPush,permState,push,markRead,refresh};
+}
+
+function NotificationBell({hook}){
+  const {unread,showPanel,setShowPanel,notifs,markRead,requestPush,permState}=hook;
+  return(
+    <>
+      <button onClick={()=>{setShowPanel(!showPanel);if(!showPanel)markRead();}}
+        className="relative w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 active:bg-slate-200 transition-colors">
+        <motion.span
+          animate={unread>0?{rotate:[0,-20,20,-15,15,-8,8,0],scale:[1,1.15,1.15,1.1,1.1,1.05,1.05,1]}:{}}
+          transition={{duration:0.6,repeat:unread>0?Infinity:0,repeatDelay:3}}
+          className="text-base leading-none">🔔</motion.span>
+        {unread>0&&(
+          <motion.span initial={{scale:0}} animate={{scale:1}} transition={{type:"spring",stiffness:400,damping:12}}
+            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
+            {unread>9?'9+':unread}
+          </motion.span>
+        )}
+      </button>
+      <AnimatePresence>
+        {showPanel&&(
+          <motion.div initial={{opacity:0,y:-8,scale:0.95}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-8,scale:0.95}}
+            transition={{type:"spring",damping:22,stiffness:300}}
+            className="absolute top-14 right-3 z-[600] w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden"
+            onClick={e=>e.stopPropagation()}>
+            <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-slate-100">
+              <div>
+                <p className="font-black text-slate-900 text-sm">Notifications</p>
+                <p className="text-slate-400 text-[10px]">{notifs.length} total</p>
+              </div>
+              <button onClick={()=>setShowPanel(false)} className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 text-xs">✕</button>
+            </div>
+            {permState!=='granted'&&permState!=='unavailable'&&(
+              <div className="mx-3 mt-3 bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-start gap-3">
+                <span className="text-xl flex-shrink-0">🔔</span>
+                <div className="flex-1">
+                  <p className="font-black text-amber-800 text-xs">Get deal alerts</p>
+                  <p className="text-amber-600 text-[10px] mt-0.5">Never miss a flash deal near you</p>
+                </div>
+                <button onClick={requestPush} className="bg-amber-500 text-white px-3 py-1.5 rounded-xl font-black text-[10px] uppercase flex-shrink-0">Enable</button>
+              </div>
+            )}
+            {permState==='granted'&&(
+              <div className="mx-3 mt-3 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                <span className="text-sm">✅</span>
+                <p className="text-emerald-700 font-black text-[10px]">Push notifications active</p>
+              </div>
+            )}
+            <div className="max-h-72 overflow-y-auto">
+              {notifs.length===0?(
+                <div className="py-10 text-center">
+                  <p className="text-3xl mb-2">🔕</p>
+                  <p className="text-slate-400 text-xs font-bold">No notifications yet</p>
+                </div>
+              ):(
+                <div className="divide-y divide-slate-50">
+                  {notifs.map(n=>(
+                    <div key={n.id} className={`px-4 py-3 flex gap-3 items-start ${n.read?'':'bg-blue-50/40'}`}>
+                      <span className="text-xl flex-shrink-0 mt-0.5">{n.icon||'📢'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-black truncate ${n.read?'text-slate-600':'text-slate-900'}`}>{n.title}</p>
+                        <p className="text-slate-400 text-[10px] leading-tight mt-0.5">{n.body}</p>
+                        <p className="text-slate-300 text-[9px] mt-1">{timeAgo(n.createdAt)}</p>
+                      </div>
+                      {!n.read&&<div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"/>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+// ─── RATING MODAL ─────────────────────────────────────────────────────────────
+function RatingModal({vendorId,vendorName,orderId,onDone}){
+  const [stars,setStars]=useState(0);
+  const [hovered,setHovered]=useState(0);
+  const [comment,setComment]=useState('');
+  const [submitted,setSubmitted]=useState(false);
+  const QUICK=['Delicious!','Good value','Fast pickup','Fresh food','Will order again'];
+  const handleSubmit=()=>{
+    if(!stars)return;
+    addReview(vendorId,{id:'rev_'+Date.now(),vendorId,orderId,stars,comment:comment.trim(),buyerName:'You',createdAt:Date.now()});
+    setSubmitted(true);
+    setTimeout(onDone,1200);
+  };
+  if(submitted)return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[800] bg-black/70 backdrop-blur-sm flex items-center justify-center p-5">
+      <motion.div initial={{scale:0.8}} animate={{scale:1}} transition={{type:"spring",stiffness:300,damping:18}}
+        className="bg-white rounded-3xl p-8 text-center max-w-xs w-full">
+        <motion.div initial={{scale:0}} animate={{scale:[0,1.3,1]}} transition={{delay:0.1,duration:0.5}} className="text-5xl mb-3">🎉</motion.div>
+        <p className="font-black text-slate-900 text-lg">Thanks for your review!</p>
+        <p className="text-slate-400 text-sm mt-1">Your feedback helps other buyers.</p>
+      </motion.div>
+    </motion.div>
+  );
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[800] bg-black/70 backdrop-blur-sm flex items-end justify-center">
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}} transition={{type:"spring",damping:28,stiffness:280}}
+        className="w-full max-w-sm bg-white rounded-t-[36px] p-6 pb-10">
+        <div className="flex justify-center mb-4"><div className="w-10 h-1 bg-slate-200 rounded-full"/></div>
+        <div className="text-center mb-5">
+          <p className="text-2xl mb-1">⭐</p>
+          <h2 className="font-black text-slate-900 text-lg">Rate your order</h2>
+          <p className="text-slate-500 text-sm mt-0.5">How was <span className="font-black text-slate-800">{vendorName}</span>?</p>
+        </div>
+        <div className="flex justify-center gap-3 mb-5">
+          {[1,2,3,4,5].map(s=>(
+            <motion.button key={s} whileTap={{scale:0.8}}
+              onMouseEnter={()=>setHovered(s)} onMouseLeave={()=>setHovered(0)}
+              onClick={()=>setStars(s)} className="text-4xl transition-transform">
+              <motion.span animate={{scale:s<=(hovered||stars)?[1,1.25,1]:1}} transition={{duration:0.15}}>
+                {s<=(hovered||stars)?'⭐':'☆'}
+              </motion.span>
+            </motion.button>
+          ))}
+        </div>
+        {stars>0&&(
+          <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="flex flex-wrap gap-2 justify-center mb-4">
+            {QUICK.map(q=>{const sel=comment===q;return(
+              <button key={q} onClick={()=>setComment(sel?'':q)}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-black border-2 transition-all ${sel?'bg-emerald-500 border-emerald-500 text-white':'border-slate-200 text-slate-600'}`}>
+                {q}
+              </button>
+            );})}
+          </motion.div>
+        )}
+        {stars>0&&(
+          <motion.textarea initial={{opacity:0}} animate={{opacity:1}}
+            value={comment} onChange={e=>setComment(e.target.value)}
+            placeholder="Tell us more... (optional)"
+            className="w-full border border-slate-200 rounded-2xl px-4 py-3 text-sm font-medium focus:border-emerald-500 focus:outline-none resize-none mb-4" rows={2}/>
+        )}
+        <button onClick={handleSubmit} disabled={!stars}
+          className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 ${stars?'bg-emerald-500 text-white shadow-lg shadow-emerald-100':'bg-slate-100 text-slate-300'}`}>
+          {stars?`Submit ${stars}-Star Review`:'Tap a star to rate'}
+        </button>
+        <button onClick={onDone} className="w-full text-slate-300 text-xs font-bold py-3 mt-1">Skip for now</button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function StarDisplay({vendorId,size='sm'}){
+  const avg=avgStars(vendorId);const count=getVendorRatings(vendorId).length;
+  if(!avg)return null;
+  return(
+    <span className={`inline-flex items-center gap-0.5 ${size==='sm'?'text-[10px]':'text-xs'} font-black`}>
+      <span className="text-yellow-400">★</span>
+      <span className="text-slate-700">{avg.toFixed(1)}</span>
+      <span className="text-slate-400 font-normal">({count})</span>
+    </span>
+  );
+}
+
+function VendorReviewsList({vendorId,vendorName,onClose}){
+  const reviews=getVendorRatings(vendorId);
+  const avg=avgStars(vendorId);
+  const dist=[5,4,3,2,1].map(s=>({stars:s,count:reviews.filter(r=>r.stars===s).length}));
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[710] bg-black/70 backdrop-blur-sm flex items-end justify-center">
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}} transition={{type:"spring",damping:28}}
+        className="w-full max-w-sm bg-white rounded-t-[36px] max-h-[88vh] flex flex-col">
+        <div className="px-5 pt-5 pb-3 border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div><p className="font-black text-slate-900 text-base">{vendorName}</p><p className="text-slate-400 text-xs">Customer Reviews</p></div>
+            <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">✕</button>
+          </div>
+          {avg&&(
+            <div className="flex items-center gap-4 mt-3 bg-slate-50 rounded-2xl p-3">
+              <div className="text-center">
+                <p className="font-black text-slate-900 text-3xl">{avg.toFixed(1)}</p>
+                <div className="flex gap-0.5 justify-center">{[1,2,3,4,5].map(s=><span key={s} className={`text-sm ${s<=Math.round(avg)?'text-yellow-400':'text-slate-200'}`}>★</span>)}</div>
+                <p className="text-slate-400 text-[10px] mt-0.5">{reviews.length} reviews</p>
+              </div>
+              <div className="flex-1">
+                {dist.map(d=>(
+                  <div key={d.stars} className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] text-slate-500 w-3">{d.stars}</span>
+                    <span className="text-yellow-400 text-[10px]">★</span>
+                    <div className="flex-1 bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                      <div className="bg-yellow-400 h-full rounded-full" style={{width:reviews.length?`${(d.count/reviews.length)*100}%`:'0%'}}/>
+                    </div>
+                    <span className="text-[10px] text-slate-400 w-3">{d.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto px-5 py-3 space-y-3">
+          {reviews.length===0?(
+            <div className="py-10 text-center"><p className="text-3xl mb-2">💬</p><p className="text-slate-400 text-sm font-bold">No reviews yet</p></div>
+          ):reviews.map(r=>(
+            <div key={r.id} className="bg-slate-50 rounded-2xl p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center text-[10px] font-black text-emerald-700">{r.buyerName?.[0]||'?'}</div>
+                  <p className="font-black text-slate-700 text-xs">{r.buyerName||'Anonymous'}</p>
+                </div>
+                <div className="flex gap-0.5">{[1,2,3,4,5].map(s=><span key={s} className={`text-xs ${s<=r.stars?'text-yellow-400':'text-slate-200'}`}>★</span>)}</div>
+              </div>
+              {r.comment&&<p className="text-slate-600 text-xs leading-relaxed">{r.comment}</p>}
+              <p className="text-slate-300 text-[9px] mt-1">{timeAgo(r.createdAt)}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── VENDOR PROFILE PAGE (buyer-facing) ──────────────────────────────────────
+function VendorProfilePage({vendorId,vendorName,vendorPhone,listings,onClose,onAddToCart,cart,t}){
+  const reviews=getVendorRatings(vendorId);
+  const avg=avgStars(vendorId);
+  const menu=getVendorMenu(vendorId);
+  const ext=getVendorProfileExt()||{};
+  const [showReviews,setShowReviews]=useState(false);
+  const catEmoji={Food:"🍛",Drink:"🧋",Bakery:"🥐",Dessert:"🍡",TongSui:"🍮",Fruit:"🍉",Other:"📦"};
+  const cartIds=cart.map(i=>String(i.id));
+  // Use seeded bio for mock vendors
+  const bioMap={1:"Family-run warung since 2015. Authentic kampung recipes passed down from grandma.",2:"Premium European-style bakery. All breads baked fresh daily at 6am.",3:"Traditional kopitiam, open since 1998.",4:"Pak Din's famous economy rice — always fresh, always generous.",5:"Traditional kuih made fresh every morning. Order early — sells out fast!"};
+  const bio=ext.bio||(bioMap[vendorId]||"Local food vendor serving fresh, honest food.");
+  const banner=ext.banner||`https://picsum.photos/seed/vendor${vendorId}b/800/300`;
+  const avatar=ext.avatar||`https://picsum.photos/seed/vendor${vendorId}a/100/100`;
+  const tags=ext.tags||['Halal','Homemade','Daily Fresh'];
+  const open=ext.openHours||'8:00 AM';
+  const close=ext.closeHours||'3:00 PM';
+  const activeListings=listings.filter(l=>{
+    if(!l.endTime)return true;
+    if(typeof l.endTime==="number")return l.endTime>Date.now();
+    const p=l.endTime.split(":").map(Number);const e=new Date();e.setHours(p[0],p[1],0,0);return e>new Date();
+  });
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[650] bg-black/80 backdrop-blur-md flex items-end justify-center">
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}} transition={{type:"spring",damping:26,stiffness:250}}
+        className="w-full max-w-sm bg-white rounded-t-[36px] max-h-[92vh] flex flex-col overflow-hidden">
+        <div className="relative flex-shrink-0">
+          <div className="w-full h-36 overflow-hidden rounded-t-[36px]">
+            <img src={banner} className="w-full h-full object-cover" alt=""/>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-t-[36px]"/>
+          </div>
+          <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-sm">✕</button>
+          <div className="absolute -bottom-8 left-5 w-16 h-16 rounded-2xl overflow-hidden shadow-xl" style={{border:'3px solid white'}}>
+            <img src={avatar} className="w-full h-full object-cover" alt=""/>
+          </div>
+          {activeListings.length>0&&(
+            <div className="absolute bottom-3 right-5 bg-emerald-500 text-white text-[9px] font-black px-2.5 py-1 rounded-full flex items-center gap-1">
+              <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"/>
+              {activeListings.length} Live Deal{activeListings.length!==1?'s':''}
+            </div>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-5 pt-10 pb-4 border-b border-slate-100">
+            <h2 className="font-black text-slate-900 text-xl">{vendorName}</h2>
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              {avg&&(
+                <button onClick={()=>setShowReviews(true)} className="flex items-center gap-1 bg-yellow-50 border border-yellow-200 px-2.5 py-1 rounded-full">
+                  <span className="text-yellow-500 text-sm">★</span>
+                  <span className="font-black text-yellow-700 text-xs">{avg.toFixed(1)}</span>
+                  <span className="text-yellow-500 text-[10px]">({reviews.length})</span>
+                </button>
+              )}
+              <span className="text-slate-400 text-[10px] font-bold">🕐 {open}–{close}</span>
+            </div>
+            <p className="text-slate-500 text-xs mt-2 leading-relaxed">{bio}</p>
+            <div className="flex gap-1.5 mt-2 flex-wrap">
+              {tags.map(tag=><span key={tag} className="bg-emerald-50 text-emerald-700 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-200">{tag}</span>)}
+            </div>
+            {vendorPhone&&(
+              <a href={`https://wa.me/${vendorPhone}`} target="_blank" rel="noreferrer"
+                className="mt-3 flex items-center gap-2 bg-[#25D366]/10 border border-[#25D366]/20 rounded-xl px-3 py-2 w-fit">
+                <span className="text-base">💬</span><span className="text-[#25D366] font-black text-xs">Chat on WhatsApp</span>
+              </a>
+            )}
+          </div>
+          {activeListings.length>0&&(
+            <div className="px-5 py-4 border-b border-slate-100">
+              <p className="font-black text-slate-900 text-sm mb-3">🔥 Live Deals</p>
+              <div className="space-y-2">
+                {activeListings.map(l=>{
+                  const inCart=cartIds.includes(String(l.id));
+                  const savings=savingsPct(l.originalPrice,l.dealPrice);
+                  return(
+                    <div key={l.id} className="flex items-center gap-3 bg-slate-50 rounded-2xl p-3">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-200"><img src={l.image} className="w-full h-full object-cover" alt=""/></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-slate-800 text-sm truncate">{l.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-emerald-600 font-black text-sm">RM{fmtRM(l.dealPrice)}</p>
+                          {savings&&<span className="bg-yellow-400 text-black text-[8px] font-black px-1.5 py-0.5 rounded-full">-{savings}%</span>}
+                        </div>
+                      </div>
+                      <button onClick={()=>!inCart&&onAddToCart(l)} disabled={inCart}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-lg flex-shrink-0 ${inCart?"bg-emerald-100 text-emerald-600":"bg-slate-900 text-white"}`}>
+                        {inCart?"✓":"+"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {menu.length>0&&(
+            <div className="px-5 py-4 border-b border-slate-100">
+              <p className="font-black text-slate-900 text-sm mb-3">📋 Menu ({menu.filter(m=>m.available!==false).length} items)</p>
+              <div className="space-y-2">
+                {menu.filter(m=>m.available!==false).slice(0,5).map(item=>{
+                  const cartKey="menu_"+item.id;const inCart=cartIds.includes(cartKey);
+                  return(
+                    <div key={item.id} className="flex items-center gap-3 bg-slate-50 rounded-2xl px-3 py-2.5">
+                      <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-white flex items-center justify-center text-base">
+                        {item.image?<img src={item.image} className="w-full h-full object-cover" alt=""/>:<span>{catEmoji[item.cat]||"🍽️"}</span>}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black text-slate-800 text-xs truncate">{item.name}</p>
+                        <p className="text-emerald-600 font-black text-xs">RM{fmtRM(item.price)}</p>
+                      </div>
+                      <button onClick={()=>!inCart&&onAddToCart({id:cartKey,vendorId,vendorName,vendorPhone,title:item.name,desc:item.desc||"",dealPrice:item.price,originalPrice:item.price,image:"",category:item.cat,halal:1,freeDeliveryThreshold:null,studentPrice:null,qty:null,claimed:0,type:"menu",})} disabled={inCart}
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-base flex-shrink-0 ${inCart?"bg-emerald-100 text-emerald-600":"bg-slate-900 text-white"}`}>
+                        {inCart?"✓":"+"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          <div className="px-5 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-black text-slate-900 text-sm">Reviews</p>
+              {reviews.length>0&&<button onClick={()=>setShowReviews(true)} className="text-emerald-600 font-black text-xs">See all →</button>}
+            </div>
+            {reviews.slice(0,2).map(r=>(
+              <div key={r.id} className="bg-slate-50 rounded-2xl p-3 mb-2">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="font-black text-slate-700 text-xs">{r.buyerName||'Anonymous'}</p>
+                  <div className="flex gap-0.5">{[1,2,3,4,5].map(s=><span key={s} className={`text-[11px] ${s<=r.stars?'text-yellow-400':'text-slate-200'}`}>★</span>)}</div>
+                </div>
+                {r.comment&&<p className="text-slate-500 text-xs">{r.comment}</p>}
+              </div>
+            ))}
+            {reviews.length===0&&<p className="text-slate-300 text-xs font-bold text-center py-4">No reviews yet</p>}
+          </div>
+        </div>
+      </motion.div>
+      <AnimatePresence>{showReviews&&<VendorReviewsList vendorId={vendorId} vendorName={vendorName} onClose={()=>setShowReviews(false)}/>}</AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ─── VENDOR PROFILE EDITOR (merchant side) ───────────────────────────────────
+function VendorProfileEditor({vendorMeta,onSave}){
+  const existing=getVendorProfileExt()||{};
+  const [form,setForm]=useState({bio:existing.bio||'',openHours:existing.openHours||'08:00',closeHours:existing.closeHours||'20:00',tags:existing.tags||[],banner:existing.banner||'',avatar:existing.avatar||''});
+  const [saved,setSaved]=useState(false);
+  const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const TAG_OPTIONS=['Halal','Non-Halal','Homemade','Daily Fresh','Catering','Students Welcome','Delivery','Pickup Only'];
+  const handleBanner=(e)=>{const file=e.target.files?.[0];if(!file)return;const r=new FileReader();r.onloadend=()=>upd('banner',r.result);r.readAsDataURL(file);};
+  const handleAvatar=(e)=>{const file=e.target.files?.[0];if(!file)return;const r=new FileReader();r.onloadend=()=>upd('avatar',r.result);r.readAsDataURL(file);};
+  const handleSave=()=>{saveVendorProfileExt(form);setSaved(true);setTimeout(()=>setSaved(false),2000);if(onSave)onSave(form);};
+  return(
+    <div className="px-4 pt-3 pb-28">
+      <div className="flex items-center justify-between mb-4">
+        <div><p className="text-white font-black text-base">Shop Profile</p><p className="text-white/30 text-[10px]">Visible to buyers — build trust</p></div>
+        <motion.button whileTap={{scale:0.95}} onClick={handleSave}
+          className={`px-4 py-2 rounded-xl font-black text-xs uppercase transition-all ${saved?"bg-emerald-300 text-emerald-900":"bg-emerald-500 text-white"}`}>
+          {saved?"✅ Saved":"Save"}
+        </motion.button>
+      </div>
+      <label className="block mb-3 cursor-pointer">
+        <p className="text-white/40 text-[9px] font-black uppercase tracking-widest mb-1.5">Shop Banner</p>
+        <div className={`w-full h-28 rounded-2xl overflow-hidden flex items-center justify-center border-2 border-dashed transition-all ${form.banner?"border-emerald-500/30":"border-white/10"}`}>
+          {form.banner?<img src={form.banner} className="w-full h-full object-cover" alt=""/>:<div className="text-center"><p className="text-2xl mb-1">🖼️</p><p className="text-white/30 text-[10px] font-black">Upload banner photo</p></div>}
+        </div>
+        <input type="file" accept="image/*" className="hidden" onChange={handleBanner}/>
+      </label>
+      <label className="flex items-center gap-3 mb-4 cursor-pointer">
+        <div className={`w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center border-2 flex-shrink-0 ${form.avatar?"border-emerald-500/30":"border-white/10 border-dashed"}`}>
+          {form.avatar?<img src={form.avatar} className="w-full h-full object-cover" alt=""/>:<span className="text-2xl">🏪</span>}
+        </div>
+        <div><p className="text-white font-black text-xs">Shop Avatar / Logo</p><p className="text-white/30 text-[10px]">Tap to upload</p></div>
+        <input type="file" accept="image/*" className="hidden" onChange={handleAvatar}/>
+      </label>
+      <div className="mb-3">
+        <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">About Your Shop</label>
+        <textarea value={form.bio} onChange={e=>upd('bio',e.target.value)}
+          placeholder="Tell buyers about your food, your story, what makes you special..."
+          className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-3 text-white text-xs font-medium focus:border-emerald-500 focus:outline-none resize-none" rows={3}/>
+      </div>
+      <div className="grid grid-cols-2 gap-2 mb-3">
+        <div>
+          <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">Opens At</label>
+          <input type="time" value={form.openHours} onChange={e=>upd('openHours',e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs font-black focus:border-emerald-500 focus:outline-none"/>
+        </div>
+        <div>
+          <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">Closes At</label>
+          <input type="time" value={form.closeHours} onChange={e=>upd('closeHours',e.target.value)}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs font-black focus:border-emerald-500 focus:outline-none"/>
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className="text-white/40 text-[9px] font-black uppercase tracking-widest block mb-1.5">Shop Tags</label>
+        <div className="flex flex-wrap gap-2">
+          {TAG_OPTIONS.map(tag=>{const sel=form.tags.includes(tag);return(
+            <button key={tag} type="button" onClick={()=>upd('tags',sel?form.tags.filter(x=>x!==tag):[...form.tags,tag])}
+              className={`px-3 py-1.5 rounded-full text-[10px] font-black border transition-all ${sel?"bg-emerald-500 border-emerald-500 text-white":"border-white/20 bg-white/5 text-white/50"}`}>
+              {tag}
+            </button>
+          );})}
+        </div>
+      </div>
+      {/* Preview */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+        <p className="text-white/30 text-[9px] font-black uppercase mb-2">Buyer preview</p>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 flex-shrink-0 flex items-center justify-center">
+            {form.avatar?<img src={form.avatar} className="w-full h-full object-cover" alt=""/>:<span className="text-2xl">🏪</span>}
+          </div>
+          <div>
+            <p className="text-white font-black text-sm">{vendorMeta?.shopName||"My Shop"}</p>
+            <p className="text-white/40 text-[10px]">{form.openHours}–{form.closeHours} · {vendorMeta?.area||""}</p>
+          </div>
+        </div>
+        {form.bio&&<p className="text-white/30 text-[10px] mt-2 line-clamp-2">{form.bio}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ─── BOOST / ADVERTISE SHEET ──────────────────────────────────────────────────
+function BoostSheet({post,onClose,onBoost}){
+  const [selectedPlan,setSelectedPlan]=useState(null);
+  const [paying,setPaying]=useState(false);
+  const [done,setDone]=useState(false);
+  const existing=isListingBoosted(post.id);
+  const handlePay=()=>{
+    if(!selectedPlan)return;
+    setPaying(true);
+    setTimeout(()=>{
+      const record={listingId:post.id,planId:selectedPlan.id,planLabel:selectedPlan.label,paidRM:selectedPlan.priceRM,boostedAt:Date.now(),expiresAt:Date.now()+selectedPlan.hours*60*60*1000,badge:selectedPlan.badge,color:selectedPlan.color};
+      saveBoost(post.id,record);
+      setPaying(false);setDone(true);
+      if(onBoost)onBoost(record);
+    },1500);
+  };
+  if(done)return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[700] bg-black/70 backdrop-blur-sm flex items-end justify-center">
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}} transition={{type:"spring",damping:26}}
+        className="w-full max-w-sm bg-[#0d1929] rounded-t-[36px] p-8 pb-12 text-center">
+        <motion.div initial={{scale:0}} animate={{scale:[0,1.3,1]}} transition={{duration:0.5}} className="text-6xl mb-4">🚀</motion.div>
+        <h2 className="text-white font-black text-xl mb-1">Deal Boosted!</h2>
+        <p className="text-white/50 text-sm mb-6">Pinned to top of feed for {selectedPlan?.hours}h</p>
+        <button onClick={onClose} className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95">Done</button>
+      </motion.div>
+    </motion.div>
+  );
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[700] bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={onClose}>
+      <motion.div initial={{y:"100%"}} animate={{y:0}} exit={{y:"100%"}} transition={{type:"spring",damping:26,stiffness:260}}
+        onClick={e=>e.stopPropagation()}
+        className="w-full max-w-sm bg-[#0d1929] rounded-t-[36px] p-5 pb-10">
+        <div className="flex justify-center mb-4"><div className="w-10 h-1 bg-white/10 rounded-full"/></div>
+        <div className="flex items-center justify-between mb-4">
+          <div><h2 className="text-white font-black text-xl">Boost Deal</h2><p className="text-white/40 text-xs mt-0.5">Pin to top · More visibility · More sales</p></div>
+          <button onClick={onClose} className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center text-white">✕</button>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-3 mb-4 flex items-center gap-3">
+          {post.image&&<div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0"><img src={post.image} className="w-full h-full object-cover" alt=""/></div>}
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-black text-sm truncate">{post.title}</p>
+            <p className="text-emerald-400 font-black text-xs">RM{fmtRM(post.dealPrice)}</p>
+          </div>
+          {existing&&<span className={`text-white text-[9px] font-black px-2 py-1 rounded-full ${existing.color}`}>{existing.badge}</span>}
+        </div>
+        {existing&&(
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 mb-4 flex items-center gap-2">
+            <span className="text-sm">⚡</span>
+            <p className="text-amber-300 text-[10px] font-bold">Active boost! Expires in {Math.max(0,Math.floor((existing.expiresAt-Date.now())/3600000))}h</p>
+          </div>
+        )}
+        <div className="space-y-2 mb-5">
+          {BOOST_PLANS.map(plan=>{
+            const sel=selectedPlan?.id===plan.id;
+            return(
+              <motion.button key={plan.id} whileTap={{scale:0.98}} onClick={()=>setSelectedPlan(plan)}
+                className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${sel?'border-amber-400 bg-amber-400/10':'border-white/10 bg-white/5'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[10px] font-black text-white px-2 py-1 rounded-full ${plan.color}`}>{plan.badge}</span>
+                    <div>
+                      <p className={`font-black text-sm ${sel?"text-amber-300":"text-white"}`}>{plan.label}</p>
+                      <p className="text-white/30 text-[10px]">{plan.hours}h boost · Pinned to top</p>
+                    </div>
+                  </div>
+                  <p className={`font-black text-lg ${sel?"text-amber-300":"text-white/60"}`}>RM{plan.priceRM}</p>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3 flex gap-3 mb-4">
+          <span className="text-lg flex-shrink-0">💡</span>
+          <p className="text-white/40 text-[10px]">Boosted deals get 3–8x more views. RM5 boost can unlock RM150+ in extra orders.</p>
+        </div>
+        <button onClick={handlePay} disabled={!selectedPlan||paying}
+          className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${selectedPlan&&!paying?"bg-amber-500 text-white shadow-amber-900/50":"bg-white/5 text-white/20"}`}>
+          {paying?<><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Processing...</>
+          :selectedPlan?`💙 Pay RM${selectedPlan.priceRM} via TNG`:"Select a plan"}
+        </button>
+        <p className="text-white/20 text-[9px] text-center font-bold uppercase mt-2">Paid via TNG eWallet</p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function useLocation(){
   const [loc,setLoc]=useState(()=>{
     const lat=localStorage.getItem(LS_LAT);const lon=localStorage.getItem(LS_LON);const area=localStorage.getItem(LS_AREA)||'';
@@ -713,7 +1365,7 @@ function CategoryDropdown({value, onChange, t}){
 }
 
 // ─── LISTING CARD ─────────────────────────────────────────────────────────────
-function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLockedTap,t}){
+function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLockedTap,onVendorTap,t}){
   const countdown=useCountdown(listing.endTime);
   const pct=stockPct(listing.qty,listing.claimed);
   const savings=savingsPct(listing.originalPrice,listing.dealPrice);
@@ -724,6 +1376,7 @@ function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLocked
   const tag=dealTag(listing.type);
   const hb=halalBadge(listing.halal);
   const showStudentPrice=isStudentMode&&listing.studentPrice;
+  const boost=isListingBoosted(listing.id);
 
   return(
     <motion.div layout initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}}
@@ -745,6 +1398,7 @@ function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLocked
           </div>
         )}
         {hb&&<div className={`absolute top-2 right-2 text-[8px] font-black px-2 py-1 rounded-lg text-white ${hb.bg}`}>{hb.label}</div>}
+        {boost&&<div className={`absolute top-8 right-2 text-white text-[8px] font-black px-2 py-1 rounded-lg shadow-lg ${boost.color}`}>{boost.badge}</div>}
         <div className="absolute bottom-2 left-2">
           <span className={`text-[8px] font-black px-2 py-1 rounded-full uppercase text-white ${tag.bg}`}>{tag.label}</span>
         </div>
@@ -761,7 +1415,10 @@ function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLocked
       </div>
       <div className="p-2.5 flex flex-col flex-1">
         <p className="font-black text-slate-900 text-xs leading-tight line-clamp-2 mb-0.5">{listing.title}</p>
-        <p className="text-slate-400 text-[9px] font-bold truncate">{listing.vendorName}</p>
+        <button onClick={()=>onVendorTap&&onVendorTap(listing)} className="text-left w-full">
+          <p className="text-slate-400 text-[9px] font-bold truncate underline-offset-1 hover:text-emerald-600 transition-colors">{listing.vendorName}</p>
+        </button>
+        <StarDisplay vendorId={listing.vendorId} size="sm"/>
         {isUrgent&&!isSoldOut&&<p className="text-[9px] font-black text-red-500 mt-0.5">⚠️ {listing.qty-listing.claimed} left!</p>}
         <div className="flex items-end justify-between mt-1.5 mb-2">
           <div>
@@ -1413,7 +2070,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                     <p className="text-slate-400 text-[10px] mt-0.5">{deliveryMode==="delivery"?"Lalamove will be notified":t.pickupNote}</p>
                   </div>
                 </div>
-                <button onClick={()=>{onCheckout({pickupCode});onClose();}}
+                <button onClick={()=>{onCheckout({pickupCode,vendorId:currentVendor?.vendorId,vendorName:currentVendor?.vendorName});onClose();}}
                   className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 text-sm font-black">✕</button>
               </div>
 
@@ -1509,7 +2166,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
 
               {/* Done button */}
               <div className="px-4 mb-8">
-                <button onClick={()=>{onCheckout({pickupCode});onClose();}}
+                <button onClick={()=>{onCheckout({pickupCode,vendorId:currentVendor?.vendorId,vendorName:currentVendor?.vendorName});onClose();}}
                   className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs active:scale-95 transition-transform">{t.goPickup}</button>
               </div>
             </motion.div>
@@ -1903,7 +2560,7 @@ function ActivePostBadge({post}){
 }
 
 function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubscription,t}){
-  const [vendorFlowTab,setVendorFlowTab]=useState("deals"); // "deals" | "menu"
+  const [vendorFlowTab,setVendorFlowTab]=useState("deals"); // "deals" | "menu" | "profile"
   const [postDealNudge,setPostDealNudge]=useState(false);
   const [step,setStep]=useState(1);
   const [postType,setPostType]=useState(null);
@@ -1914,6 +2571,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
   const [activePosts,setActivePosts]=useState([]);
   const [form,setForm]=useState({title:"",desc:"",price:"",original:"",endTime:"",qty:"",reheat:"none",halal:null,hasStudentPrice:false,studentPrice:""});
   const [cancelTarget,setCancelTarget]=useState(null);
+  const [boostTarget,setBoostTarget]=useState(null); // post to boost
   const [showSuccess,setShowSuccess]=useState(false);
   const [showAddMenu,setShowAddMenu]=useState(false);
   const [lastPosted,setLastPosted]=useState(null);
@@ -1994,6 +2652,10 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
             className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="menu"?"bg-purple-500 text-white":"bg-white/10 text-white/40"}`}>
             🍽️ My Menu
           </button>
+          <button onClick={()=>setVendorFlowTab("profile")}
+            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="profile"?"bg-blue-500 text-white":"bg-white/10 text-white/40"}`}>
+            🏪 Profile
+          </button>
         </div>
         {vendorFlowTab==="deals"&&(
           <div className="flex items-center justify-between mt-1">
@@ -2015,6 +2677,22 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
           setTimeout(()=>setPostDealNudge(false),3000);
         }}/>
       )}
+
+      {/* Profile tab */}
+      {vendorFlowTab==="profile"&&(
+        <VendorProfileEditor vendorMeta={vendorMeta} onSave={()=>{}}/>
+      )}
+
+      {/* Boost Sheet */}
+      <AnimatePresence>
+        {boostTarget&&(
+          <BoostSheet
+            post={boostTarget}
+            onClose={()=>setBoostTarget(null)}
+            onBoost={(record)=>{setBoostTarget(null);}}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Post Deal tab */}
       {vendorFlowTab==="deals"&&(
@@ -2057,6 +2735,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
                             <ActivePostBadge post={l}/>
                           </div>
                         </div>
+                        <button onClick={()=>setBoostTarget(l)} className="w-7 h-7 bg-amber-500/20 rounded-lg flex items-center justify-center text-amber-400 text-xs" title="Boost this deal">🚀</button>
                         <button onClick={()=>setCancelTarget(l.id)} className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center text-red-400 text-xs">✕</button>
                       </div>
                     ))}
@@ -2400,7 +3079,7 @@ function SideOrderPopup({popup,cart,onAdd,onCheckout,onClose,allListings}){
 }
 
 // ─── BUYER FEED ───────────────────────────────────────────────────────────────
-function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
+function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendorTap,onCheckoutDone}){
   const [search,setSearch]=useState("");
   const [catFilter,setCatFilter]=useState("all");
   const [dealFilter,setDealFilter]=useState("all");
@@ -2463,7 +3142,8 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
   });
 
   const urgentDeals=filtered.filter(l=>!isStudentMode&&l.qty&&(l.qty-l.claimed)<=3&&l.claimed<l.qty);
-  const regular=filtered.filter(l=>!urgentDeals.find(u=>u.id===l.id));
+  const regular=filtered.filter(l=>!urgentDeals.find(u=>u.id===l.id))
+    .sort((a,b)=>{const ba=isListingBoosted(a.id)?1:0,bb=isListingBoosted(b.id)?1:0;return bb-ba;});
 
   const attemptAddToCart=(item)=>{
     if(cartIds.includes(String(item.id)))return;
@@ -2608,6 +3288,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
                     isStudentMode={false}
                     isLocked={currentVendorId&&l.vendorId!==currentVendorId}
                     onLockedTap={()=>attemptAddToCart(l)}
+                    onVendorTap={onVendorTap}
                     t={t}/>
                 </div>
               ))}
@@ -2635,6 +3316,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
                 isStudentMode={isStudentMode}
                 isLocked={!!(currentVendorId&&l.vendorId!==currentVendorId)}
                 onLockedTap={()=>attemptAddToCart(l)}
+                onVendorTap={onVendorTap}
                 t={t}/>
             ))}
           </div>
@@ -2675,7 +3357,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t}){
       <AnimatePresence>
         {showCart&&(
           <CartPanel cart={cart} onRemove={removeFromCart} onClose={()=>setShowCart(false)}
-            onCheckout={()=>{setCart([]);setShowCart(false);}}
+            onCheckout={(meta)=>{setCart([]);setShowCart(false);if(onCheckoutDone&&meta)onCheckoutDone(meta);}}
             onAdd={attemptAddToCart}
             allListings={allListings}
             t={t}/>
@@ -3033,12 +3715,17 @@ function AppInner(){
   const [showMerchantGate,setShowMerchantGate]=useState(false);
   const [merchantUnlocked,setMerchantUnlocked]=useState(()=>getMerchantAuth());
   const locationHook=useLocation();
+  const notifHook=useNotifications();
+  const [showRating,setShowRating]=useState(null); // {vendorId,vendorName,orderId}
+  const [viewVendorProfile,setViewVendorProfile]=useState(null); // {vendorId,...}
   const t=T[lang]||T.en;
 
   useEffect(()=>{if(locationHook.status==='idle')locationHook.request();},[]);
 
   const handleNewListing=(listing)=>{
     setVendorListings(p=>[listing,...p]);
+    // Fire in-app notification to simulate buyer alert
+    notifHook.push({type:'new_deal',title:`New deal: ${listing.title}`,body:`RM${fmtRM(listing.dealPrice)} from ${listing.vendorName||'a vendor near you'}`,icon:'🍽️'});
   };
 
   const handlePostDone=()=>{
@@ -3052,7 +3739,7 @@ function AppInner(){
         {showHalalDisclaimer&&<HalalDisclaimer t={t} onAccept={()=>setShowHalalDisclaimer(false)}/>}
       </AnimatePresence>
 
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between relative">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
             <span className="text-xl">🛒</span>
@@ -3065,6 +3752,7 @@ function AppInner(){
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          <NotificationBell hook={notifHook}/>
           <LangToggle lang={lang} setLang={setLang}/>
           <div className="flex bg-slate-100 p-1 rounded-xl gap-0.5">
             <button onClick={()=>setTab("deals")} className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab==="deals"?"bg-white shadow-sm text-emerald-600":"text-slate-400"}`}>{t.buy}</button>
@@ -3106,7 +3794,15 @@ function AppInner(){
       </header>
 
       <div style={{display:(tab==="deals"||tab==="student")?"block":"none"}}>
-        <BuyerFeed vendorListings={vendorListings} activeTab={tab} userLocation={locationHook.loc} locationHook={locationHook} t={t}/>
+        <BuyerFeed vendorListings={vendorListings} activeTab={tab} userLocation={locationHook.loc} locationHook={locationHook} t={t}
+          onVendorTap={(listing)=>{
+            // Build listings list for this vendor from allListings
+            setViewVendorProfile({vendorId:listing.vendorId,vendorName:listing.vendorName,vendorPhone:listing.vendorPhone,listings:[listing],cart:[],onAddToCart:()=>{}});
+          }}
+          onCheckoutDone={(meta)=>{
+            if(meta?.vendorId){setTimeout(()=>setShowRating({vendorId:meta.vendorId,vendorName:meta.vendorName,orderId:meta.pickupCode}),800);}
+          }}
+        />
       </div>
 
       <AnimatePresence mode="wait">
@@ -3154,6 +3850,34 @@ function AppInner(){
               else{setTab("sell");}
             }}
             onCancel={()=>setShowMerchantGate(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Rating Modal — shown after checkout */}
+      <AnimatePresence>
+        {showRating&&(
+          <RatingModal
+            vendorId={showRating.vendorId}
+            vendorName={showRating.vendorName}
+            orderId={showRating.orderId}
+            onDone={()=>setShowRating(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Vendor Profile Page — full sheet */}
+      <AnimatePresence>
+        {viewVendorProfile&&(
+          <VendorProfilePage
+            vendorId={viewVendorProfile.vendorId}
+            vendorName={viewVendorProfile.vendorName}
+            vendorPhone={viewVendorProfile.vendorPhone}
+            listings={viewVendorProfile.listings||[]}
+            onClose={()=>setViewVendorProfile(null)}
+            onAddToCart={viewVendorProfile.onAddToCart||(()=>{})}
+            cart={viewVendorProfile.cart||[]}
+            t={t}
           />
         )}
       </AnimatePresence>
