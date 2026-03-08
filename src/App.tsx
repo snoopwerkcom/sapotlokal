@@ -148,7 +148,44 @@ const T = {
     celebSub:"Your {0} plan is now active.",
     celebBtn:"Start Posting",
     // Categories
-    catAll:"All Deals", catFood:"Food", catDrink:"Drink", catFruit:"Fruit", catBakery:"Bakery", catDessert:"Dessert", catTongSui:"Tong Sui", catOther:"Other",
+    catAll:"All Deals", catFood:"Food",
+    // Services tabs
+    cateringTab:"🎂 Event Catering", canopyTab:"⛺ Canopy Rental",
+    cateringTagline:"Full-service catering for your special event",
+    canopyTagline:"Tables, chairs, canopies & fans delivered to you",
+    // Catering form
+    cateringStep1:"Event Details", cateringStep2:"Your Info", cateringStep3:"Submitted!",
+    cateringPax:"How many pax?", cateringPaxPlaceholder:"e.g. 50",
+    cateringEvent:"Type of event?", cateringEventPlaceholder:"e.g. Birthday, Full Moon, Anniversary...",
+    cateringDate:"Event date?", cateringTime:"Event time?",
+    cateringVenue:"Venue / location?", cateringVenuePlaceholder:"e.g. Taman Puchong Indah Community Hall",
+    cateringNotes:"Special requests (optional)", cateringNotesPlaceholder:"Dietary needs, theme, etc.",
+    cateringName:"Your name", cateringPhone:"Your phone number",
+    cateringNamePlaceholder:"Full name", cateringPhonePlaceholder:"e.g. 0123456789",
+    cateringSubmit:"Send Enquiry →", cateringBack:"← Back",
+    cateringSuccessTitle:"Enquiry Sent! 🎉", cateringSuccessId:"Reference ID",
+    cateringSuccessMsg:"We'll WhatsApp you a menu & quotation within 24 hours.",
+    cateringWA:"Contact via WhatsApp",
+    cateringNewQuery:"Submit Another Enquiry",
+    cateringEvents:["Birthday 🎂","Full Moon 🌕","Anniversary 💍","Wedding 💒","Corporate 🏢","Aqiqah 🐑","Kenduri 🍽️","Other ✏️"],
+    cateringEventOther:"Other (please specify)",
+    cateringMyQueries:"My Enquiries",
+    cateringStatusPending:"Pending Review", cateringStatusQuoted:"Quotation Sent", cateringStatusAccepted:"Accepted", cateringStatusPaid:"Paid",
+    cateringPayNow:"Pay Deposit Now",
+    // Canopy form
+    canopyStep1:"Rental Details", canopyStep2:"Your Info", canopyStep3:"Confirmed!",
+    canopyDate:"Event date?", canopyTime:"Setup time?",
+    canopyVenue:"Delivery address?", canopyVenuePlaceholder:"e.g. No. 5, Jalan Wawasan, Puchong",
+    canopyQtyCanopy:"No. of canopies", canopyQtyTable:"No. of tables", canopyQtyChair:"No. of chairs", canopyQtyFan:"No. of fans",
+    canopyNotes:"Additional notes (optional)", canopyNotesPlaceholder:"e.g. Need lighting, generator, etc.",
+    canopyName:"Your name", canopyPhone:"Your phone number",
+    canopyNamePlaceholder:"Full name", canopyPhonePlaceholder:"e.g. 0123456789",
+    canopySubmit:"Send Rental Enquiry →",
+    canopySuccessTitle:"Enquiry Received! ⛺", canopySuccessMsg:"We'll WhatsApp you a quotation within 24 hours.",
+    canopyWA:"Contact via WhatsApp",
+    canopyNewQuery:"Submit Another Enquiry",
+    canopyMyQueries:"My Enquiries",
+    canopyStatusPending:"Pending Review", canopyStatusQuoted:"Quote Sent", canopyStatusAccepted:"Confirmed", canopyStatusPaid:"Paid", catDrink:"Drink", catFruit:"Fruit", catBakery:"Bakery", catDessert:"Dessert", catTongSui:"Tong Sui", catOther:"Other",
     // Merchant Orders Dashboard
     ordersTab:"Orders", ordersManage:"Manage incoming orders",
     orderStatusNew:"New", orderStatusCooking:"Cooking", orderStatusReady:"Ready", orderStatusDone:"Done",
@@ -280,7 +317,41 @@ const T = {
     choosePlan:"Pilih Pelan Anda", choosePlanSub:"Cuba percuma 60 hari, kemudian langgan",
     currentPlan:"Pelan Semasa", upgradePlan:"Naik Taraf",
     celebTitle:"Selamat datang! 🎉", celebSub:"Pelan {0} anda kini aktif.", celebBtn:"Mula Post",
-    catAll:"Semua Deal", catFood:"Makanan", catDrink:"Minuman", catFruit:"Buah", catBakery:"Bakeri", catDessert:"Pencuci Mulut", catTongSui:"Tong Sui", catOther:"Lain-lain",
+    catAll:"Semua Deal", catFood:"Makanan",
+    cateringTab:"🎂 Katering Acara", canopyTab:"⛺ Sewa Kanopi",
+    cateringTagline:"Katering lengkap untuk majlis istimewa anda",
+    canopyTagline:"Meja, kerusi, kanopi & kipas dihantar ke lokasi anda",
+    cateringStep1:"Butiran Acara", cateringStep2:"Maklumat Anda", cateringStep3:"Dihantar!",
+    cateringPax:"Berapa pax?", cateringPaxPlaceholder:"cth. 50",
+    cateringEvent:"Jenis acara?", cateringEventPlaceholder:"cth. Hari Jadi, Bulan Penuh, Ulang Tahun...",
+    cateringDate:"Tarikh acara?", cateringTime:"Masa acara?",
+    cateringVenue:"Tempat / lokasi?", cateringVenuePlaceholder:"cth. Dewan Komuniti Taman Puchong Indah",
+    cateringNotes:"Permintaan khas (pilihan)", cateringNotesPlaceholder:"Keperluan pemakanan, tema, dll.",
+    cateringName:"Nama anda", cateringPhone:"No. telefon anda",
+    cateringNamePlaceholder:"Nama penuh", cateringPhonePlaceholder:"cth. 0123456789",
+    cateringSubmit:"Hantar Pertanyaan →", cateringBack:"← Kembali",
+    cateringSuccessTitle:"Pertanyaan Dihantar! 🎉", cateringSuccessId:"ID Rujukan",
+    cateringSuccessMsg:"Kami akan WhatsApp menu & sebut harga dalam 24 jam.",
+    cateringWA:"Hubungi via WhatsApp",
+    cateringNewQuery:"Hantar Pertanyaan Lain",
+    cateringEvents:["Hari Jadi 🎂","Bulan Penuh 🌕","Ulang Tahun 💍","Perkahwinan 💒","Korporat 🏢","Aqiqah 🐑","Kenduri 🍽️","Lain-lain ✏️"],
+    cateringEventOther:"Lain-lain (sila nyatakan)",
+    cateringMyQueries:"Pertanyaan Saya",
+    cateringStatusPending:"Menunggu Semakan", cateringStatusQuoted:"Sebut Harga Dihantar", cateringStatusAccepted:"Diterima", cateringStatusPaid:"Dibayar",
+    cateringPayNow:"Bayar Deposit Sekarang",
+    canopyStep1:"Butiran Sewaan", canopyStep2:"Maklumat Anda", canopyStep3:"Disahkan!",
+    canopyDate:"Tarikh acara?", canopyTime:"Masa pemasangan?",
+    canopyVenue:"Alamat penghantaran?", canopyVenuePlaceholder:"cth. No. 5, Jalan Wawasan, Puchong",
+    canopyQtyCanopy:"Bil. kanopi", canopyQtyTable:"Bil. meja", canopyQtyChair:"Bil. kerusi", canopyQtyFan:"Bil. kipas",
+    canopyNotes:"Nota tambahan (pilihan)", canopyNotesPlaceholder:"cth. Perlukan pencahayaan, penjana, dll.",
+    canopyName:"Nama anda", canopyPhone:"No. telefon anda",
+    canopyNamePlaceholder:"Nama penuh", canopyPhonePlaceholder:"cth. 0123456789",
+    canopySubmit:"Hantar Pertanyaan Sewaan →",
+    canopySuccessTitle:"Pertanyaan Diterima! ⛺", canopySuccessMsg:"Kami akan WhatsApp sebut harga dalam 24 jam.",
+    canopyWA:"Hubungi via WhatsApp",
+    canopyNewQuery:"Hantar Pertanyaan Lain",
+    canopyMyQueries:"Pertanyaan Saya",
+    canopyStatusPending:"Menunggu Semakan", canopyStatusQuoted:"Sebut Harga Dihantar", canopyStatusAccepted:"Disahkan", canopyStatusPaid:"Dibayar", catDrink:"Minuman", catFruit:"Buah", catBakery:"Bakeri", catDessert:"Pencuci Mulut", catTongSui:"Tong Sui", catOther:"Lain-lain",
     shareTitle:"Kongsi Deal", shareWhatsapp:"Kongsi di WhatsApp", shareCopy:"Salin Pautan", shareCopied:"Pautan disalin!",
     shareMsg:"🍱 Tengok deal ni kat Sapot Lokal: {0} dari {1} hanya RM{2}! 👉 {3}",
     // Merchant Orders Dashboard
@@ -414,7 +485,41 @@ const T = {
     choosePlan:"选择您的计划", choosePlanSub:"免费试用60天，然后订阅",
     currentPlan:"当前计划", upgradePlan:"升级",
     celebTitle:"欢迎加入！🎉", celebSub:"您的{0}计划现已激活。", celebBtn:"开始发布",
-    catAll:"全部优惠", catFood:"食物", catDrink:"饮料", catFruit:"水果", catBakery:"面包烘焙", catDessert:"甜点", catTongSui:"糖水", catOther:"其他",
+    catAll:"全部优惠", catFood:"食物",
+    cateringTab:"🎂 活动餐饮", canopyTab:"⛺ 帐篷租借",
+    cateringTagline:"为您的特别活动提供全套餐饮服务",
+    canopyTagline:"桌椅、帐篷和风扇送到您的活动现场",
+    cateringStep1:"活动详情", cateringStep2:"您的资料", cateringStep3:"已提交！",
+    cateringPax:"需要多少人份？", cateringPaxPlaceholder:"例：50",
+    cateringEvent:"活动类型？", cateringEventPlaceholder:"例：生日、满月、周年纪念...",
+    cateringDate:"活动日期？", cateringTime:"活动时间？",
+    cateringVenue:"地点/场地？", cateringVenuePlaceholder:"例：Taman Puchong Indah 社区礼堂",
+    cateringNotes:"特别要求（可选）", cateringNotesPlaceholder:"饮食要求、主题等",
+    cateringName:"您的姓名", cateringPhone:"您的手机号",
+    cateringNamePlaceholder:"全名", cateringPhonePlaceholder:"例：0123456789",
+    cateringSubmit:"发送询价 →", cateringBack:"← 返回",
+    cateringSuccessTitle:"询价已发送！🎉", cateringSuccessId:"参考编号",
+    cateringSuccessMsg:"我们将在24小时内通过WhatsApp发送菜单及报价。",
+    cateringWA:"通过WhatsApp联系",
+    cateringNewQuery:"提交另一个询价",
+    cateringEvents:["生日 🎂","满月 🌕","周年纪念 💍","婚礼 💒","企业活动 🏢","Aqiqah 🐑","Kenduri 🍽️","其他 ✏️"],
+    cateringEventOther:"其他（请说明）",
+    cateringMyQueries:"我的询价",
+    cateringStatusPending:"待审核", cateringStatusQuoted:"已发报价", cateringStatusAccepted:"已接受", cateringStatusPaid:"已付款",
+    cateringPayNow:"立即支付订金",
+    canopyStep1:"租借详情", canopyStep2:"您的资料", canopyStep3:"已确认！",
+    canopyDate:"活动日期？", canopyTime:"安装时间？",
+    canopyVenue:"送货地址？", canopyVenuePlaceholder:"例：No. 5, Jalan Wawasan, Puchong",
+    canopyQtyCanopy:"帐篷数量", canopyQtyTable:"桌子数量", canopyQtyChair:"椅子数量", canopyQtyFan:"风扇数量",
+    canopyNotes:"额外备注（可选）", canopyNotesPlaceholder:"例：需要照明、发电机等",
+    canopyName:"您的姓名", canopyPhone:"您的手机号",
+    canopyNamePlaceholder:"全名", canopyPhonePlaceholder:"例：0123456789",
+    canopySubmit:"发送租借询价 →",
+    canopySuccessTitle:"询价已收到！⛺", canopySuccessMsg:"我们将在24小时内通过WhatsApp发送报价。",
+    canopyWA:"通过WhatsApp联系",
+    canopyNewQuery:"提交另一个询价",
+    canopyMyQueries:"我的询价",
+    canopyStatusPending:"待审核", canopyStatusQuoted:"已发报价", canopyStatusAccepted:"已确认", canopyStatusPaid:"已付款", catDrink:"饮料", catFruit:"水果", catBakery:"面包烘焙", catDessert:"甜点", catTongSui:"糖水", catOther:"其他",
     shareTitle:"分享优惠", shareWhatsapp:"WhatsApp分享", shareCopy:"复制链接", shareCopied:"链接已复制！",
     shareMsg:"🍱 在Sapot Lokal发现好优惠：{0}，来自{1}，只需RM{2}！👉 {3}",
     // Merchant Orders Dashboard
@@ -555,6 +660,25 @@ const LS_NOTIFS = 'sapot_notifications';
 const LS_VENDOR_PROFILE_EXT = 'sapot_vendor_profile_ext';
 const LS_BOOSTS = 'sapot_boosts';
 const LS_VENDOR_ORDERS = 'sapot_vendor_orders';
+const LS_CATERING_QUERIES = 'sapot_catering_queries';
+const LS_CANOPY_QUERIES   = 'sapot_canopy_queries';
+
+// ─── CATERING / CANOPY QUERY HELPERS ─────────────────────────────────────────
+function getCateringQueries(){try{return JSON.parse(localStorage.getItem(LS_CATERING_QUERIES)||'[]');}catch{return[];}}
+function saveCateringQuery(q){
+  const all=getCateringQueries();
+  const idx=all.findIndex(x=>x.id===q.id);
+  if(idx>=0){all[idx]=q;}else{all.unshift(q);}
+  localStorage.setItem(LS_CATERING_QUERIES,JSON.stringify(all.slice(0,200)));
+}
+function getCanopyQueries(){try{return JSON.parse(localStorage.getItem(LS_CANOPY_QUERIES)||'[]');}catch{return[];}}
+function saveCanopyQuery(q){
+  const all=getCanopyQueries();
+  const idx=all.findIndex(x=>x.id===q.id);
+  if(idx>=0){all[idx]=q;}else{all.unshift(q);}
+  localStorage.setItem(LS_CANOPY_QUERIES,JSON.stringify(all.slice(0,200)));
+}
+function genQueryId(){return 'Q'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,5).toUpperCase();}
 
 function getVendorOrders(){try{return JSON.parse(localStorage.getItem(LS_VENDOR_ORDERS)||'[]');}catch{return[];}}
 function saveVendorOrder(o){
@@ -3419,11 +3543,569 @@ function SideOrderPopup({popup,cart,onAdd,onCheckout,onClose,allListings}){
 }
 
 // ─── BUYER FEED ───────────────────────────────────────────────────────────────
+
+// ─── EVENT CATERING ENQUIRY ──────────────────────────────────────────────────
+function CateringEnquiry({t}){
+  const [step,setStep]=useState(1); // 1=event details, 2=contact, 3=success
+  const [pax,setPax]=useState('');
+  const [eventType,setEventType]=useState('');
+  const [eventTypeOther,setEventTypeOther]=useState('');
+  const [date,setDate]=useState('');
+  const [time,setTime]=useState('');
+  const [venue,setVenue]=useState('');
+  const [notes,setNotes]=useState('');
+  const [name,setName]=useState('');
+  const [phone,setPhone]=useState('');
+  const [submittedId,setSubmittedId]=useState('');
+  const [myQueries,setMyQueries]=useState(()=>getCateringQueries());
+  const [showHistory,setShowHistory]=useState(false);
+  const [paying,setPaying]=useState(false);
+
+  const PLATFORM_WA='60123456789'; // Platform admin WhatsApp
+
+  const canProceed1=pax.trim()&&eventType&&date&&time&&venue.trim();
+  const canSubmit=name.trim()&&phone.trim().length>=10;
+
+  const handleSubmit=()=>{
+    const id=genQueryId();
+    const q={
+      id, type:'catering',
+      pax, eventType:eventType==='Other ✏️'?eventTypeOther:eventType,
+      date, time, venue, notes, name, phone,
+      status:'pending', // pending | quoted | accepted | paid
+      quotation:null,
+      submittedAt:Date.now(),
+    };
+    saveCateringQuery(q);
+    setMyQueries(getCateringQueries());
+    setSubmittedId(id);
+    setStep(3);
+  };
+
+  const openWA=(query)=>{
+    const msg=`🎂 *Event Catering Enquiry*\n\nRef: ${query.id}\n👤 ${query.name} | 📱 ${query.phone}\n📅 ${query.date} at ${query.time}\n📍 ${query.venue}\n👥 ${query.pax} pax\n🎉 ${query.eventType}${query.notes?'\n📝 '+query.notes:''}`;
+    window.open(`https://wa.me/${PLATFORM_WA}?text=${encodeURIComponent(msg)}`,'_blank');
+  };
+
+  const mockPay=(qid)=>{
+    setPaying(qid);
+    setTimeout(()=>{
+      const all=getCateringQueries();
+      const idx=all.findIndex(x=>x.id===qid);
+      if(idx>=0){all[idx].status='paid'; all[idx].paidAt=Date.now();}
+      localStorage.setItem(LS_CATERING_QUERIES,JSON.stringify(all));
+      setMyQueries(getCateringQueries());
+      setPaying(false);
+    },2000);
+  };
+
+  const statusColor={pending:'bg-amber-100 text-amber-700',quoted:'bg-blue-100 text-blue-700',accepted:'bg-emerald-100 text-emerald-700',paid:'bg-emerald-600 text-white'};
+  const statusLabel=(s)=>({pending:t.cateringStatusPending,quoted:t.cateringStatusQuoted,accepted:t.cateringStatusAccepted,paid:t.cateringStatusPaid}[s]||s);
+
+  return(
+    <div className="px-4 pb-32 pt-2">
+      {/* Hero banner */}
+      <div className="relative rounded-3xl overflow-hidden mb-5 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-br from-rose-500 via-pink-500 to-orange-400"/>
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage:"url('https://picsum.photos/seed/catering1/800/400')",backgroundSize:"cover"}}/>
+        <div className="relative px-5 py-6">
+          <span className="text-4xl block mb-2">🎂</span>
+          <h2 className="text-white font-black text-xl leading-tight">{t.cateringTab.replace('🎂 ','')}</h2>
+          <p className="text-white/80 text-xs mt-1">{t.cateringTagline}</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {['50–500 Pax','Full Setup','Custom Menu','Halal Certified'].map(b=>(
+              <span key={b} className="bg-white/20 backdrop-blur text-white text-[9px] font-black px-2.5 py-1 rounded-full">{b}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* My Queries toggle */}
+      {myQueries.length>0&&(
+        <button onClick={()=>setShowHistory(!showHistory)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl mb-4 active:scale-[0.98] transition-transform">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📋</span>
+            <span className="font-black text-slate-700 text-sm">{t.cateringMyQueries}</span>
+            <span className="bg-rose-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">{myQueries.length}</span>
+          </div>
+          <span className="text-slate-400 text-xs">{showHistory?'▲':'▼'}</span>
+        </button>
+      )}
+
+      {/* History panel */}
+      <AnimatePresence>
+      {showHistory&&(
+        <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4 space-y-3">
+          {myQueries.map(q=>(
+            <div key={q.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <p className="font-black text-slate-800 text-sm">{q.eventType}</p>
+                  <p className="text-slate-400 text-[10px]">{q.date} · {q.pax} pax · {q.venue}</p>
+                </div>
+                <span className={`text-[9px] font-black px-2 py-1 rounded-full flex-shrink-0 ${statusColor[q.status]||'bg-slate-100 text-slate-500'}`}>{statusLabel(q.status)}</span>
+              </div>
+              {q.quotation&&(
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 mb-2">
+                  <p className="text-emerald-700 font-black text-xs mb-0.5">💰 Quotation</p>
+                  <p className="text-emerald-800 font-black text-lg">RM {q.quotation}</p>
+                  <p className="text-emerald-600 text-[9px] mt-0.5">{q.quotationNote||''}</p>
+                </div>
+              )}
+              <div className="flex gap-2 mt-2">
+                <p className="text-slate-300 text-[9px] flex-1">Ref: {q.id}</p>
+                {(q.status==='accepted')&&(
+                  <button onClick={()=>mockPay(q.id)} disabled={paying===q.id}
+                    className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95 disabled:opacity-60">
+                    {paying===q.id?'Processing...':t.cateringPayNow}
+                  </button>
+                )}
+                {q.status!=='paid'&&(
+                  <button onClick={()=>openWA(q)} className="bg-[#25D366] text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95">
+                    💬 WA
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      )}
+      </AnimatePresence>
+
+      {/* Step progress */}
+      {step<3&&(
+        <div className="flex items-center gap-2 mb-5">
+          {[1,2].map(s=>(
+            <div key={s} className={`flex-1 h-1.5 rounded-full transition-all ${s<=step?'bg-rose-500':'bg-slate-200'}`}/>
+          ))}
+          <span className="text-slate-400 text-[10px] font-black">{step}/2</span>
+        </div>
+      )}
+
+      {/* ── STEP 1: Event Details ── */}
+      <AnimatePresence mode="wait">
+      {step===1&&(
+        <motion.div key="s1" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-4">
+          <h3 className="font-black text-slate-900 text-base">{t.cateringStep1}</h3>
+
+          {/* Pax */}
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringPax}</label>
+            <input value={pax} onChange={e=>setPax(e.target.value.replace(/\D/,''))} type="number" inputMode="numeric"
+              placeholder={t.cateringPaxPlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300 focus:bg-white transition-colors"/>
+          </div>
+
+          {/* Event type chips */}
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-2">{t.cateringEvent}</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(t.cateringEvents||[]).map(ev=>(
+                <button key={ev} onClick={()=>setEventType(ev)}
+                  className={`py-2.5 px-3 rounded-2xl text-xs font-black text-left transition-all active:scale-95 border-2 ${eventType===ev?'border-rose-500 bg-rose-50 text-rose-700':'border-slate-200 bg-white text-slate-600'}`}>
+                  {ev}
+                </button>
+              ))}
+            </div>
+            {eventType==='Other ✏️'&&(
+              <input value={eventTypeOther} onChange={e=>setEventTypeOther(e.target.value)}
+                placeholder={t.cateringEventPlaceholder}
+                className="mt-2 w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300"/>
+            )}
+          </div>
+
+          {/* Date + Time row */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringDate}</label>
+              <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none"/>
+            </div>
+            <div>
+              <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringTime}</label>
+              <input type="time" value={time} onChange={e=>setTime(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none"/>
+            </div>
+          </div>
+
+          {/* Venue */}
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringVenue}</label>
+            <textarea value={venue} onChange={e=>setVenue(e.target.value)} rows={2}
+              placeholder={t.cateringVenuePlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300 resize-none focus:bg-white transition-colors"/>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringNotes}</label>
+            <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2}
+              placeholder={t.cateringNotesPlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300 resize-none"/>
+          </div>
+
+          <button onClick={()=>setStep(2)} disabled={!canProceed1}
+            className="w-full bg-rose-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all disabled:opacity-40 shadow-lg shadow-rose-200">
+            {t.cateringSubmit}
+          </button>
+        </motion.div>
+      )}
+
+      {/* ── STEP 2: Contact Info ── */}
+      {step===2&&(
+        <motion.div key="s2" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-4">
+          <h3 className="font-black text-slate-900 text-base">{t.cateringStep2}</h3>
+
+          {/* Summary card */}
+          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4">
+            <p className="text-rose-700 font-black text-[10px] uppercase tracking-wider mb-2">📋 Order Summary</p>
+            <div className="space-y-1 text-xs">
+              <p><span className="text-slate-400">Event:</span> <span className="font-black">{eventType==='Other ✏️'?eventTypeOther:eventType}</span></p>
+              <p><span className="text-slate-400">Pax:</span> <span className="font-black">{pax} people</span></p>
+              <p><span className="text-slate-400">Date:</span> <span className="font-black">{date} at {time}</span></p>
+              <p><span className="text-slate-400">Venue:</span> <span className="font-black">{venue}</span></p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringName}</label>
+            <input value={name} onChange={e=>setName(e.target.value)} placeholder={t.cateringNamePlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300 focus:bg-white transition-colors"/>
+          </div>
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.cateringPhone}</label>
+            <input value={phone} onChange={e=>setPhone(e.target.value)} type="tel" placeholder={t.cateringPhonePlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300 focus:bg-white transition-colors"/>
+          </div>
+
+          <p className="text-slate-400 text-[10px] text-center">We'll WhatsApp you a menu & quotation within 24 hours.</p>
+
+          <div className="flex gap-3">
+            <button onClick={()=>setStep(1)} className="flex-shrink-0 bg-slate-100 text-slate-500 py-4 px-5 rounded-2xl font-black text-sm active:scale-95">←</button>
+            <button onClick={handleSubmit} disabled={!canSubmit}
+              className="flex-1 bg-rose-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 disabled:opacity-40 shadow-lg shadow-rose-200">
+              {t.cateringSubmit}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── STEP 3: Success ── */}
+      {step===3&&(
+        <motion.div key="s3" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-6">
+          <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:'spring',delay:0.1}} className="text-6xl mb-4">🎉</motion.div>
+          <h3 className="font-black text-slate-900 text-xl mb-2">{t.cateringSuccessTitle}</h3>
+          <p className="text-slate-500 text-sm mb-1">{t.cateringSuccessMsg}</p>
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 inline-block mt-3 mb-5">
+            <p className="text-slate-400 text-[9px] font-black uppercase">{t.cateringSuccessId}</p>
+            <p className="text-slate-800 font-black text-lg tracking-widest">{submittedId}</p>
+          </div>
+          <div className="space-y-3 px-2">
+            {(()=>{const q=getCateringQueries().find(x=>x.id===submittedId);return q?(
+              <button onClick={()=>openWA(q)} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-green-200">
+                <span className="text-xl">💬</span>{t.cateringWA}
+              </button>
+            ):null;})()}
+            <button onClick={()=>{setStep(1);setPax('');setEventType('');setEventTypeOther('');setDate('');setTime('');setVenue('');setNotes('');setName('');setPhone('');setShowHistory(true);}}
+              className="w-full bg-slate-100 text-slate-600 py-3.5 rounded-2xl font-black text-sm active:scale-95">
+              {t.cateringNewQuery}
+            </button>
+          </div>
+        </motion.div>
+      )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── CANOPY RENTAL ENQUIRY ────────────────────────────────────────────────────
+function CanopyRental({t}){
+  const [step,setStep]=useState(1);
+  const [date,setDate]=useState('');
+  const [time,setTime]=useState('');
+  const [venue,setVenue]=useState('');
+  const [qtyCanopy,setQtyCanopy]=useState('1');
+  const [qtyTable,setQtyTable]=useState('0');
+  const [qtyChair,setQtyChair]=useState('0');
+  const [qtyFan,setQtyFan]=useState('0');
+  const [notes,setNotes]=useState('');
+  const [name,setName]=useState('');
+  const [phone,setPhone]=useState('');
+  const [submittedId,setSubmittedId]=useState('');
+  const [myQueries,setMyQueries]=useState(()=>getCanopyQueries());
+  const [showHistory,setShowHistory]=useState(false);
+  const [paying,setPaying]=useState(false);
+
+  const PLATFORM_WA='60123456789';
+
+  const canProceed1=date&&time&&venue.trim()&&(parseInt(qtyCanopy)||0)>0;
+  const canSubmit=name.trim()&&phone.trim().length>=10;
+
+  const QtyRow=({label,val,setVal,emoji})=>(
+    <div className="flex items-center justify-between bg-slate-50 rounded-2xl px-4 py-3">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">{emoji}</span>
+        <span className="text-slate-700 font-black text-sm">{label}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <button onClick={()=>setVal(v=>String(Math.max(0,parseInt(v||'0')-1)))}
+          className="w-8 h-8 bg-slate-200 rounded-xl font-black text-slate-700 flex items-center justify-center active:scale-95 text-lg leading-none">−</button>
+        <span className="text-slate-900 font-black text-base w-8 text-center">{val}</span>
+        <button onClick={()=>setVal(v=>String(parseInt(v||'0')+1))}
+          className="w-8 h-8 bg-slate-900 rounded-xl font-black text-white flex items-center justify-center active:scale-95 text-lg leading-none">+</button>
+      </div>
+    </div>
+  );
+
+  const handleSubmit=()=>{
+    const id=genQueryId();
+    const q={
+      id, type:'canopy',
+      date, time, venue, notes, name, phone,
+      qtyCanopy:parseInt(qtyCanopy)||0,
+      qtyTable:parseInt(qtyTable)||0,
+      qtyChair:parseInt(qtyChair)||0,
+      qtyFan:parseInt(qtyFan)||0,
+      status:'pending',
+      quotation:null,
+      submittedAt:Date.now(),
+    };
+    saveCanopyQuery(q);
+    setMyQueries(getCanopyQueries());
+    setSubmittedId(id);
+    setStep(3);
+  };
+
+  const openWA=(query)=>{
+    const msg=`⛺ *Canopy Rental Enquiry*\n\nRef: ${query.id}\n👤 ${query.name} | 📱 ${query.phone}\n📅 ${query.date} at ${query.time}\n📍 ${query.venue}\n⛺ ${query.qtyCanopy} canopies · 🪑 ${query.qtyChair} chairs · 🪵 ${query.qtyTable} tables · 💨 ${query.qtyFan} fans${query.notes?'\n📝 '+query.notes:''}`;
+    window.open(`https://wa.me/${PLATFORM_WA}?text=${encodeURIComponent(msg)}`,'_blank');
+  };
+
+  const mockPay=(qid)=>{
+    setPaying(qid);
+    setTimeout(()=>{
+      const all=getCanopyQueries();
+      const idx=all.findIndex(x=>x.id===qid);
+      if(idx>=0){all[idx].status='paid';all[idx].paidAt=Date.now();}
+      localStorage.setItem(LS_CANOPY_QUERIES,JSON.stringify(all));
+      setMyQueries(getCanopyQueries());
+      setPaying(false);
+    },2000);
+  };
+
+  const statusColor={pending:'bg-amber-100 text-amber-700',quoted:'bg-blue-100 text-blue-700',accepted:'bg-emerald-100 text-emerald-700',paid:'bg-emerald-600 text-white'};
+  const statusLabel=(s)=>({pending:t.canopyStatusPending,quoted:t.canopyStatusQuoted,accepted:t.canopyStatusAccepted,paid:t.canopyStatusPaid}[s]||s);
+
+  return(
+    <div className="px-4 pb-32 pt-2">
+      {/* Hero banner */}
+      <div className="relative rounded-3xl overflow-hidden mb-5 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-500"/>
+        <div className="absolute inset-0 opacity-10" style={{backgroundImage:"url('https://picsum.photos/seed/canopy2/800/400')",backgroundSize:"cover"}}/>
+        <div className="relative px-5 py-6">
+          <span className="text-4xl block mb-2">⛺</span>
+          <h2 className="text-white font-black text-xl leading-tight">{t.canopyTab.replace('⛺ ','')}</h2>
+          <p className="text-white/80 text-xs mt-1">{t.canopyTagline}</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {['Canopy Setup','Tables & Chairs','Fans','Delivery Included'].map(b=>(
+              <span key={b} className="bg-white/20 backdrop-blur text-white text-[9px] font-black px-2.5 py-1 rounded-full">{b}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* My Queries toggle */}
+      {myQueries.length>0&&(
+        <button onClick={()=>setShowHistory(!showHistory)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl mb-4 active:scale-[0.98] transition-transform">
+          <div className="flex items-center gap-2">
+            <span className="text-base">📋</span>
+            <span className="font-black text-slate-700 text-sm">{t.canopyMyQueries}</span>
+            <span className="bg-sky-500 text-white text-[9px] font-black w-5 h-5 rounded-full flex items-center justify-center">{myQueries.length}</span>
+          </div>
+          <span className="text-slate-400 text-xs">{showHistory?'▲':'▼'}</span>
+        </button>
+      )}
+
+      <AnimatePresence>
+      {showHistory&&(
+        <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} className="mb-4 space-y-3">
+          {myQueries.map(q=>(
+            <div key={q.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <p className="font-black text-slate-800 text-sm">{q.date} at {q.time}</p>
+                  <p className="text-slate-400 text-[10px] truncate">{q.venue}</p>
+                  <p className="text-slate-500 text-[10px]">⛺{q.qtyCanopy} · 🪵{q.qtyTable} tables · 🪑{q.qtyChair} chairs · 💨{q.qtyFan} fans</p>
+                </div>
+                <span className={`text-[9px] font-black px-2 py-1 rounded-full flex-shrink-0 ${statusColor[q.status]||'bg-slate-100 text-slate-500'}`}>{statusLabel(q.status)}</span>
+              </div>
+              {q.quotation&&(
+                <div className="bg-sky-50 border border-sky-200 rounded-xl p-2.5 mb-2">
+                  <p className="text-sky-700 font-black text-xs mb-0.5">💰 Quotation</p>
+                  <p className="text-sky-800 font-black text-lg">RM {q.quotation}</p>
+                </div>
+              )}
+              <div className="flex gap-2 mt-2">
+                <p className="text-slate-300 text-[9px] flex-1">Ref: {q.id}</p>
+                {q.status==='accepted'&&(
+                  <button onClick={()=>mockPay(q.id)} disabled={paying===q.id}
+                    className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95 disabled:opacity-60">
+                    {paying===q.id?'Processing...':t.cateringPayNow}
+                  </button>
+                )}
+                {q.status!=='paid'&&(
+                  <button onClick={()=>openWA(q)} className="bg-[#25D366] text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95">
+                    💬 WA
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      )}
+      </AnimatePresence>
+
+      {/* Step progress */}
+      {step<3&&(
+        <div className="flex items-center gap-2 mb-5">
+          {[1,2].map(s=>(
+            <div key={s} className={`flex-1 h-1.5 rounded-full transition-all ${s<=step?'bg-sky-500':'bg-slate-200'}`}/>
+          ))}
+          <span className="text-slate-400 text-[10px] font-black">{step}/2</span>
+        </div>
+      )}
+
+      <AnimatePresence mode="wait">
+      {/* ── STEP 1: Rental Details ── */}
+      {step===1&&(
+        <motion.div key="c1" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-4">
+          <h3 className="font-black text-slate-900 text-base">{t.canopyStep1}</h3>
+
+          {/* Date + Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.canopyDate}</label>
+              <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-3 text-sm font-bold focus:border-sky-400 focus:outline-none"/>
+            </div>
+            <div>
+              <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.canopyTime}</label>
+              <input type="time" value={time} onChange={e=>setTime(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-3 text-sm font-bold focus:border-sky-400 focus:outline-none"/>
+            </div>
+          </div>
+
+          {/* Venue */}
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.canopyVenue}</label>
+            <textarea value={venue} onChange={e=>setVenue(e.target.value)} rows={2}
+              placeholder={t.canopyVenuePlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-sky-400 focus:outline-none placeholder:text-slate-300 resize-none"/>
+          </div>
+
+          {/* Qty spinners */}
+          <div className="space-y-2">
+            <QtyRow label={t.canopyQtyCanopy} val={qtyCanopy} setVal={setQtyCanopy} emoji="⛺"/>
+            <QtyRow label={t.canopyQtyTable} val={qtyTable} setVal={setQtyTable} emoji="🪵"/>
+            <QtyRow label={t.canopyQtyChair} val={qtyChair} setVal={setQtyChair} emoji="🪑"/>
+            <QtyRow label={t.canopyQtyFan} val={qtyFan} setVal={setQtyFan} emoji="💨"/>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.canopyNotes}</label>
+            <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={2}
+              placeholder={t.canopyNotesPlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-sky-400 focus:outline-none placeholder:text-slate-300 resize-none"/>
+          </div>
+
+          <button onClick={()=>setStep(2)} disabled={!canProceed1}
+            className="w-full bg-sky-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 disabled:opacity-40 shadow-lg shadow-sky-200">
+            {t.canopySubmit}
+          </button>
+        </motion.div>
+      )}
+
+      {/* ── STEP 2: Contact ── */}
+      {step===2&&(
+        <motion.div key="c2" initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}} className="space-y-4">
+          <h3 className="font-black text-slate-900 text-base">{t.canopyStep2}</h3>
+
+          {/* Summary card */}
+          <div className="bg-sky-50 border border-sky-200 rounded-2xl p-4">
+            <p className="text-sky-700 font-black text-[10px] uppercase tracking-wider mb-2">📋 Rental Summary</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <p><span className="text-slate-400">Date:</span> <span className="font-black">{date}</span></p>
+              <p><span className="text-slate-400">Time:</span> <span className="font-black">{time}</span></p>
+              <p><span className="text-slate-400">⛺</span> <span className="font-black">{qtyCanopy} canopies</span></p>
+              <p><span className="text-slate-400">🪵</span> <span className="font-black">{qtyTable} tables</span></p>
+              <p><span className="text-slate-400">🪑</span> <span className="font-black">{qtyChair} chairs</span></p>
+              <p><span className="text-slate-400">💨</span> <span className="font-black">{qtyFan} fans</span></p>
+            </div>
+            <p className="text-slate-500 text-xs mt-2 truncate">📍 {venue}</p>
+          </div>
+
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.canopyName}</label>
+            <input value={name} onChange={e=>setName(e.target.value)} placeholder={t.canopyNamePlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-sky-400 focus:outline-none placeholder:text-slate-300 focus:bg-white transition-colors"/>
+          </div>
+          <div>
+            <label className="text-slate-600 text-[10px] font-black uppercase tracking-wider block mb-1.5">{t.canopyPhone}</label>
+            <input value={phone} onChange={e=>setPhone(e.target.value)} type="tel" placeholder={t.canopyPhonePlaceholder}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-sky-400 focus:outline-none placeholder:text-slate-300 focus:bg-white transition-colors"/>
+          </div>
+
+          <p className="text-slate-400 text-[10px] text-center">We'll WhatsApp you a quotation within 24 hours.</p>
+
+          <div className="flex gap-3">
+            <button onClick={()=>setStep(1)} className="flex-shrink-0 bg-slate-100 text-slate-500 py-4 px-5 rounded-2xl font-black text-sm active:scale-95">←</button>
+            <button onClick={handleSubmit} disabled={!canSubmit}
+              className="flex-1 bg-sky-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 disabled:opacity-40 shadow-lg shadow-sky-200">
+              {t.canopySubmit}
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── STEP 3: Success ── */}
+      {step===3&&(
+        <motion.div key="c3" initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} className="text-center py-6">
+          <motion.div initial={{scale:0}} animate={{scale:1}} transition={{type:'spring',delay:0.1}} className="text-6xl mb-4">⛺</motion.div>
+          <h3 className="font-black text-slate-900 text-xl mb-2">{t.canopySuccessTitle}</h3>
+          <p className="text-slate-500 text-sm mb-1">{t.canopySuccessMsg}</p>
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 inline-block mt-3 mb-5">
+            <p className="text-slate-400 text-[9px] font-black uppercase">Reference ID</p>
+            <p className="text-slate-800 font-black text-lg tracking-widest">{submittedId}</p>
+          </div>
+          <div className="space-y-3 px-2">
+            {(()=>{const q=getCanopyQueries().find(x=>x.id===submittedId);return q?(
+              <button onClick={()=>openWA(q)} className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-green-200">
+                <span className="text-xl">💬</span>{t.canopyWA}
+              </button>
+            ):null;})()}
+            <button onClick={()=>{setStep(1);setDate('');setTime('');setVenue('');setQtyCanopy('1');setQtyTable('0');setQtyChair('0');setQtyFan('0');setNotes('');setName('');setPhone('');setShowHistory(true);}}
+              className="w-full bg-slate-100 text-slate-600 py-3.5 rounded-2xl font-black text-sm active:scale-95">
+              {t.canopyNewQuery}
+            </button>
+          </div>
+        </motion.div>
+      )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
 function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendorTap,onCheckoutDone}){
   const [search,setSearch]=useState("");
   const [catFilter,setCatFilter]=useState("all");
   const [dealFilter,setDealFilter]=useState("all");
-  const [buyerTab,setBuyerTab]=useState("foods"); // "foods" | "deals"
+  const [buyerTab,setBuyerTab]=useState("foods"); // "foods" | "deals" | "cook" | "catering" | "canopy"
   const [cart,setCart]=useState([]);
   const [showCart,setShowCart]=useState(false);
   const [differentVendor,setDifferentVendor]=useState(null);
@@ -3526,7 +4208,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
         <p className="text-amber-700 text-[10px] font-bold">{t.halalSelfDeclared}</p>
       </div>
 
-      {!isStudentMode&&(
+      {!isStudentMode&&buyerTab!=="catering"&&buyerTab!=="canopy"&&(
         <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
           {/* Search bar */}
           <div className="relative mb-2">
@@ -3536,19 +4218,27 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
               className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
             {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
           </div>
-          {/* Three main tabs */}
-          <div className="flex gap-1.5 mb-2">
+          {/* Scrollable tab bar — 5 tabs */}
+          <div className="flex gap-1.5 mb-2 overflow-x-auto no-scrollbar">
             <button onClick={()=>setBuyerTab("foods")}
-              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               🍽️ All Foods
             </button>
             <button onClick={()=>setBuyerTab("deals")}
-              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="deals"?"bg-orange-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="deals"?"bg-orange-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               🔖 Deals
             </button>
             <button onClick={()=>setBuyerTab("cook")}
-              className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="cook"?"bg-purple-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="cook"?"bg-purple-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               📋 Menu
+            </button>
+            <button onClick={()=>setBuyerTab("catering")}
+              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="catering"?"bg-rose-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              🎂 Catering
+            </button>
+            <button onClick={()=>setBuyerTab("canopy")}
+              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="canopy"?"bg-sky-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+              ⛺ Canopy
             </button>
           </div>
           {/* Foods sub-filter: category pills */}
@@ -3606,7 +4296,21 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
         <MenuBrowse allListings={allListings} onAddToCart={attemptAddToCart} cart={cart} t={t}/>
       )}
 
-      <div className="px-3 pt-3 pb-6" style={{display:buyerTab==="cook"?"none":"block"}}>
+      {/* ── EVENT CATERING TAB ── */}
+      {buyerTab==="catering"&&(
+        <div className="overflow-y-auto flex-1">
+          <CateringEnquiry t={t}/>
+        </div>
+      )}
+
+      {/* ── CANOPY RENTAL TAB ── */}
+      {buyerTab==="canopy"&&(
+        <div className="overflow-y-auto flex-1">
+          <CanopyRental t={t}/>
+        </div>
+      )}
+
+      <div className="px-3 pt-3 pb-6" style={{display:(buyerTab==="cook"||buyerTab==="catering"||buyerTab==="canopy")?"none":"block"}}>
         {isStudentMode&&(
           <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4 mb-3">
             <h2 className="font-black text-indigo-900 text-base mb-0.5">{t.studentCornerTitle}</h2>
