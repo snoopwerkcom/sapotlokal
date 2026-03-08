@@ -23,7 +23,7 @@ const T = {
     freeDeliveryFrom:"🎁 Merchant covers delivery from RM{0}",
     noDelivery:"Self-pickup only",
     halalDisclaimerTitle:"Halal Status Notice",
-    halalDisclaimerBody:"The Halal and Muslim-Owned badges are self-declared by vendors. Sapot Lokal does not check or guarantee any halal status.\n\nPlease use your own judgement. Sapot Lokal is not responsible for any halal claims.",
+    halalDisclaimerBody:"Halal and Non-Halal status is self-declared by vendors. Sapot Lokal does not verify or guarantee any halal status.\n\nPlease use your own judgement when purchasing.",
     halalDisclaimerBtn:"I understand, continue",
     studentCornerTitle:"🎓 Student Corner",
     studentCornerDesc:"Special prices posted by vendors who support students. No verification needed.",
@@ -579,7 +579,7 @@ const MOCK_LISTINGS = [
   {id:1,vendorId:1,vendorName:"Warung Mak Teh",vendorPhone:"60123456789",freeDeliveryThreshold:20,studentPrice:2.00,title:"Nasi Lemak Bungkus",desc:"Egg, Sambal, Anchovies",originalPrice:5.00,dealPrice:3.00,emoji:"🍛",image:"https://picsum.photos/seed/nasilemak1/800/600",category:"Food",halal:1,endTime:"21:00",qty:18,claimed:6,type:"limited",reheat:"none",postedAt:Date.now()-60000*20,vendorSubscribed:true},
   {id:2,vendorId:1,vendorName:"Warung Mak Teh",vendorPhone:"60123456789",freeDeliveryThreshold:20,studentPrice:1.50,title:"Teh Tarik Large",desc:"Fresh, thick teh tarik",originalPrice:3.50,dealPrice:2.00,emoji:"🧋",image:"https://picsum.photos/seed/tehtarik/800/600",category:"Drink",halal:1,endTime:"21:00",qty:null,claimed:0,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:true},
   {id:3,vendorId:2,vendorName:"Bakeri Fariz",vendorPhone:"60197654321",freeDeliveryThreshold:30,studentPrice:7.50,title:"Assorted Pastry Box",desc:"Croissant, Danish Almond, Chocolate Bun",originalPrice:15.00,dealPrice:9.90,emoji:"🥐",image:"https://picsum.photos/seed/pastrybox1/800/600",category:"Bakery",halal:1,endTime:"20:30",qty:10,claimed:9,type:"limited",reheat:"oven",postedAt:Date.now()-60000*45,vendorSubscribed:true},
-  {id:4,vendorId:3,vendorName:"Uncle Lim Kopitiam",vendorPhone:"60112233445",freeDeliveryThreshold:null,studentPrice:null,title:"Drink Bundle",desc:"Teh Tarik + Milo Ais + Lime Juice",originalPrice:9.00,dealPrice:5.50,emoji:"🧋",image:"https://picsum.photos/seed/drinks1/800/600",category:"Drink",halal:2,endTime:"22:00",qty:null,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:false},
+  {id:4,vendorId:3,vendorName:"Uncle Lim Kopitiam",vendorPhone:"60112233445",freeDeliveryThreshold:null,studentPrice:null,title:"Drink Bundle",desc:"Teh Tarik + Milo Ais + Lime Juice",originalPrice:9.00,dealPrice:5.50,emoji:"🧋",image:"https://picsum.photos/seed/drinks1/800/600",category:"Drink",halal:1,endTime:"22:00",qty:null,claimed:3,type:"promo",reheat:"none",postedAt:Date.now()-60000*10,vendorSubscribed:false},
   {id:5,vendorId:4,vendorName:"Pak Din Gerai",vendorPhone:"60169988776",freeDeliveryThreshold:25,studentPrice:3.50,title:"Economy Rice",desc:"2 Veg + 1 Main of your choice",originalPrice:8.00,dealPrice:5.00,emoji:"🍱",image:"https://picsum.photos/seed/nasicamp1/800/600",category:"Food",halal:1,endTime:"14:30",qty:20,claimed:14,type:"promo",reheat:"microwave",postedAt:Date.now()-60000*5,vendorSubscribed:false},
   {id:6,vendorId:5,vendorName:"Kuih Mak Jah",vendorPhone:"60133344556",freeDeliveryThreshold:20,studentPrice:5.00,title:"Traditional Kuih Set",desc:"Kuih Lapis, Onde-onde, Seri Muka",originalPrice:12.00,dealPrice:7.00,emoji:"🍡",image:"https://picsum.photos/seed/kuih1/800/600",category:"Food",halal:1,endTime:"18:00",qty:8,claimed:5,type:"special",reheat:"none",postedAt:Date.now()-60000*60,vendorSubscribed:true},
   {id:7,vendorId:6,vendorName:"Restoran Maju Jaya",vendorPhone:"60144455667",freeDeliveryThreshold:35,studentPrice:6.00,title:"Honey Chicken (New!)",desc:"New recipe — try it and give feedback",originalPrice:14.00,dealPrice:8.00,emoji:"🍗",image:"https://picsum.photos/seed/ayampercik/800/600",category:"Food",halal:1,endTime:"20:00",qty:15,claimed:2,type:"special",reheat:"oven",postedAt:Date.now()-60000*15,vendorSubscribed:true},
@@ -619,8 +619,8 @@ const stockPct = (qty,claimed)=>qty?Math.min(Math.round((claimed/qty)*100),100):
 const dealTag = (type)=>({limited:{label:"🔥 Limited",bg:"bg-orange-500"},promo:{label:"⚡ Flash",bg:"bg-blue-500"},special:{label:"🌟 Special",bg:"bg-purple-500"}})[type]||{label:"🔥 Limited",bg:"bg-orange-500"};
 const fill = (str,...vals)=>vals.reduce((s,v,i)=>s.replace(`{${i}}`,v),str);
 const halalBadge = (h)=>{
-  if(h===1||h===2)return{label:"Halal",bg:"bg-emerald-500"};
-  if(h===3)return{label:"Non-Halal",bg:"bg-slate-500"};
+  if(h===1)return{label:"Halal",bg:"bg-emerald-500"};
+  if(h===0)return{label:"Non-Halal",bg:"bg-slate-500"};
   return null;
 };
 
@@ -3616,7 +3616,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
                     <span className="text-red-400 text-[9px]">* Required</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    {[{val:1,icon:"🟢",label:"Halal"},{val:3,icon:"🔴",label:"Non-Halal"}].map(opt=>{
+                    {[{val:1,icon:"🟢",label:"Halal"},{val:0,icon:"🔴",label:"Non-Halal"}].map(opt=>{
                       const sel=form.halal===opt.val;
                       return(
                         <button key={opt.val} onClick={()=>upd("halal",opt.val)} type="button"
@@ -3982,7 +3982,7 @@ function CateringEnquiry({t}){
           <h2 className="text-white font-black text-xl leading-tight">{t.cateringTab.replace('🎂 ','')}</h2>
           <p className="text-white/80 text-xs mt-1">{t.cateringTagline}</p>
           <div className="flex gap-2 mt-3 flex-wrap">
-            {['50–500 Pax','Full Setup','Custom Menu','Halal Certified'].map(b=>(
+            {['50–500 Pax','Full Setup','Custom Menu','Book Nationwide'].map(b=>(
               <span key={b} className="bg-white/20 backdrop-blur text-white text-[9px] font-black px-2.5 py-1 rounded-full">{b}</span>
             ))}
           </div>
@@ -4583,20 +4583,21 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
         <p className="text-amber-700 text-[10px] font-bold">{t.halalSelfDeclared}</p>
       </div>
 
-      {!isStudentMode&&(
-        <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
-          {/* Search bar — hidden on services tabs */}
-          {buyerTab!=="catering"&&buyerTab!=="canopy"&&(
-            <div className="relative mb-2">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-              <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
-                placeholder={t.searchPlaceholder}
-                className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
-              {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
-            </div>
-          )}
-          {/* Scrollable tab bar — always visible */}
-          <div className="flex gap-1.5 mb-1 overflow-x-auto no-scrollbar">
+      {/* ── STICKY NAV BAR — always rendered, controls all buyer tabs ── */}
+      <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
+        {/* Search bar — only on food/deal/menu tabs, not services */}
+        {!isStudentMode&&buyerTab!=="catering"&&buyerTab!=="canopy"&&(
+          <div className="relative mb-2">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder={t.searchPlaceholder}
+              className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
+            {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
+          </div>
+        )}
+        {/* Tab bar — ALWAYS visible on all buyer sub-tabs including student */}
+        <div className="flex gap-1.5 mb-1 overflow-x-auto no-scrollbar">
+          {!isStudentMode&&(<>
             <button onClick={()=>setBuyerTab("foods")}
               className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               🍽️ All Foods
@@ -4609,64 +4610,59 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
               className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="cook"?"bg-purple-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               📋 Menu
             </button>
-            <button onClick={()=>setBuyerTab("catering")}
-              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="catering"?"bg-rose-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-              🎂 Catering
-            </button>
-            <button onClick={()=>setBuyerTab("canopy")}
-              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="canopy"?"bg-sky-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-              ⛺ Canopy
-            </button>
-          </div>
-          {/* Foods sub-filter: category pills */}
-          {buyerTab==="foods"&&(
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
-              {[
-                {id:"all",emoji:"🍽️",label:"All"},
-                {id:"Food",emoji:"🍛",label:t.catFood},
-                {id:"Drink",emoji:"🧋",label:t.catDrink},
-                {id:"Bakery",emoji:"🥐",label:t.catBakery},
-                {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
-                {id:"TongSui",emoji:"🍮",label:t.catTongSui||"Tong Sui"},
-                {id:"Fruit",emoji:"🍉",label:t.catFruit},
-                {id:"Other",emoji:"📦",label:t.catOther},
-              ].map(cat=>(
-                <button key={cat.id} onClick={()=>setCatFilter(cat.id)}
-                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
-                    catFilter===cat.id
-                      ?"bg-emerald-600 text-white border-emerald-600"
-                      :"bg-white text-slate-600 border-slate-200"
-                  }`}>
-                  <span className="text-sm leading-none">{cat.emoji}</span>
-                  <span>{cat.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          {/* Deals sub-filter: deal type pills */}
-          {buyerTab==="deals"&&(
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
-              {[
-                {id:"all",emoji:"🔖",label:"All Deals",color:"bg-slate-900"},
-                {id:"promo",emoji:"⚡",label:"Promotion",color:"bg-blue-500"},
-                {id:"limited",emoji:"🔥",label:"Limited",color:"bg-orange-500"},
-                {id:"surplus",emoji:"💰",label:"Surplus",color:"bg-emerald-600"},
-                {id:"special",emoji:"🌟",label:"Special",color:"bg-purple-500"},
-              ].map(d=>(
-                <button key={d.id} onClick={()=>setDealFilter(d.id)}
-                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
-                    dealFilter===d.id
-                      ?`${d.color} text-white border-transparent`
-                      :"bg-white text-slate-600 border-slate-200"
-                  }`}>
-                  <span className="text-sm leading-none">{d.emoji}</span>
-                  <span>{d.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          </>)}
+          <button onClick={()=>setBuyerTab("catering")}
+            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="catering"?"bg-rose-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+            🎂 Catering
+          </button>
+          <button onClick={()=>setBuyerTab("canopy")}
+            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="canopy"?"bg-sky-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
+            ⛺ Canopy
+          </button>
         </div>
-      )}
+        {/* Sub-filters only on food/deal tabs */}
+        {!isStudentMode&&buyerTab==="foods"&&(
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
+            {[
+              {id:"all",emoji:"🍽️",label:"All"},
+              {id:"Food",emoji:"🍛",label:t.catFood},
+              {id:"Drink",emoji:"🧋",label:t.catDrink},
+              {id:"Bakery",emoji:"🥐",label:t.catBakery},
+              {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
+              {id:"TongSui",emoji:"🍮",label:t.catTongSui||"Tong Sui"},
+              {id:"Fruit",emoji:"🍉",label:t.catFruit},
+              {id:"Other",emoji:"📦",label:t.catOther},
+            ].map(cat=>(
+              <button key={cat.id} onClick={()=>setCatFilter(cat.id)}
+                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
+                  catFilter===cat.id?"bg-emerald-600 text-white border-emerald-600":"bg-white text-slate-600 border-slate-200"
+                }`}>
+                <span className="text-sm leading-none">{cat.emoji}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {!isStudentMode&&buyerTab==="deals"&&(
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
+            {[
+              {id:"all",emoji:"🔖",label:"All Deals",color:"bg-slate-900"},
+              {id:"promo",emoji:"⚡",label:"Promotion",color:"bg-blue-500"},
+              {id:"limited",emoji:"🔥",label:"Limited",color:"bg-orange-500"},
+              {id:"surplus",emoji:"💰",label:"Surplus",color:"bg-emerald-600"},
+              {id:"special",emoji:"🌟",label:"Special",color:"bg-purple-500"},
+            ].map(d=>(
+              <button key={d.id} onClick={()=>setDealFilter(d.id)}
+                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
+                  dealFilter===d.id?`${d.color} text-white border-transparent`:"bg-white text-slate-600 border-slate-200"
+                }`}>
+                <span className="text-sm leading-none">{d.emoji}</span>
+                <span>{d.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* ── ORDER TO COOK TAB — always mounted ── */}
       <div style={{display:(buyerTab==="cook"&&!isStudentMode)?"block":"none"}}>
