@@ -149,6 +149,28 @@ const T = {
     celebBtn:"Start Posting",
     // Categories
     catAll:"All Deals", catFood:"Food", catDrink:"Drink", catFruit:"Fruit", catBakery:"Bakery", catDessert:"Dessert", catTongSui:"Tong Sui", catOther:"Other",
+    // Merchant Orders Dashboard
+    ordersTab:"Orders", ordersManage:"Manage incoming orders",
+    orderStatusNew:"New", orderStatusCooking:"Cooking", orderStatusReady:"Ready", orderStatusDone:"Done",
+    ordersActive:"Active", ordersDone:"Done", ordersAll:"All",
+    ordersNoActive:"No active orders", ordersNoneYet:"No orders yet",
+    ordersBuyersHere:"Orders from buyers will appear here",
+    ordersLoadDemo:"Load Demo Orders",
+    ordersPickupCode:"Pickup Code",
+    ordersTotal:"Total", ordersDelivery:"Lalamove Delivery",
+    ordersDrop:"Drop", ordersMobile:"Mobile",
+    ordersMinLeft:"{0}m left",
+    ordersCookingBtn:"Cooking ({0}m)", ordersStartCooking:"Start Cooking",
+    ordersHowManyMins:"How many minutes to cook?", ordersMinsPlaceholder:"mins",
+    ordersStartBtn:"Start",
+    ordersMarkReady:"✅ Mark Ready + Notify Buyer",
+    ordersDoneCollected:"✓ Done / Collected",
+    ordersCallRider:"🛵 Call Rider",
+    ordersWABuyer:"💬 WhatsApp Buyer",
+    ordersNotifyReadyMsg:"✅ *Your order is READY!*\n\nOrder {0}\n🏪 Come pickup now!\n\nPowered by Sapot Lokal",
+    ordersRiderMsg:"🛵 *Rider Pickup Request*\n\nOrder: {0}\nItems: {1}\nFrom: {2}\nTo: {3}\n\nBook via Lalamove: https://web.lalamove.com",
+    ordersWABuyerMsg:"Hi! Your Sapot Lokal order {0} update:",
+    ordersNewPill:"{0} New", ordersCookingPill:"{0} Cooking", ordersReadyPill:"{0} Ready",
   },
   bm: {
     appTagline:"Portal Vendor", buy:"Deal", sell:"Jual", studentTab:"🎓 Pelajar",
@@ -261,6 +283,28 @@ const T = {
     catAll:"Semua Deal", catFood:"Makanan", catDrink:"Minuman", catFruit:"Buah", catBakery:"Bakeri", catDessert:"Pencuci Mulut", catTongSui:"Tong Sui", catOther:"Lain-lain",
     shareTitle:"Kongsi Deal", shareWhatsapp:"Kongsi di WhatsApp", shareCopy:"Salin Pautan", shareCopied:"Pautan disalin!",
     shareMsg:"🍱 Tengok deal ni kat Sapot Lokal: {0} dari {1} hanya RM{2}! 👉 {3}",
+    // Merchant Orders Dashboard
+    ordersTab:"Pesanan", ordersManage:"Urus pesanan masuk",
+    orderStatusNew:"Baru", orderStatusCooking:"Memasak", orderStatusReady:"Siap", orderStatusDone:"Selesai",
+    ordersActive:"Aktif", ordersDone:"Selesai", ordersAll:"Semua",
+    ordersNoActive:"Tiada pesanan aktif", ordersNoneYet:"Belum ada pesanan",
+    ordersBuyersHere:"Pesanan dari pembeli akan muncul di sini",
+    ordersLoadDemo:"Muat Demo Pesanan",
+    ordersPickupCode:"Kod Ambil",
+    ordersTotal:"Jumlah", ordersDelivery:"Penghantaran Lalamove",
+    ordersDrop:"Hantar ke", ordersMobile:"Telefon",
+    ordersMinLeft:"{0}m lagi",
+    ordersCookingBtn:"Memasak ({0}m)", ordersStartCooking:"Mula Masak",
+    ordersHowManyMins:"Berapa minit untuk masak?", ordersMinsPlaceholder:"min",
+    ordersStartBtn:"Mula",
+    ordersMarkReady:"✅ Tandakan Siap + Beritahu Pembeli",
+    ordersDoneCollected:"✓ Selesai / Diambil",
+    ordersCallRider:"🛵 Hubungi Rider",
+    ordersWABuyer:"💬 WhatsApp Pembeli",
+    ordersNotifyReadyMsg:"✅ *Pesanan anda SIAP!*\n\nPesanan {0}\n🏪 Datang ambil sekarang!\n\nDijana oleh Sapot Lokal",
+    ordersRiderMsg:"🛵 *Permintaan Ambil Rider*\n\nPesanan: {0}\nItem: {1}\nDari: {2}\nKe: {3}\n\nTempah via Lalamove: https://web.lalamove.com",
+    ordersWABuyerMsg:"Hai! Kemas kini pesanan Sapot Lokal anda {0}:",
+    ordersNewPill:"{0} Baru", ordersCookingPill:"{0} Memasak", ordersReadyPill:"{0} Siap",
   },
   zh: {
     appTagline:"校园美食优惠", buy:"优惠", sell:"卖家", studentTab:"🎓 学生",
@@ -373,6 +417,28 @@ const T = {
     catAll:"全部优惠", catFood:"食物", catDrink:"饮料", catFruit:"水果", catBakery:"面包烘焙", catDessert:"甜点", catTongSui:"糖水", catOther:"其他",
     shareTitle:"分享优惠", shareWhatsapp:"WhatsApp分享", shareCopy:"复制链接", shareCopied:"链接已复制！",
     shareMsg:"🍱 在Sapot Lokal发现好优惠：{0}，来自{1}，只需RM{2}！👉 {3}",
+    // Merchant Orders Dashboard
+    ordersTab:"订单", ordersManage:"管理买家订单",
+    orderStatusNew:"新订单", orderStatusCooking:"烹饪中", orderStatusReady:"已准备好", orderStatusDone:"完成",
+    ordersActive:"进行中", ordersDone:"已完成", ordersAll:"全部",
+    ordersNoActive:"暂无进行中订单", ordersNoneYet:"暂无订单",
+    ordersBuyersHere:"买家订单将显示在这里",
+    ordersLoadDemo:"加载示范订单",
+    ordersPickupCode:"取餐码",
+    ordersTotal:"总计", ordersDelivery:"Lalamove送餐",
+    ordersDrop:"送到", ordersMobile:"电话",
+    ordersMinLeft:"剩{0}分钟",
+    ordersCookingBtn:"烹饪中（{0}分钟）", ordersStartCooking:"开始烹饪",
+    ordersHowManyMins:"需要几分钟烹饪？", ordersMinsPlaceholder:"分钟",
+    ordersStartBtn:"开始",
+    ordersMarkReady:"✅ 标记完成 + 通知买家",
+    ordersDoneCollected:"✓ 完成 / 已取",
+    ordersCallRider:"🛵 联系骑手",
+    ordersWABuyer:"💬 WhatsApp 买家",
+    ordersNotifyReadyMsg:"✅ *您的订单已准备好！*\n\n订单 {0}\n🏪 请来取餐！\n\nSapot Lokal",
+    ordersRiderMsg:"🛵 *骑手取餐请求*\n\n订单：{0}\n商品：{1}\n取货地点：{2}\n送往：{3}\n\n通过Lalamove预订：https://web.lalamove.com",
+    ordersWABuyerMsg:"您好！您的Sapot Lokal订单 {0} 更新：",
+    ordersNewPill:"{0} 新", ordersCookingPill:"{0} 烹饪中", ordersReadyPill:"{0} 已准备好",
   },
   };
 
@@ -1122,24 +1188,23 @@ function useOrderTimer(order){
   return remaining;
 }
 
-function OrderCard({order,onUpdate}){
+function OrderCard({order,onUpdate,t}){
   const [showCookPicker,setShowCookPicker]=useState(false);
   const [cookInput,setCookInput]=useState('10');
   const remaining=useOrderTimer(order);
   const statusColor={new:'bg-blue-500',cooking:'bg-amber-500',ready:'bg-emerald-500',done:'bg-slate-400'};
-  const statusLabel={new:'New',cooking:'Cooking',ready:'Ready',done:'Done'};
+  const statusLabel={new:t.orderStatusNew,cooking:t.orderStatusCooking,ready:t.orderStatusReady,done:t.orderStatusDone};
 
   const notifyReady=()=>{
     if(!order.vendorPhone&&!order.mobile)return;
     const phone=order.mobile||'';
-    const msg=`✅ *Your order is READY!*%0A%0AOrder ${order.pickupCode}%0A🏪 Come pickup now!%0A%0APowered by Sapot Lokal`;
+    const msg=encodeURIComponent(t.ordersNotifyReadyMsg.replace('{0}',order.pickupCode));
     window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
   };
 
   const callRider=()=>{
-    const phone=order.mobile||'';
-    const items=order.items?.map(i=>`${i.qty||1}x ${i.title}`).join(', ')||'order';
-    const msg=`🛵 *Rider Pickup Request*%0A%0AOrder: ${order.pickupCode}%0AItems: ${encodeURIComponent(items)}%0AFrom: ${encodeURIComponent(order.vendorName||'Merchant')}%0ATo: ${encodeURIComponent(order.dropAddr||'Buyer address')}%0A%0ABook via Lalamove: https://web.lalamove.com`;
+    const items=order.items?.map(i=>`${i.qty||1}x ${i.title}`).join(', ')||'';
+    const msg=encodeURIComponent(t.ordersRiderMsg.replace('{0}',order.pickupCode).replace('{1}',items).replace('{2}',order.vendorName||'').replace('{3}',order.dropAddr||''));
     window.open(`https://wa.me/?text=${msg}`,'_blank');
   };
 
@@ -1155,7 +1220,7 @@ function OrderCard({order,onUpdate}){
         <div className="flex items-center gap-2">
           {order.status==='cooking'&&remaining!==null&&(
             <span className="bg-amber-500/20 border border-amber-500/30 text-amber-300 font-black text-[10px] px-2 py-1 rounded-full">
-              🍳 {remaining}m left
+              🍳 {t.ordersMinLeft.replace('{0}',String(remaining))}
             </span>
           )}
           <span className={`text-white text-[9px] font-black px-2 py-1 rounded-full ${statusColor[order.status||'new']}`}>
@@ -1173,21 +1238,21 @@ function OrderCard({order,onUpdate}){
           </div>
         ))}
         <div className="flex justify-between text-xs pt-2 border-t border-white/10 mt-2">
-          <span className="text-white/40">Total</span>
+          <span className="text-white/40">{t.ordersTotal}</span>
           <span className="text-white font-black">RM{fmtRM(order.total||0)}</span>
         </div>
         {order.deliveryMode==='delivery'&&(
           <div className="mt-2 bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-2">
-            <p className="text-blue-300 font-black text-[9px] uppercase tracking-wider mb-1">🛵 Lalamove Delivery</p>
-            <p className="text-white/50 text-[9px]">Drop: {order.dropAddr||'—'}</p>
-            <p className="text-white/50 text-[9px]">Mobile: {order.mobile||'—'}</p>
+            <p className="text-blue-300 font-black text-[9px] uppercase tracking-wider mb-1">{`🛵 ${t.ordersDelivery}`}</p>
+            <p className="text-white/50 text-[9px]">{t.ordersDrop}: {order.dropAddr||'—'}</p>
+            <p className="text-white/50 text-[9px]">{t.ordersMobile}: {order.mobile||'—'}</p>
           </div>
         )}
       </div>
 
       {/* Pickup code */}
       <div className="px-4 py-2 border-b border-white/10 flex items-center justify-between">
-        <span className="text-white/30 text-[9px] font-black uppercase">Pickup Code</span>
+        <span className="text-white/30 text-[9px] font-black uppercase">{t.ordersPickupCode}</span>
         <span className="text-emerald-400 font-black text-lg tracking-widest">{order.pickupCode}</span>
       </div>
 
@@ -1199,7 +1264,7 @@ function OrderCard({order,onUpdate}){
             {!showCookPicker?(
               <button onClick={()=>setShowCookPicker(true)}
                 className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 ${order.status==='cooking'?'bg-amber-500/20 border border-amber-500/30 text-amber-300':'bg-amber-500 text-white shadow-lg shadow-amber-900/30'}`}>
-                🍳 {order.status==='cooking'?`Cooking (${order.cookMins}m)`:'Start Cooking'}
+                🍳 {order.status==='cooking'?t.ordersCookingBtn.replace('{0}',order.cookMins):t.ordersStartCooking}
               </button>
             ):(
               <motion.div initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
@@ -1221,7 +1286,7 @@ function OrderCard({order,onUpdate}){
                     onUpdate();
                     setShowCookPicker(false);
                   }} className="bg-amber-500 text-white px-4 py-2 rounded-xl font-black text-xs uppercase active:scale-95">
-                    Start
+                    {t.ordersStartBtn}
                   </button>
                   <button onClick={()=>setShowCookPicker(false)} className="bg-white/10 text-white/50 px-3 py-2 rounded-xl text-xs">✕</button>
                 </div>
@@ -1252,7 +1317,7 @@ function OrderCard({order,onUpdate}){
         )}
         {/* WhatsApp buyer direct */}
         {order.mobile&&(
-          <a href={`https://wa.me/${order.mobile}?text=${encodeURIComponent(`Hi! Your Sapot Lokal order ${order.pickupCode} update:`)}`} target="_blank" rel="noreferrer"
+          <a href={`https://wa.me/${order.mobile}?text=${encodeURIComponent(t.ordersWABuyerMsg.replace('{0}',order.pickupCode))}`} target="_blank" rel="noreferrer"
             className="w-full py-2 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95">
             💬 WhatsApp Buyer
           </a>
@@ -1262,7 +1327,7 @@ function OrderCard({order,onUpdate}){
   );
 }
 
-function MerchantOrdersDash({vendorMeta}){
+function MerchantOrdersDash({vendorMeta,t}){
   const [orders,setOrders]=useState(()=>getVendorOrders());
   const [filterStatus,setFilterStatus]=useState('active'); // 'active' | 'done' | 'all'
   const refresh=()=>setOrders(getVendorOrders());
@@ -1301,15 +1366,15 @@ function MerchantOrdersDash({vendorMeta}){
 
       {/* Status summary pills */}
       <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-        {newCount>0&&<div className="flex-shrink-0 bg-blue-500/20 border border-blue-500/30 text-blue-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"/>{newCount} New</div>}
-        {cookingCount>0&&<div className="flex-shrink-0 bg-amber-500/20 border border-amber-500/30 text-amber-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5">🍳 {cookingCount} Cooking</div>}
-        {readyCount>0&&<div className="flex-shrink-0 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5">✅ {readyCount} Ready</div>}
-        {newCount===0&&cookingCount===0&&readyCount===0&&<div className="flex-shrink-0 bg-white/5 text-white/30 font-black text-[10px] px-3 py-1.5 rounded-full">No active orders</div>}
+        {newCount>0&&<div className="flex-shrink-0 bg-blue-500/20 border border-blue-500/30 text-blue-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"/>{t.ordersNewPill.replace('{0}',newCount)}</div>}
+        {cookingCount>0&&<div className="flex-shrink-0 bg-amber-500/20 border border-amber-500/30 text-amber-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5">🍳 {t.ordersCookingPill.replace('{0}',cookingCount)}</div>}
+        {readyCount>0&&<div className="flex-shrink-0 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5">✅ {t.ordersReadyPill.replace('{0}',readyCount)}</div>}
+        {newCount===0&&cookingCount===0&&readyCount===0&&<div className="flex-shrink-0 bg-white/5 text-white/30 font-black text-[10px] px-3 py-1.5 rounded-full">{t.ordersNoActive}</div>}
       </div>
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-4">
-        {[['active','Active'],['done','Done'],['all','All']].map(([v,l])=>(
+        {[["active",t.ordersActive],["done",t.ordersDone],["all",t.ordersAll]].map(([v,l])=>(
           <button key={v} onClick={()=>setFilterStatus(v)}
             className={`px-3 py-1.5 rounded-xl font-black text-[10px] uppercase transition-all ${filterStatus===v?'bg-white/20 text-white':'bg-white/5 text-white/30'}`}>{l}</button>
         ))}
@@ -1318,7 +1383,7 @@ function MerchantOrdersDash({vendorMeta}){
       {filtered.length===0?(
         <div className="py-16 text-center">
           <p className="text-4xl mb-3">📋</p>
-          <p className="text-white/40 font-black text-sm mb-1">{filterStatus==='active'?'No active orders':'No orders yet'}</p>
+          <p className="text-white/40 font-black text-sm mb-1">{filterStatus==='active'?t.ordersNoActive:t.ordersNoneYet}</p>
           <p className="text-white/20 text-[10px] mb-6">Orders from buyers will appear here</p>
           <button onClick={seedDemo} className="bg-white/10 text-white/50 px-4 py-2 rounded-xl font-black text-[10px] uppercase active:scale-95">
             Load Demo Orders
@@ -1327,7 +1392,7 @@ function MerchantOrdersDash({vendorMeta}){
       ):(
         <div className="space-y-3">
           {filtered.map(order=>(
-            <OrderCard key={order.pickupCode} order={order} onUpdate={refresh}/>
+            <OrderCard key={order.pickupCode} order={order} onUpdate={refresh} t={t}/>
           ))}
         </div>
       )}
@@ -2955,7 +3020,7 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
 
       {/* Orders tab */}
       {vendorFlowTab==="orders"&&(
-        <MerchantOrdersDash vendorMeta={vendorMeta}/>
+        <MerchantOrdersDash vendorMeta={vendorMeta} t={t}/>
       )}
 
       {/* Boost Sheet */}
