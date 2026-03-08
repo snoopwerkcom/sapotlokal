@@ -3013,8 +3013,357 @@ function ActivePostBadge({post}){
   return <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">{label}</span>;
 }
 
+
+// ─── CATERING SUPPLIER DASHBOARD ─────────────────────────────────────────────
+function CateringSupplierDash({t}){
+  const [queries,setQueries]=useState(()=>getCateringQueries());
+  const [filter,setFilter]=useState('all'); // all | pending | quoted | accepted | paid
+  const [expandedId,setExpandedId]=useState(null);
+  const [quotingId,setQuotingId]=useState(null);
+  const [quoteAmt,setQuoteAmt]=useState('');
+  const [quoteNote,setQuoteNote]=useState('');
+
+  const refresh=()=>setQueries(getCateringQueries());
+  useEffect(()=>{const id=setInterval(refresh,15000);return()=>clearInterval(id);},[]);
+
+  const filtered=filter==='all'?queries:queries.filter(q=>q.status===filter);
+  const counts={all:queries.length,pending:queries.filter(q=>q.status==='pending').length,quoted:queries.filter(q=>q.status==='quoted').length,accepted:queries.filter(q=>q.status==='accepted').length,paid:queries.filter(q=>q.status==='paid').length};
+
+  const updateStatus=(id,status,extra={})=>{
+    const all=getCateringQueries();
+    const idx=all.findIndex(x=>x.id===id);
+    if(idx>=0)all[idx]={...all[idx],status,...extra,updatedAt:Date.now()};
+    localStorage.setItem(LS_CATERING_QUERIES,JSON.stringify(all));
+    refresh();
+  };
+
+  const sendQuote=(id)=>{
+    if(!quoteAmt)return;
+    updateStatus(id,'quoted',{quotation:quoteAmt,quotationNote:quoteNote});
+    // WhatsApp buyer
+    const q=getCateringQueries().find(x=>x.id===id);
+    if(q?.phone){
+      const msg=`🎂 *Sapot Lokal — Catering Quotation*\n\nHi ${q.name||''},\n\nRef: ${id}\nEvent: ${q.eventType} | ${q.pax} pax\nDate: ${q.date} at ${q.time}\n\n💰 Quotation: RM${quoteAmt}${quoteNote?'\n📝 '+quoteNote:''}\n\nReply to accept or ask questions.`;
+      window.open(`https://wa.me/${q.phone}?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+    setQuotingId(null);setQuoteAmt('');setQuoteNote('');
+  };
+
+  const acceptQuery=(id)=>updateStatus(id,'accepted');
+  const markPaid=(id)=>updateStatus(id,'paid',{paidAt:Date.now()});
+
+  const statusStyle={pending:'bg-amber-100 text-amber-700',quoted:'bg-blue-100 text-blue-700',accepted:'bg-emerald-100 text-emerald-700',paid:'bg-emerald-600 text-white'};
+  const statusLabel={pending:t.cateringStatusPending,quoted:t.cateringStatusQuoted,accepted:t.cateringStatusAccepted,paid:t.cateringStatusPaid};
+
+  // Seed demo if empty
+  const seedDemo=()=>{
+    const DEMOS=[
+      {id:genQueryId(),type:'catering',pax:'80',eventType:'Birthday 🎂',date:'2026-03-20',time:'19:00',venue:'Dewan Komuniti Taman Puchong',notes:'Vegetarian options needed',name:'Ahmad Faizi',phone:'0123456789',status:'pending',submittedAt:Date.now()-3600000},
+      {id:genQueryId(),type:'catering',pax:'200',eventType:'Aqiqah 🐑',date:'2026-03-25',time:'11:00',venue:'No. 5 Jalan Wawasan, Puchong',notes:'Full halal, no pork',name:'Siti Rahimah',phone:'0198887766',status:'quoted',quotation:'2400',quotationNote:'Includes full setup & cleanup',submittedAt:Date.now()-7200000},
+    ];
+    DEMOS.forEach(d=>saveCateringQuery(d));
+    refresh();
+  };
+
+  return(
+    <div className="pb-28 px-4 pt-3">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-white font-black text-base">🎂 Catering Enquiries</p>
+          <p className="text-white/30 text-[10px]">Manage catering requests from buyers</p>
+        </div>
+        <button onClick={refresh} className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-white text-sm active:scale-95">↻</button>
+      </div>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[['all','All',counts.all,'bg-white/10'],['pending','Pending',counts.pending,'bg-amber-500/20'],['quoted','Quoted',counts.quoted,'bg-blue-500/20'],['paid','Paid',counts.paid,'bg-emerald-500/20']].map(([v,l,c,bg])=>(
+          <button key={v} onClick={()=>setFilter(v)}
+            className={`${bg} border rounded-xl py-2 px-1 text-center transition-all active:scale-95 ${filter===v?'border-white/30':'border-white/10'}`}>
+            <p className="text-white font-black text-lg leading-none">{c}</p>
+            <p className="text-white/50 text-[8px] font-black uppercase mt-0.5">{l}</p>
+          </button>
+        ))}
+      </div>
+
+      {filtered.length===0?(
+        <div className="py-16 text-center">
+          <p className="text-4xl mb-3">🎂</p>
+          <p className="text-white/40 font-black text-sm mb-1">No {filter==='all'?'':''+filter} enquiries yet</p>
+          <p className="text-white/20 text-[10px] mb-6">Buyer enquiries will appear here</p>
+          <button onClick={seedDemo} className="bg-white/10 text-white/50 px-4 py-2 rounded-xl font-black text-[10px] uppercase active:scale-95">Load Demo Enquiries</button>
+        </div>
+      ):(
+        <div className="space-y-3">
+          {filtered.map(q=>(
+            <motion.div key={q.id} layout className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+              {/* Header row */}
+              <button onClick={()=>setExpandedId(expandedId===q.id?null:q.id)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-white/5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${q.status==='pending'?'bg-amber-400 animate-pulse':q.status==='paid'?'bg-emerald-400':'bg-blue-400'}`}/>
+                  <div className="min-w-0">
+                    <p className="text-white font-black text-sm truncate">{q.eventType} — {q.pax} pax</p>
+                    <p className="text-white/40 text-[9px]">{q.name} · {q.date}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-[9px] font-black px-2 py-1 rounded-full ${statusStyle[q.status]||'bg-white/10 text-white/50'}`}>{statusLabel[q.status]||q.status}</span>
+                  <span className="text-white/30 text-xs">{expandedId===q.id?'▲':'▼'}</span>
+                </div>
+              </button>
+
+              {/* Expanded detail */}
+              <AnimatePresence>
+              {expandedId===q.id&&(
+                <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} className="overflow-hidden">
+                  <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                      <p><span className="text-white/40">Phone:</span> <span className="text-white font-bold">{q.phone}</span></p>
+                      <p><span className="text-white/40">Date:</span> <span className="text-white font-bold">{q.date}</span></p>
+                      <p><span className="text-white/40">Time:</span> <span className="text-white font-bold">{q.time}</span></p>
+                      <p><span className="text-white/40">Pax:</span> <span className="text-white font-bold">{q.pax}</span></p>
+                      <p className="col-span-2"><span className="text-white/40">Venue:</span> <span className="text-white font-bold">{q.venue}</span></p>
+                      {q.notes&&<p className="col-span-2"><span className="text-white/40">Notes:</span> <span className="text-white font-bold">{q.notes}</span></p>}
+                    </div>
+                    {q.quotation&&(
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-2.5">
+                        <p className="text-emerald-300 font-black text-xs">💰 Quoted: RM{q.quotation}</p>
+                        {q.quotationNote&&<p className="text-emerald-400/70 text-[9px] mt-0.5">{q.quotationNote}</p>}
+                      </div>
+                    )}
+                    <p className="text-white/20 text-[8px]">Ref: {q.id}</p>
+
+                    {/* Action buttons */}
+                    <div className="space-y-2">
+                      {/* Quote form */}
+                      {(q.status==='pending'||q.status==='quoted')&&(
+                        quotingId===q.id?(
+                          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+                            <p className="text-white/60 font-black text-[10px] uppercase">Send Quotation</p>
+                            <div className="flex gap-2">
+                              <input value={quoteAmt} onChange={e=>setQuoteAmt(e.target.value.replace(/\D/,''))} type="number"
+                                placeholder="Amount (RM)" className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:outline-none focus:border-emerald-400"/>
+                            </div>
+                            <input value={quoteNote} onChange={e=>setQuoteNote(e.target.value)}
+                              placeholder="Note (optional)" className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:outline-none focus:border-emerald-400"/>
+                            <div className="flex gap-2">
+                              <button onClick={()=>sendQuote(q.id)} disabled={!quoteAmt}
+                                className="flex-1 bg-emerald-500 text-white py-2 rounded-xl font-black text-xs uppercase active:scale-95 disabled:opacity-40">
+                                Send via WhatsApp 💬
+                              </button>
+                              <button onClick={()=>setQuotingId(null)} className="bg-white/10 text-white/50 px-3 py-2 rounded-xl text-xs">✕</button>
+                            </div>
+                          </div>
+                        ):(
+                          <button onClick={()=>setQuotingId(q.id)}
+                            className="w-full bg-blue-500/20 border border-blue-500/30 text-blue-300 font-black text-xs py-2.5 rounded-xl uppercase active:scale-95">
+                            💰 {q.quotation?'Update Quotation':'Send Quotation'}
+                          </button>
+                        )
+                      )}
+                      {q.status==='quoted'&&(
+                        <button onClick={()=>acceptQuery(q.id)}
+                          className="w-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-black text-xs py-2.5 rounded-xl uppercase active:scale-95">
+                          ✅ Mark as Accepted
+                        </button>
+                      )}
+                      {q.status==='accepted'&&(
+                        <button onClick={()=>markPaid(q.id)}
+                          className="w-full bg-emerald-500 text-white font-black text-xs py-2.5 rounded-xl uppercase active:scale-95 shadow-lg shadow-emerald-900/30">
+                          💳 Mark as Paid
+                        </button>
+                      )}
+                      <a href={`https://wa.me/${q.phone}?text=${encodeURIComponent('Hi '+q.name+', regarding your catering enquiry ref '+q.id+':')}`} target="_blank" rel="noreferrer"
+                        className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-xs py-2 rounded-xl active:scale-95">
+                        💬 WhatsApp Buyer
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CANOPY SUPPLIER DASHBOARD ────────────────────────────────────────────────
+function CanopySupplierDash({t}){
+  const [queries,setQueries]=useState(()=>getCanopyQueries());
+  const [filter,setFilter]=useState('all');
+  const [expandedId,setExpandedId]=useState(null);
+  const [quotingId,setQuotingId]=useState(null);
+  const [quoteAmt,setQuoteAmt]=useState('');
+  const [quoteNote,setQuoteNote]=useState('');
+
+  const refresh=()=>setQueries(getCanopyQueries());
+  useEffect(()=>{const id=setInterval(refresh,15000);return()=>clearInterval(id);},[]);
+
+  const filtered=filter==='all'?queries:queries.filter(q=>q.status===filter);
+  const counts={all:queries.length,pending:queries.filter(q=>q.status==='pending').length,quoted:queries.filter(q=>q.status==='quoted').length,accepted:queries.filter(q=>q.status==='accepted').length,paid:queries.filter(q=>q.status==='paid').length};
+
+  const updateStatus=(id,status,extra={})=>{
+    const all=getCanopyQueries();
+    const idx=all.findIndex(x=>x.id===id);
+    if(idx>=0)all[idx]={...all[idx],status,...extra,updatedAt:Date.now()};
+    localStorage.setItem(LS_CANOPY_QUERIES,JSON.stringify(all));
+    refresh();
+  };
+
+  const sendQuote=(id)=>{
+    if(!quoteAmt)return;
+    updateStatus(id,'quoted',{quotation:quoteAmt,quotationNote:quoteNote});
+    const q=getCanopyQueries().find(x=>x.id===id);
+    if(q?.phone){
+      const msg=`⛺ *Sapot Lokal — Canopy Rental Quotation*\n\nHi ${q.name||''},\n\nRef: ${id}\n⛺${q.qtyCanopy} canopies · 🪵${q.qtyTable} tables · 🪑${q.qtyChair} chairs · 💨${q.qtyFan} fans\nDate: ${q.date} at ${q.time}\n📍 ${q.venue}\n\n💰 Quotation: RM${quoteAmt}${quoteNote?'\n📝 '+quoteNote:''}\n\nReply to confirm booking.`;
+      window.open(`https://wa.me/${q.phone}?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+    setQuotingId(null);setQuoteAmt('');setQuoteNote('');
+  };
+
+  const seedDemo=()=>{
+    const DEMOS=[
+      {id:genQueryId(),type:'canopy',date:'2026-03-22',time:'08:00',venue:'Padang Awam Puchong Perdana',notes:'Near main gate please',name:'Hafiz Rahman',phone:'0112233445',qtyCanopy:3,qtyTable:15,qtyChair:120,qtyFan:6,status:'pending',submittedAt:Date.now()-1800000},
+      {id:genQueryId(),type:'canopy',date:'2026-03-29',time:'10:00',venue:'Taman Sri Puchong Community Ground',notes:'Need lighting too',name:'Noraini Hamid',phone:'0167788990',qtyCanopy:5,qtyTable:25,qtyChair:200,qtyFan:10,status:'accepted',quotation:'850',quotationNote:'Includes transport',submittedAt:Date.now()-10800000},
+    ];
+    DEMOS.forEach(d=>saveCanopyQuery(d));
+    refresh();
+  };
+
+  const statusStyle={pending:'bg-amber-100 text-amber-700',quoted:'bg-blue-100 text-blue-700',accepted:'bg-emerald-100 text-emerald-700',paid:'bg-emerald-600 text-white'};
+  const statusLabel={pending:t.canopyStatusPending,quoted:t.canopyStatusQuoted,accepted:t.canopyStatusAccepted,paid:t.canopyStatusPaid};
+
+  return(
+    <div className="pb-28 px-4 pt-3">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-white font-black text-base">⛺ Canopy Rental Enquiries</p>
+          <p className="text-white/30 text-[10px]">Manage canopy rental requests</p>
+        </div>
+        <button onClick={refresh} className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-white text-sm active:scale-95">↻</button>
+      </div>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[['all','All',counts.all,'bg-white/10'],['pending','Pending',counts.pending,'bg-amber-500/20'],['quoted','Quoted',counts.quoted,'bg-blue-500/20'],['paid','Paid',counts.paid,'bg-emerald-500/20']].map(([v,l,c,bg])=>(
+          <button key={v} onClick={()=>setFilter(v)}
+            className={`${bg} border rounded-xl py-2 px-1 text-center transition-all active:scale-95 ${filter===v?'border-white/30':'border-white/10'}`}>
+            <p className="text-white font-black text-lg leading-none">{c}</p>
+            <p className="text-white/50 text-[8px] font-black uppercase mt-0.5">{l}</p>
+          </button>
+        ))}
+      </div>
+
+      {filtered.length===0?(
+        <div className="py-16 text-center">
+          <p className="text-4xl mb-3">⛺</p>
+          <p className="text-white/40 font-black text-sm mb-1">No {filter==='all'?'':''+filter} enquiries yet</p>
+          <p className="text-white/20 text-[10px] mb-6">Canopy rental requests will appear here</p>
+          <button onClick={seedDemo} className="bg-white/10 text-white/50 px-4 py-2 rounded-xl font-black text-[10px] uppercase active:scale-95">Load Demo Enquiries</button>
+        </div>
+      ):(
+        <div className="space-y-3">
+          {filtered.map(q=>(
+            <motion.div key={q.id} layout className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+              <button onClick={()=>setExpandedId(expandedId===q.id?null:q.id)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left active:bg-white/5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${q.status==='pending'?'bg-amber-400 animate-pulse':q.status==='paid'?'bg-emerald-400':'bg-blue-400'}`}/>
+                  <div className="min-w-0">
+                    <p className="text-white font-black text-sm">⛺{q.qtyCanopy} · 🪑{q.qtyChair} · 🪵{q.qtyTable} · 💨{q.qtyFan}</p>
+                    <p className="text-white/40 text-[9px]">{q.name} · {q.date}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-[9px] font-black px-2 py-1 rounded-full ${statusStyle[q.status]||'bg-white/10 text-white/50'}`}>{statusLabel[q.status]||q.status}</span>
+                  <span className="text-white/30 text-xs">{expandedId===q.id?'▲':'▼'}</span>
+                </div>
+              </button>
+
+              <AnimatePresence>
+              {expandedId===q.id&&(
+                <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} className="overflow-hidden">
+                  <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                      <p><span className="text-white/40">Name:</span> <span className="text-white font-bold">{q.name}</span></p>
+                      <p><span className="text-white/40">Phone:</span> <span className="text-white font-bold">{q.phone}</span></p>
+                      <p><span className="text-white/40">Date:</span> <span className="text-white font-bold">{q.date}</span></p>
+                      <p><span className="text-white/40">Time:</span> <span className="text-white font-bold">{q.time}</span></p>
+                      <p className="col-span-2"><span className="text-white/40">Venue:</span> <span className="text-white font-bold">{q.venue}</span></p>
+                      <p><span className="text-white/40">⛺ Canopy:</span> <span className="text-white font-bold">{q.qtyCanopy}</span></p>
+                      <p><span className="text-white/40">🪵 Tables:</span> <span className="text-white font-bold">{q.qtyTable}</span></p>
+                      <p><span className="text-white/40">🪑 Chairs:</span> <span className="text-white font-bold">{q.qtyChair}</span></p>
+                      <p><span className="text-white/40">💨 Fans:</span> <span className="text-white font-bold">{q.qtyFan}</span></p>
+                      {q.notes&&<p className="col-span-2"><span className="text-white/40">Notes:</span> <span className="text-white font-bold">{q.notes}</span></p>}
+                    </div>
+                    {q.quotation&&(
+                      <div className="bg-sky-500/10 border border-sky-500/20 rounded-xl p-2.5">
+                        <p className="text-sky-300 font-black text-xs">💰 Quoted: RM{q.quotation}</p>
+                        {q.quotationNote&&<p className="text-sky-400/70 text-[9px] mt-0.5">{q.quotationNote}</p>}
+                      </div>
+                    )}
+                    <p className="text-white/20 text-[8px]">Ref: {q.id}</p>
+
+                    <div className="space-y-2">
+                      {(q.status==='pending'||q.status==='quoted')&&(
+                        quotingId===q.id?(
+                          <div className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
+                            <p className="text-white/60 font-black text-[10px] uppercase">Send Quotation</p>
+                            <input value={quoteAmt} onChange={e=>setQuoteAmt(e.target.value.replace(/\D/,''))} type="number"
+                              placeholder="Amount (RM)" className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:outline-none focus:border-sky-400"/>
+                            <input value={quoteNote} onChange={e=>setQuoteNote(e.target.value)}
+                              placeholder="Note e.g. includes transport" className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:outline-none focus:border-sky-400"/>
+                            <div className="flex gap-2">
+                              <button onClick={()=>sendQuote(q.id)} disabled={!quoteAmt}
+                                className="flex-1 bg-sky-500 text-white py-2 rounded-xl font-black text-xs uppercase active:scale-95 disabled:opacity-40">
+                                Send via WhatsApp 💬
+                              </button>
+                              <button onClick={()=>setQuotingId(null)} className="bg-white/10 text-white/50 px-3 py-2 rounded-xl text-xs">✕</button>
+                            </div>
+                          </div>
+                        ):(
+                          <button onClick={()=>setQuotingId(q.id)}
+                            className="w-full bg-sky-500/20 border border-sky-500/30 text-sky-300 font-black text-xs py-2.5 rounded-xl uppercase active:scale-95">
+                            💰 {q.quotation?'Update Quotation':'Send Quotation'}
+                          </button>
+                        )
+                      )}
+                      {q.status==='quoted'&&(
+                        <button onClick={()=>updateStatus(q.id,'accepted')}
+                          className="w-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-black text-xs py-2.5 rounded-xl uppercase active:scale-95">
+                          ✅ Mark as Accepted
+                        </button>
+                      )}
+                      {q.status==='accepted'&&(
+                        <button onClick={()=>updateStatus(q.id,'paid',{paidAt:Date.now()})}
+                          className="w-full bg-emerald-500 text-white font-black text-xs py-2.5 rounded-xl uppercase active:scale-95 shadow-lg shadow-emerald-900/30">
+                          💳 Mark as Paid
+                        </button>
+                      )}
+                      <a href={`https://wa.me/${q.phone}?text=${encodeURIComponent('Hi '+q.name+', regarding your canopy rental enquiry ref '+q.id+':')}`} target="_blank" rel="noreferrer"
+                        className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-xs py-2 rounded-xl active:scale-95">
+                        💬 WhatsApp Buyer
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubscription,t}){
-  const [vendorFlowTab,setVendorFlowTab]=useState("orders"); // "deals" | "menu" | "profile" | "orders"
+  const [vendorFlowTab,setVendorFlowTab]=useState("orders"); // "deals" | "menu" | "profile" | "orders" | "catering" | "canopy"
   const [postDealNudge,setPostDealNudge]=useState(false);
   const [step,setStep]=useState(1);
   const [postType,setPostType]=useState(null);
@@ -3093,27 +3442,37 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
   return(
     <div className="min-h-screen bg-[#0a0f1e] pb-28">
       {/* TrialBanner removed — subscription model discontinued */}
-      {/* Sell tab switcher: Post Deal | My Menu */}
+      {/* Sell tab switcher — scrollable */}
       <div className="sticky top-[60px] z-40 bg-[#0a0f1e]/95 backdrop-blur-md border-b border-white/10 px-4 py-3">
-        <div className="flex gap-2 mb-1">
+        <div className="flex gap-2 mb-1 overflow-x-auto no-scrollbar">
           <button onClick={()=>setVendorFlowTab("orders")}
-            className={`relative flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="orders"?"bg-blue-500 text-white":"bg-white/10 text-white/40"}`}>
+            className={`relative flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="orders"?"bg-blue-500 text-white":"bg-white/10 text-white/40"}`}>
             📋 Orders
             {(()=>{const n=getVendorOrders().filter(o=>o.status==='new').length;return n>0?<span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">{n}</span>:null;})()}
           </button>
           <motion.button onClick={()=>setVendorFlowTab("deals")}
             animate={postDealNudge?{scale:[1,1.06,1,1.06,1],boxShadow:["0 0 0px #10b981","0 0 18px #10b981","0 0 0px #10b981"]}:{}}
             transition={{duration:0.5,repeat:postDealNudge?3:0}}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="deals"?"bg-emerald-500 text-white":`bg-white/10 text-white/40 ${postDealNudge?"ring-2 ring-emerald-400 ring-offset-1 ring-offset-[#0a0f1e]":""}`}`}>
+            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="deals"?"bg-emerald-500 text-white":`bg-white/10 text-white/40 ${postDealNudge?"ring-2 ring-emerald-400 ring-offset-1 ring-offset-[#0a0f1e]":""}`}`}>
             ⚡ Post Deal{postDealNudge&&<span className="ml-1 text-emerald-300">← Now!</span>}
           </motion.button>
           <button onClick={()=>setVendorFlowTab("menu")}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="menu"?"bg-purple-500 text-white":"bg-white/10 text-white/40"}`}>
+            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="menu"?"bg-purple-500 text-white":"bg-white/10 text-white/40"}`}>
             🍽️ My Menu
           </button>
           <button onClick={()=>setVendorFlowTab("profile")}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="profile"?"bg-blue-500 text-white":"bg-white/10 text-white/40"}`}>
+            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="profile"?"bg-blue-400 text-white":"bg-white/10 text-white/40"}`}>
             🏪 Profile
+          </button>
+          <button onClick={()=>setVendorFlowTab("catering")}
+            className={`relative flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${vendorFlowTab==="catering"?"bg-rose-500 text-white":"bg-white/10 text-white/40"}`}>
+            🎂 Catering
+            {(()=>{const n=getCateringQueries().filter(q=>q.status==='pending').length;return n>0?<span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 text-white text-[7px] font-black rounded-full flex items-center justify-center">{n}</span>:null;})()}
+          </button>
+          <button onClick={()=>setVendorFlowTab("canopy")}
+            className={`relative flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${vendorFlowTab==="canopy"?"bg-sky-500 text-white":"bg-white/10 text-white/40"}`}>
+            ⛺ Canopy
+            {(()=>{const n=getCanopyQueries().filter(q=>q.status==='pending').length;return n>0?<span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 text-white text-[7px] font-black rounded-full flex items-center justify-center">{n}</span>:null;})()}
           </button>
         </div>
         {vendorFlowTab==="deals"&&(
@@ -3146,6 +3505,16 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
       {vendorFlowTab==="orders"&&(
         <MerchantOrdersDash vendorMeta={vendorMeta} t={t}/>
       )}
+
+      {/* Catering supplier dashboard — always mounted */}
+      <div style={{display:vendorFlowTab==="catering"?"block":"none"}}>
+        <CateringSupplierDash t={t}/>
+      </div>
+
+      {/* Canopy supplier dashboard — always mounted */}
+      <div style={{display:vendorFlowTab==="canopy"?"block":"none"}}>
+        <CanopySupplierDash t={t}/>
+      </div>
 
       {/* Boost Sheet */}
       <AnimatePresence>
@@ -3746,10 +4115,16 @@ function CateringEnquiry({t}){
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold focus:border-rose-400 focus:outline-none placeholder:text-slate-300 resize-none"/>
           </div>
 
-          <button onClick={()=>setStep(2)} disabled={!canProceed1}
-            className="w-full bg-rose-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all disabled:opacity-40 shadow-lg shadow-rose-200">
-            {t.cateringSubmit}
-          </button>
+          <div className="flex gap-3">
+            <button onClick={()=>setStep(2)} disabled={!canProceed1}
+              className="flex-1 bg-rose-500 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all disabled:opacity-40 shadow-lg shadow-rose-200">
+              {t.cateringSubmit}
+            </button>
+            <button onClick={()=>setStep(2)}
+              className="flex-shrink-0 bg-slate-100 text-slate-400 py-4 px-4 rounded-2xl font-black text-xs active:scale-95 transition-all">
+              Skip →
+            </button>
+          </div>
         </motion.div>
       )}
 
@@ -4208,18 +4583,20 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
         <p className="text-amber-700 text-[10px] font-bold">{t.halalSelfDeclared}</p>
       </div>
 
-      {!isStudentMode&&buyerTab!=="catering"&&buyerTab!=="canopy"&&(
+      {!isStudentMode&&(
         <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
-          {/* Search bar */}
-          <div className="relative mb-2">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
-            {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
-          </div>
-          {/* Scrollable tab bar — 5 tabs */}
-          <div className="flex gap-1.5 mb-2 overflow-x-auto no-scrollbar">
+          {/* Search bar — hidden on services tabs */}
+          {buyerTab!=="catering"&&buyerTab!=="canopy"&&(
+            <div className="relative mb-2">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
+              <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+                placeholder={t.searchPlaceholder}
+                className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
+              {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
+            </div>
+          )}
+          {/* Scrollable tab bar — always visible */}
+          <div className="flex gap-1.5 mb-1 overflow-x-auto no-scrollbar">
             <button onClick={()=>setBuyerTab("foods")}
               className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
               🍽️ All Foods
@@ -4243,7 +4620,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
           </div>
           {/* Foods sub-filter: category pills */}
           {buyerTab==="foods"&&(
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
               {[
                 {id:"all",emoji:"🍽️",label:"All"},
                 {id:"Food",emoji:"🍛",label:t.catFood},
@@ -4268,7 +4645,7 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
           )}
           {/* Deals sub-filter: deal type pills */}
           {buyerTab==="deals"&&(
-            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
               {[
                 {id:"all",emoji:"🔖",label:"All Deals",color:"bg-slate-900"},
                 {id:"promo",emoji:"⚡",label:"Promotion",color:"bg-blue-500"},
@@ -4291,24 +4668,20 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
         </div>
       )}
 
-      {/* ── ORDER TO COOK TAB ── */}
-      {buyerTab==="cook"&&!isStudentMode&&(
+      {/* ── ORDER TO COOK TAB — always mounted ── */}
+      <div style={{display:(buyerTab==="cook"&&!isStudentMode)?"block":"none"}}>
         <MenuBrowse allListings={allListings} onAddToCart={attemptAddToCart} cart={cart} t={t}/>
-      )}
+      </div>
 
-      {/* ── EVENT CATERING TAB ── */}
-      {buyerTab==="catering"&&(
-        <div className="overflow-y-auto flex-1">
-          <CateringEnquiry t={t}/>
-        </div>
-      )}
+      {/* ── EVENT CATERING TAB — always mounted, hidden when inactive ── */}
+      <div style={{display:buyerTab==="catering"?"block":"none"}}>
+        <CateringEnquiry t={t}/>
+      </div>
 
-      {/* ── CANOPY RENTAL TAB ── */}
-      {buyerTab==="canopy"&&(
-        <div className="overflow-y-auto flex-1">
-          <CanopyRental t={t}/>
-        </div>
-      )}
+      {/* ── CANOPY RENTAL TAB — always mounted, hidden when inactive ── */}
+      <div style={{display:buyerTab==="canopy"?"block":"none"}}>
+        <CanopyRental t={t}/>
+      </div>
 
       <div className="px-3 pt-3 pb-6" style={{display:(buyerTab==="cook"||buyerTab==="catering"||buyerTab==="canopy")?"none":"block"}}>
         {isStudentMode&&(
