@@ -20,7 +20,7 @@ const T = {
     halalSelfDeclared:"*Halal status is self-declared by vendors",
     almostOut:"Almost out —", unitsLeft:"units left", soldOutLabel:"Sold Out 🎉",
     endsAt:"Until", units:"units", back:"← Back",
-    freeDeliveryFrom:"🚗 Free delivery from RM{0}",
+    freeDeliveryFrom:"🎁 Merchant covers delivery from RM{0}",
     noDelivery:"Self-pickup only",
     halalDisclaimerTitle:"Halal Status Notice",
     halalDisclaimerBody:"The Halal and Muslim-Owned badges are self-declared by vendors. Sapot Lokal does not check or guarantee any halal status.\n\nPlease use your own judgement. Sapot Lokal is not responsible for any halal claims.",
@@ -69,10 +69,10 @@ const T = {
     studentPricePH:"e.g. 2.50",
     vendorSettings:"Shop Settings",
     freeDeliveryThreshold:"Free Delivery Min (RM)",
-    thresholdOff:"No free delivery",
+    thresholdOff:"No merchant delivery offer",
     thresholdWarning:"~RM8 delivery cost deducted from your payout",
     saveSettings:"Save", settingsSaved:"✅ Saved",
-    offerFreeDelivery:"Offer free delivery",
+    offerFreeDelivery:"Offer to cover delivery cost",
     monthlyPlan:"Monthly Plan", perMonth:"/mo",
     subscribeCTA:"💙 Subscribe via TNG", autoRenew:"Auto-renews · Cancel anytime",
     processing:"Processing...",
@@ -166,7 +166,7 @@ const T = {
     halalSelfDeclared:"*Diisytihar sendiri oleh vendor",
     almostOut:"Hampir habis —", unitsLeft:"unit", soldOutLabel:"Habis Terjual 🎉",
     endsAt:"Hingga", units:"unit", back:"← Kembali",
-    freeDeliveryFrom:"🚗 Penghantaran percuma dari RM{0}",
+    freeDeliveryFrom:"🎁 Peniaga cover penghantaran dari RM{0}",
     noDelivery:"Ambil sendiri sahaja",
     halalDisclaimerTitle:"Notis Status Halal",
     halalDisclaimerBody:"Lencana Halal dan Milik Muslim dalam app ini adalah pengisytiharan sendiri oleh vendor. Sapot Lokal tidak mengesahkan atau menjamin status halal mana-mana makanan.\n\nPembeli dinasihatkan untuk membuat pertimbangan sendiri. Sapot Lokal tidak bertanggungjawab ke atas status halal.",
@@ -278,7 +278,7 @@ const T = {
     halalSelfDeclared:"*商家自行申报清真状态",
     almostOut:"快售完 —", unitsLeft:"份", soldOutLabel:"已售罄 🎉",
     endsAt:"截止", units:"份", back:"← 返回",
-    freeDeliveryFrom:"🚗 消费RM{0}免运费",
+    freeDeliveryFrom:"🎁 商家承担RM{0}以上运费",
     noDelivery:"仅限自取",
     halalDisclaimerTitle:"清真状态声明",
     halalDisclaimerBody:"本应用显示的清真及穆斯林经营标志均由商家自行申报。Sapot Lokal 不对任何食品或商家的清真状态进行核实或保证。\n\n买家请自行判断。Sapot Lokal 对本平台出售的任何商品的清真状态不承担任何责任。",
@@ -488,6 +488,21 @@ const LS_RATINGS = 'sapot_ratings';
 const LS_NOTIFS = 'sapot_notifications';
 const LS_VENDOR_PROFILE_EXT = 'sapot_vendor_profile_ext';
 const LS_BOOSTS = 'sapot_boosts';
+const LS_VENDOR_ORDERS = 'sapot_vendor_orders';
+
+function getVendorOrders(){try{return JSON.parse(localStorage.getItem(LS_VENDOR_ORDERS)||'[]');}catch{return[];}}
+function saveVendorOrder(o){
+  const all=getVendorOrders();
+  const idx=all.findIndex(x=>x.pickupCode===o.pickupCode);
+  if(idx>=0){all[idx]=o;}else{all.unshift(o);}
+  localStorage.setItem(LS_VENDOR_ORDERS,JSON.stringify(all.slice(0,100)));
+}
+function updateOrderStatus(pickupCode,status,cookMins?){
+  const all=getVendorOrders();
+  const idx=all.findIndex(x=>x.pickupCode===pickupCode);
+  if(idx>=0){all[idx]={...all[idx],status,cookMins:cookMins||all[idx].cookMins,statusAt:Date.now()};}
+  localStorage.setItem(LS_VENDOR_ORDERS,JSON.stringify(all));
+}
 
 function getVendorProfile(){try{return JSON.parse(localStorage.getItem(LS_VENDOR)||'null');}catch{return null;}}
 function saveVendorProfile(p){localStorage.setItem(LS_VENDOR,JSON.stringify(p));}
@@ -1087,6 +1102,239 @@ function VendorProfileEditor({vendorMeta,onSave}){
   );
 }
 
+
+// ─── MERCHANT ORDERS DASHBOARD ───────────────────────────────────────────────
+// useOrderTimer: live countdown for cooking timer
+function useOrderTimer(order){
+  const [remaining,setRemaining]=useState(()=>{
+    if(!order.cookMins||order.status!=='cooking')return null;
+    const elapsed=Math.floor((Date.now()-order.statusAt)/60000);
+    return Math.max(0,order.cookMins-elapsed);
+  });
+  useEffect(()=>{
+    if(order.status!=='cooking'||!order.cookMins)return;
+    const id=setInterval(()=>{
+      const elapsed=Math.floor((Date.now()-order.statusAt)/60000);
+      setRemaining(Math.max(0,order.cookMins-elapsed));
+    },30000);
+    return()=>clearInterval(id);
+  },[order.status,order.cookMins,order.statusAt]);
+  return remaining;
+}
+
+function OrderCard({order,onUpdate}){
+  const [showCookPicker,setShowCookPicker]=useState(false);
+  const [cookInput,setCookInput]=useState('10');
+  const remaining=useOrderTimer(order);
+  const statusColor={new:'bg-blue-500',cooking:'bg-amber-500',ready:'bg-emerald-500',done:'bg-slate-400'};
+  const statusLabel={new:'New',cooking:'Cooking',ready:'Ready',done:'Done'};
+
+  const notifyReady=()=>{
+    if(!order.vendorPhone&&!order.mobile)return;
+    const phone=order.mobile||'';
+    const msg=`✅ *Your order is READY!*%0A%0AOrder ${order.pickupCode}%0A🏪 Come pickup now!%0A%0APowered by Sapot Lokal`;
+    window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
+  };
+
+  const callRider=()=>{
+    const phone=order.mobile||'';
+    const items=order.items?.map(i=>`${i.qty||1}x ${i.title}`).join(', ')||'order';
+    const msg=`🛵 *Rider Pickup Request*%0A%0AOrder: ${order.pickupCode}%0AItems: ${encodeURIComponent(items)}%0AFrom: ${encodeURIComponent(order.vendorName||'Merchant')}%0ATo: ${encodeURIComponent(order.dropAddr||'Buyer address')}%0A%0ABook via Lalamove: https://web.lalamove.com`;
+    window.open(`https://wa.me/?text=${msg}`,'_blank');
+  };
+
+  return(
+    <motion.div layout initial={{opacity:0,y:8}} animate={{opacity:1,y:0}}
+      className={`bg-white/5 border rounded-2xl overflow-hidden transition-all ${order.status==='new'?'border-blue-500/40':'border-white/10'}`}>
+      {/* Order header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${order.status==='new'?'bg-blue-400 animate-pulse':order.status==='cooking'?'bg-amber-400 animate-pulse':order.status==='ready'?'bg-emerald-400':''}`}/>
+          <p className="text-white font-black text-sm">Order {order.pickupCode}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {order.status==='cooking'&&remaining!==null&&(
+            <span className="bg-amber-500/20 border border-amber-500/30 text-amber-300 font-black text-[10px] px-2 py-1 rounded-full">
+              🍳 {remaining}m left
+            </span>
+          )}
+          <span className={`text-white text-[9px] font-black px-2 py-1 rounded-full ${statusColor[order.status||'new']}`}>
+            {statusLabel[order.status||'new']}
+          </span>
+        </div>
+      </div>
+
+      {/* Items */}
+      <div className="px-4 py-3 border-b border-white/10">
+        {(order.items||[]).map((item,i)=>(
+          <div key={i} className="flex items-center justify-between text-xs py-0.5">
+            <span className="text-white/70">{item.qty||1}× {item.title}</span>
+            <span className="text-emerald-400 font-black">RM{fmtRM(item.price||item.dealPrice)}</span>
+          </div>
+        ))}
+        <div className="flex justify-between text-xs pt-2 border-t border-white/10 mt-2">
+          <span className="text-white/40">Total</span>
+          <span className="text-white font-black">RM{fmtRM(order.total||0)}</span>
+        </div>
+        {order.deliveryMode==='delivery'&&(
+          <div className="mt-2 bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-2">
+            <p className="text-blue-300 font-black text-[9px] uppercase tracking-wider mb-1">🛵 Lalamove Delivery</p>
+            <p className="text-white/50 text-[9px]">Drop: {order.dropAddr||'—'}</p>
+            <p className="text-white/50 text-[9px]">Mobile: {order.mobile||'—'}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Pickup code */}
+      <div className="px-4 py-2 border-b border-white/10 flex items-center justify-between">
+        <span className="text-white/30 text-[9px] font-black uppercase">Pickup Code</span>
+        <span className="text-emerald-400 font-black text-lg tracking-widest">{order.pickupCode}</span>
+      </div>
+
+      {/* Action buttons */}
+      <div className="px-4 py-3 space-y-2">
+        {/* Cooking timer */}
+        {(order.status==='new'||order.status==='cooking')&&(
+          <>
+            {!showCookPicker?(
+              <button onClick={()=>setShowCookPicker(true)}
+                className={`w-full py-3 rounded-xl font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 ${order.status==='cooking'?'bg-amber-500/20 border border-amber-500/30 text-amber-300':'bg-amber-500 text-white shadow-lg shadow-amber-900/30'}`}>
+                🍳 {order.status==='cooking'?`Cooking (${order.cookMins}m)`:'Start Cooking'}
+              </button>
+            ):(
+              <motion.div initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">
+                <p className="text-amber-300 font-black text-[10px] mb-2">How many minutes to cook?</p>
+                <div className="flex gap-2 flex-wrap mb-2">
+                  {[5,10,15,20,30].map(m=>(
+                    <button key={m} onClick={()=>setCookInput(String(m))}
+                      className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all ${cookInput===String(m)?'bg-amber-500 text-white':'bg-white/10 text-white/50'}`}>
+                      {m}m
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input value={cookInput} onChange={e=>setCookInput(e.target.value.replace(/\D/,''))} type="number"
+                    className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-xs font-bold focus:border-amber-400 focus:outline-none" placeholder="mins"/>
+                  <button onClick={()=>{
+                    const mins=parseInt(cookInput)||10;
+                    updateOrderStatus(order.pickupCode,'cooking',mins);
+                    onUpdate();
+                    setShowCookPicker(false);
+                  }} className="bg-amber-500 text-white px-4 py-2 rounded-xl font-black text-xs uppercase active:scale-95">
+                    Start
+                  </button>
+                  <button onClick={()=>setShowCookPicker(false)} className="bg-white/10 text-white/50 px-3 py-2 rounded-xl text-xs">✕</button>
+                </div>
+              </motion.div>
+            )}
+          </>
+        )}
+        {/* Ready */}
+        {order.status!=='done'&&order.status!=='ready'&&(
+          <button onClick={()=>{updateOrderStatus(order.pickupCode,'ready',undefined);notifyReady();onUpdate();}}
+            className="w-full py-3 rounded-xl bg-emerald-500 text-white font-black text-xs uppercase tracking-wide flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg shadow-emerald-900/30">
+            ✅ Mark Ready + Notify Buyer
+          </button>
+        )}
+        {order.status==='ready'&&(
+          <div className="flex gap-2">
+            <button onClick={()=>{updateOrderStatus(order.pickupCode,'done',undefined);onUpdate();}}
+              className="flex-1 py-3 rounded-xl bg-slate-600 text-white font-black text-xs uppercase active:scale-95">
+              ✓ Done / Collected
+            </button>
+            {order.deliveryMode==='delivery'&&(
+              <button onClick={callRider}
+                className="flex-1 py-3 rounded-xl bg-[#F7941D] text-white font-black text-xs uppercase flex items-center justify-center gap-1 active:scale-95">
+                🛵 Call Rider
+              </button>
+            )}
+          </div>
+        )}
+        {/* WhatsApp buyer direct */}
+        {order.mobile&&(
+          <a href={`https://wa.me/${order.mobile}?text=${encodeURIComponent(`Hi! Your Sapot Lokal order ${order.pickupCode} update:`)}`} target="_blank" rel="noreferrer"
+            className="w-full py-2 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-[10px] uppercase flex items-center justify-center gap-2 active:scale-95">
+            💬 WhatsApp Buyer
+          </a>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function MerchantOrdersDash({vendorMeta}){
+  const [orders,setOrders]=useState(()=>getVendorOrders());
+  const [filterStatus,setFilterStatus]=useState('active'); // 'active' | 'done' | 'all'
+  const refresh=()=>setOrders(getVendorOrders());
+
+  useEffect(()=>{const id=setInterval(refresh,30000);return()=>clearInterval(id);},[]);
+
+  const filtered=orders.filter(o=>{
+    if(filterStatus==='active')return o.status!=='done';
+    if(filterStatus==='done')return o.status==='done';
+    return true;
+  });
+
+  const newCount=orders.filter(o=>o.status==='new').length;
+  const cookingCount=orders.filter(o=>o.status==='cooking').length;
+  const readyCount=orders.filter(o=>o.status==='ready').length;
+
+  // Generate demo orders if empty
+  const seedDemo=()=>{
+    const DEMO=[
+      {pickupCode:'A21B',vendorId:99,vendorName:vendorMeta?.shopName||'My Shop',items:[{qty:2,title:'Nasi Lemak',price:3.00},{qty:1,title:'Teh Tarik',price:2.00}],subtotal:8.00,deliveryCost:0,total:8.00,deliveryMode:'pickup',mobile:'0123456789',dropAddr:'',status:'new',statusAt:Date.now()-120000,orderNum:'#A21B',savedAt:Date.now()-120000},
+      {pickupCode:'X4P2',vendorId:99,vendorName:vendorMeta?.shopName||'My Shop',items:[{qty:1,title:'Mee Goreng',price:4.00}],subtotal:4.00,deliveryCost:8.00,total:12.00,deliveryMode:'delivery',mobile:'0198887766',dropAddr:'Unit 3-5, Puchong Perdana',status:'cooking',cookMins:10,statusAt:Date.now()-300000,orderNum:'#X4P2',savedAt:Date.now()-300000},
+    ];
+    DEMO.forEach(o=>saveVendorOrder(o));
+    refresh();
+  };
+
+  return(
+    <div className="pb-28 px-4 pt-3">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-white font-black text-base">Orders</p>
+          <p className="text-white/30 text-[10px]">Manage incoming orders</p>
+        </div>
+        <button onClick={refresh} className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center text-white text-sm active:scale-95">↻</button>
+      </div>
+
+      {/* Status summary pills */}
+      <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+        {newCount>0&&<div className="flex-shrink-0 bg-blue-500/20 border border-blue-500/30 text-blue-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5"><div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"/>{newCount} New</div>}
+        {cookingCount>0&&<div className="flex-shrink-0 bg-amber-500/20 border border-amber-500/30 text-amber-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5">🍳 {cookingCount} Cooking</div>}
+        {readyCount>0&&<div className="flex-shrink-0 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-black text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5">✅ {readyCount} Ready</div>}
+        {newCount===0&&cookingCount===0&&readyCount===0&&<div className="flex-shrink-0 bg-white/5 text-white/30 font-black text-[10px] px-3 py-1.5 rounded-full">No active orders</div>}
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-4">
+        {[['active','Active'],['done','Done'],['all','All']].map(([v,l])=>(
+          <button key={v} onClick={()=>setFilterStatus(v)}
+            className={`px-3 py-1.5 rounded-xl font-black text-[10px] uppercase transition-all ${filterStatus===v?'bg-white/20 text-white':'bg-white/5 text-white/30'}`}>{l}</button>
+        ))}
+      </div>
+
+      {filtered.length===0?(
+        <div className="py-16 text-center">
+          <p className="text-4xl mb-3">📋</p>
+          <p className="text-white/40 font-black text-sm mb-1">{filterStatus==='active'?'No active orders':'No orders yet'}</p>
+          <p className="text-white/20 text-[10px] mb-6">Orders from buyers will appear here</p>
+          <button onClick={seedDemo} className="bg-white/10 text-white/50 px-4 py-2 rounded-xl font-black text-[10px] uppercase active:scale-95">
+            Load Demo Orders
+          </button>
+        </div>
+      ):(
+        <div className="space-y-3">
+          {filtered.map(order=>(
+            <OrderCard key={order.pickupCode} order={order} onUpdate={refresh}/>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── BOOST / ADVERTISE SHEET ──────────────────────────────────────────────────
 function BoostSheet({post,onClose,onBoost}){
   const [selectedPlan,setSelectedPlan]=useState(null);
@@ -1425,7 +1673,7 @@ function ListingCard({listing,onAddToCart,inCart,isStudentMode,isLocked,onLocked
             <p className="text-[9px] text-slate-300 line-through leading-none">RM{fmtRM(showStudentPrice?listing.dealPrice:listing.originalPrice)}</p>
             <p className={`font-black text-sm leading-none ${showStudentPrice?"text-indigo-600":"text-emerald-600"}`}>RM{fmtRM(showStudentPrice?listing.studentPrice:listing.dealPrice)}</p>
           </div>
-          {listing.freeDeliveryThreshold&&<span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Free Del</span>}
+          {listing.freeDeliveryThreshold&&<span className="text-[8px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md">🎁 Merchant Del</span>}
         </div>
         <button onClick={()=>onAddToCart({...listing,dealPrice:showStudentPrice?listing.studentPrice:listing.dealPrice})}
           disabled={isSoldOut||inCart||isExpired||isLocked}
@@ -1951,14 +2199,16 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
 
   // Validate Lalamove form
   useEffect(()=>{
-    setLalamoveReady(deliveryMode==="delivery"?(pickupAddr.trim().length>5&&dropAddr.trim().length>5&&mobile.trim().length>=10):true);
-  },[deliveryMode,pickupAddr,dropAddr,mobile]);
+    setLalamoveReady(deliveryMode==="delivery"?(dropAddr.trim().length>5&&mobile.trim().length>=10):true);
+  },[deliveryMode,dropAddr,mobile]);
 
   // Open Lalamove deep-link with prefilled data
   const openLalamove=()=>{
-    const msg=`Sapot Lokal Delivery%0APickup: ${encodeURIComponent(pickupAddr)}%0ADrop: ${encodeURIComponent(dropAddr)}%0AMobile: ${mobile}%0AOrder: ${cart.map(i=>i.title).join(', ')}`;
-    // Try to open Lalamove app; fallback to web
-    window.open(`https://web.lalamove.com/?utm_source=sapotlokal`,'_blank');
+    const merchantName=encodeURIComponent(currentVendor?.vendorName||"Merchant");
+    const merchantArea=encodeURIComponent(currentVendor?.vendorArea||"Puchong, Selangor");
+    const drop=encodeURIComponent(dropAddr);
+    const orders=encodeURIComponent(cart.map(i=>i.title).join(', '));
+    window.open(`https://web.lalamove.com/?utm_source=sapotlokal&pickup=${merchantName}%2C${merchantArea}&dropoff=${drop}&phone=${mobile}&notes=Sapot+Lokal+Order+${pickupCode}+${orders}`,'_blank');
   };
 
   // After payment success, auto-save receipt then show ad
@@ -1974,17 +2224,22 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
       deliveryCost,
       total,
       deliveryMode,
-      pickupAddr:deliveryMode==="delivery"?pickupAddr:"",
+      pickupAddr:deliveryMode==="delivery"?(currentVendor?.vendorName+', '+(currentVendor?.vendorArea||'')):"",
       dropAddr:deliveryMode==="delivery"?dropAddr:"",
       mobile:deliveryMode==="delivery"?mobile:"",
       savedAt:Date.now(),
     };
     saveOrder(receipt);
-    // ── MERCHANT NOTIFICATION ─────────────────────────────────────────────────
-    // Receipt is saved automatically above. Merchant notification via WhatsApp
-    // can be triggered manually by the buyer from the receipt using Share WhatsApp button.
-    // Auto-open removed: receipt panel already shows the order details clearly.
-    // ──────────────────────────────────────────────────────────────────────────
+    // ── SAVE TO VENDOR ORDERS (for merchant dashboard) ───────────────────────
+    const vendorOrderRecord={
+      ...receipt,
+      status:'new', // 'new' | 'cooking' | 'ready' | 'done'
+      cookMins:null,
+      statusAt:Date.now(),
+      orderNum:'#'+pickupCode,
+      items:cart.map(i=>({id:i.id,title:i.title,qty:1,price:i.dealPrice})),
+    };
+    saveVendorOrder(vendorOrderRecord);
     setShowAdvert(true);
     setTimeout(()=>{setShowAdvert(false);setAdvertDismissed(true);setSuccess(true);},5000);
   };
@@ -2114,7 +2369,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                 {/* Totals */}
                 <div className="px-5 py-3 space-y-1.5 border-b border-dashed border-slate-200">
                   <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.subtotal}</span><span className="font-bold">RM{fmtRM(subtotal)}</span></div>
-                  <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.deliveryFee}</span><span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryCost===0?t.free:`RM${fmtRM(deliveryCost)}`}</span></div>
+                  <div className="flex justify-between text-[10px]"><span className="text-slate-400">{t.deliveryFee}</span><span className={`font-bold ${deliveryCost===0?"text-emerald-600":""}`}>{deliveryMode==="pickup"?t.free:freeUnlocked?`RM${fmtRM(deliveryCost)} (Merchant Paid)`:`RM${fmtRM(deliveryCost)} (Lalamove)`}</span></div>
                   <div className="flex justify-between text-sm pt-1 border-t border-slate-100 mt-1"><span className="font-black">Total</span><span className="font-black text-emerald-600">RM{fmtRM(total)}</span></div>
                 </div>
                 {/* Ad placeholder */}
@@ -2134,30 +2389,39 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
               </div>
 
               {/* Action buttons */}
-              <div className="px-4 mt-4 mb-3 grid grid-cols-2 gap-2">
-                {/* Save as image / screenshot */}
+              <div className="px-4 mt-4 mb-2 space-y-2">
+                {/* Notify merchant via WhatsApp */}
                 <button onClick={()=>{
-                  // Use native share if available, else print
-                  if(navigator.share){
-                    navigator.share({title:'My Sapot Lokal Receipt',text:`Order ${pickupCode} from ${currentVendor?.vendorName} — RM${fmtRM(total)}`})
-                      .catch(()=>{});
-                  } else {
-                    window.print();
-                  }
+                  const itemLines=cart.map(i=>`• ${i.title} — RM${fmtRM(i.dealPrice)}`).join('%0A');
+                  const msg=`🛒 *New Order — Sapot Lokal*%0A%0AOrder ${pickupCode}%0A${itemLines}%0A%0APickup Code: *${pickupCode}*%0ATotal: RM${fmtRM(total)}`;
+                  const phone=currentVendor?.vendorPhone||'';
+                  window.open(`https://wa.me/${phone}?text=${msg}`,'_blank');
                 }}
-                  className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-emerald-100">
-                  <span className="text-base">📥</span>
-                  Save Receipt
-                </button>
-                {/* Share via WhatsApp */}
-                <button onClick={()=>{
-                  const msg=`🧾 *Sapot Lokal Receipt*\n🏪 ${currentVendor?.vendorName}\n📦 Order: ${pickupCode}\n💰 Total: RM${fmtRM(total)}\n📅 ${new Date().toLocaleString('en-MY',{dateStyle:'short',timeStyle:'short'})}`;
-                  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
-                }}
-                  className="flex items-center justify-center gap-2 bg-[#25D366] text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-green-100">
+                  className="w-full flex items-center justify-center gap-2 bg-[#25D366] text-white py-3.5 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-green-100">
                   <span className="text-base">💬</span>
-                  WhatsApp
+                  Notify Merchant via WhatsApp
                 </button>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Save receipt */}
+                  <button onClick={()=>{
+                    if(navigator.share){
+                      navigator.share({title:'My Sapot Lokal Receipt',text:`Order ${pickupCode} from ${currentVendor?.vendorName} — RM${fmtRM(total)}`}).catch(()=>{});
+                    } else { window.print(); }
+                  }}
+                    className="flex items-center justify-center gap-2 bg-emerald-500 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform shadow-md shadow-emerald-100">
+                    <span className="text-base">📥</span>
+                    Save Receipt
+                  </button>
+                  {/* Share my copy */}
+                  <button onClick={()=>{
+                    const msg=`🧾 *Sapot Lokal Receipt*\n🏪 ${currentVendor?.vendorName}\n📦 Code: ${pickupCode}\n💰 RM${fmtRM(total)}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+                  }}
+                    className="flex items-center justify-center gap-2 bg-slate-700 text-white py-3 rounded-2xl font-black text-xs uppercase tracking-wide active:scale-95 transition-transform">
+                    <span className="text-base">📤</span>
+                    Share Copy
+                  </button>
+                </div>
               </div>
               {/* Download hint */}
               <p className="text-center text-slate-300 text-[9px] font-bold px-5 mb-3">
@@ -2188,18 +2452,19 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
               ):(
                 <>
                   <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                    {/* Single vendor lock banner */}
+                    {/* Vendor info + quick profile link */}
                     {currentVendor&&(
                       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2">
                           <span className="text-base">🏪</span>
-                          <div className="flex-1">
-                            <p className="text-emerald-700 font-black text-xs">{t.orderingFrom}</p>
-                            <p className="text-emerald-800 font-black text-sm">{currentVendor.vendorName}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-emerald-700 font-black text-[10px]">{t.orderingFrom}</p>
+                            <p className="text-emerald-800 font-black text-sm truncate">{currentVendor.vendorName}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <StarDisplay vendorId={currentVendor.vendorId} size="sm"/>
+                            </div>
                           </div>
-                          <span className="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg">1 Merchant Only</span>
                         </div>
-                        <p className="text-emerald-600 text-[9px] leading-relaxed">Items from other merchants need a separate order. Tap 🔒 on other items to switch.</p>
                       </div>
                     )}
                     {/* Free delivery progress */}
@@ -2210,7 +2475,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                         ):(
                           <>
                             <div className="flex justify-between items-center mb-2">
-                              <p className="text-[10px] font-black text-slate-500">🚗 Add RM{fmtRM(toGo)} more for free delivery</p>
+                              <p className="text-[10px] font-black text-slate-500">🎁 Add RM{fmtRM(toGo)} — merchant covers delivery!</p>
                               <p className="text-[10px] font-bold text-slate-400">RM{fmtRM(subtotal)}/RM{fmtRM(threshold)}</p>
                             </div>
                             <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
@@ -2328,7 +2593,7 @@ function CartPanel({cart,onRemove,onClose,onCheckout,allListings,onAdd,t}){
                           <span className="text-xl flex-shrink-0 mt-0.5">🛒</span>
                           <div className="flex-1">
                             {amountToFreeDelivery&&(
-                              <p className="font-black text-amber-800 text-xs">Add RM{amountToFreeDelivery} more for free delivery! 🚗</p>
+                              <p className="font-black text-amber-800 text-xs">Add RM{amountToFreeDelivery} more — merchant covers delivery! 🎁</p>
                             )}
                             {moreCount>0&&(
                               <p className={`text-amber-700 text-[10px] ${amountToFreeDelivery?"mt-0.5":"font-black text-xs"}`}>
@@ -2560,7 +2825,7 @@ function ActivePostBadge({post}){
 }
 
 function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubscription,t}){
-  const [vendorFlowTab,setVendorFlowTab]=useState("deals"); // "deals" | "menu" | "profile"
+  const [vendorFlowTab,setVendorFlowTab]=useState("orders"); // "deals" | "menu" | "profile" | "orders"
   const [postDealNudge,setPostDealNudge]=useState(false);
   const [step,setStep]=useState(1);
   const [postType,setPostType]=useState(null);
@@ -2642,6 +2907,11 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
       {/* Sell tab switcher: Post Deal | My Menu */}
       <div className="sticky top-[60px] z-40 bg-[#0a0f1e]/95 backdrop-blur-md border-b border-white/10 px-4 py-3">
         <div className="flex gap-2 mb-1">
+          <button onClick={()=>setVendorFlowTab("orders")}
+            className={`relative flex-1 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${vendorFlowTab==="orders"?"bg-blue-500 text-white":"bg-white/10 text-white/40"}`}>
+            📋 Orders
+            {(()=>{const n=getVendorOrders().filter(o=>o.status==='new').length;return n>0?<span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[7px] font-black rounded-full flex items-center justify-center">{n}</span>:null;})()}
+          </button>
           <motion.button onClick={()=>setVendorFlowTab("deals")}
             animate={postDealNudge?{scale:[1,1.06,1,1.06,1],boxShadow:["0 0 0px #10b981","0 0 18px #10b981","0 0 0px #10b981"]}:{}}
             transition={{duration:0.5,repeat:postDealNudge?3:0}}
@@ -2681,6 +2951,11 @@ function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubsc
       {/* Profile tab */}
       {vendorFlowTab==="profile"&&(
         <VendorProfileEditor vendorMeta={vendorMeta} onSave={()=>{}}/>
+      )}
+
+      {/* Orders tab */}
+      {vendorFlowTab==="orders"&&(
+        <MerchantOrdersDash vendorMeta={vendorMeta}/>
       )}
 
       {/* Boost Sheet */}
@@ -2971,7 +3246,7 @@ function SideOrderPopup({popup,cart,onAdd,onCheckout,onClose,allListings}){
               ):(
                 <>
                   <div className="flex justify-between items-center mb-1.5">
-                    <p className="text-blue-700 font-black text-[10px]">🚗 Add RM{fmtRM(toFreeDelivery)} more for free delivery</p>
+                    <p className="text-blue-700 font-black text-[10px]">🎁 Add RM{fmtRM(toFreeDelivery)} — merchant covers delivery!</p>
                     <p className="text-blue-500 text-[9px] font-bold">RM{fmtRM(subtotal)} / RM{fmtRM(threshold)}</p>
                   </div>
                   <div className="w-full bg-blue-200 h-2 rounded-full overflow-hidden">
