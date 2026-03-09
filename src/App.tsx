@@ -662,9 +662,36 @@ const LS_BOOSTS = 'sapot_boosts';
 const LS_VENDOR_ORDERS = 'sapot_vendor_orders';
 const LS_CATERING_QUERIES = 'sapot_catering_queries';
 const LS_CANOPY_QUERIES   = 'sapot_canopy_queries';
+const LS_MESSAGES         = 'sapot_messages';        // in-app thread per enquiry
+const LS_VENDOR_AGREEMENT = 'sapot_vendor_agreement'; // {agreedAt, ip}
+const DEPOSIT_PCT         = 30;                       // 30% deposit required to confirm booking
 
 // ─── CATERING / CANOPY QUERY HELPERS ─────────────────────────────────────────
 function getCateringQueries(){try{return JSON.parse(localStorage.getItem(LS_CATERING_QUERIES)||'[]');}catch{return[];}}
+// ─── Message thread helpers ───────────────────────────────────────────────────
+function getMessages(enquiryId){
+  try{const all=JSON.parse(localStorage.getItem(LS_MESSAGES)||'{}');return all[enquiryId]||[];}
+  catch{return[];}
+}
+function saveMessage(enquiryId,msg){
+  try{
+    const all=JSON.parse(localStorage.getItem(LS_MESSAGES)||'{}');
+    if(!all[enquiryId])all[enquiryId]=[];
+    all[enquiryId].push({...msg,id:Date.now()+Math.random().toString(36).slice(2),ts:Date.now()});
+    localStorage.setItem(LS_MESSAGES,JSON.stringify(all));
+  }catch{}
+}
+// Mask phone: 0123456789 → 012*****89
+function maskPhone(p){if(!p||p.length<6)return'***';return p.slice(0,3)+'*'.repeat(p.length-5)+p.slice(-2);}
+// Mask name: Ahmad Faizi → Ahmad F.
+function maskName(n){if(!n)return'Customer';const parts=n.trim().split(' ');return parts[0]+(parts[1]?' '+parts[1][0]+'.':'');}
+// Vendor agreement helpers
+function getVendorAgreement(){try{return JSON.parse(localStorage.getItem(LS_VENDOR_AGREEMENT)||'null');}catch{return null;}}
+function saveVendorAgreement(){
+  const rec={agreedAt:Date.now(),agreedDate:new Date().toISOString()};
+  localStorage.setItem(LS_VENDOR_AGREEMENT,JSON.stringify(rec));
+  return rec;
+}
 function saveCateringQuery(q){
   const all=getCateringQueries();
   const idx=all.findIndex(x=>x.id===q.id);
@@ -2928,6 +2955,228 @@ function SubscriptionSheet({onClose,onSubscribe,isSubscribed,t}){
 }
 
 // ─── VENDOR ONBOARDING ────────────────────────────────────────────────────────
+
+// ─── VENDOR AGREEMENT GATE ────────────────────────────────────────────────────
+// Shown once before vendor can access the sell dashboard. Legal paper trail.
+function VendorAgreementGate({onAgreed,t}){
+  const [checked,setChecked]=useState(false);
+  const [submitting,setSubmitting]=useState(false);
+  const handleAgree=()=>{
+    if(!checked)return;
+    setSubmitting(true);
+    setTimeout(()=>{
+      saveVendorAgreement();
+      setSubmitting(false);
+      onAgreed();
+    },600);
+  };
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}}
+      className="fixed inset-0 z-[800] bg-[#0a0f1e]/98 flex flex-col items-center justify-center p-6 overflow-y-auto">
+      <motion.div initial={{y:30,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:0.1}} className="w-full max-w-sm">
+        <div className="text-center mb-6">
+          <div className="text-5xl mb-3">📋</div>
+          <h2 className="text-white font-black text-xl">Vendor Agreement</h2>
+          <p className="text-white/40 text-xs mt-1">Please read and agree before continuing</p>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-4 space-y-3 max-h-64 overflow-y-auto">
+          {[
+            {n:"1. Commission",body:"You agree to pay Sapot Lokal a platform commission on all bookings (food deals: 15%, catering & canopy: 10%) generated through this platform."},
+            {n:"2. Non-Circumvention",body:"You agree NOT to accept direct payment from any customer introduced through Sapot Lokal for 24 months. Bypass attempts are subject to a 3× commission penalty."},
+            {n:"3. Lead Ownership",body:"Any enquiry carrying a Sapot Lokal reference ID (e.g. Q1A2B3C4D) is a platform-originated lead, regardless of how payment is eventually made."},
+            {n:"4. Deposit Requirement",body:"You will only receive full buyer contact details (phone, address) after the buyer has paid the platform deposit. Do not contact buyers directly before deposit is cleared."},
+            {n:"5. Halal Declaration",body:"Your halal status declaration is self-certified. You are solely responsible for accuracy. Sapot Lokal does not verify halal credentials."},
+            {n:"6. Termination",body:"Sapot Lokal reserves the right to remove listings, withhold payouts, and ban accounts found violating these terms."},
+          ].map(c=>(
+            <div key={c.n}>
+              <p className="text-white font-black text-[10px] uppercase tracking-wide mb-0.5">{c.n}</p>
+              <p className="text-white/40 text-[10px] leading-relaxed">{c.body}</p>
+            </div>
+          ))}
+          <p className="text-white/20 text-[9px] pt-2 border-t border-white/10">
+            This agreement is governed by Malaysian law (Contracts Act 1950). By checking the box below you confirm you have read, understood, and agree to these terms.
+          </p>
+        </div>
+        <button onClick={()=>setChecked(c=>!c)}
+          className="flex items-start gap-3 w-full mb-5 text-left active:opacity-80">
+          <div className={`w-5 h-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center mt-0.5 transition-all ${checked?"bg-emerald-500 border-emerald-500":"border-white/30"}`}>
+            {checked&&<span className="text-white text-xs font-black">✓</span>}
+          </div>
+          <p className="text-white/70 text-xs leading-relaxed">I have read and agree to the Sapot Lokal Vendor Agreement. I understand the non-circumvention clause and commission obligations.</p>
+        </button>
+        <button onClick={handleAgree} disabled={!checked||submitting}
+          className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-emerald-900/50 disabled:opacity-30 active:scale-95 transition-all">
+          {submitting?"Recording agreement...":`✅ I Agree & Continue`}
+        </button>
+        <p className="text-white/20 text-[9px] text-center mt-3">Agreed on {new Date().toLocaleDateString()} · Stored locally</p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─── IN-APP MESSAGING THREAD ──────────────────────────────────────────────────
+// Replaces WhatsApp — buyer and platform/vendor exchange messages per enquiry.
+// sender: 'buyer' | 'platform' | 'vendor'
+function MessageThread({enquiryId,enquiryRef,buyerName,currentRole,onClose,t}){
+  const [msgs,setMsgs]=useState(()=>getMessages(enquiryId));
+  const [draft,setDraft]=useState('');
+  const bottomRef=React.useRef(null);
+
+  const refresh=()=>setMsgs(getMessages(enquiryId));
+  useEffect(()=>{
+    bottomRef.current?.scrollIntoView({behavior:'smooth'});
+  },[msgs]);
+
+  // Seed a welcome message from platform if thread is empty
+  useEffect(()=>{
+    if(getMessages(enquiryId).length===0){
+      saveMessage(enquiryId,{
+        sender:'platform',
+        text:`Hi ${buyerName||'there'}! 👋 Your enquiry ref *${enquiryRef}* has been received. We'll review and send you a quotation shortly. You can track all updates right here.`,
+      });
+      refresh();
+    }
+  },[]);
+
+  const send=()=>{
+    if(!draft.trim())return;
+    saveMessage(enquiryId,{sender:currentRole||'buyer',text:draft.trim()});
+    setDraft('');
+    refresh();
+    // Simulate platform auto-reply after 1.5s if buyer sent
+    if(currentRole==='buyer'){
+      setTimeout(()=>{
+        saveMessage(enquiryId,{sender:'platform',text:'Thanks! Our team has noted your message and will respond shortly. 🙏'});
+        refresh();
+      },1500);
+    }
+  };
+
+  const bubbleStyle=(sender)=>{
+    if(sender==='buyer')return'bg-emerald-500 text-white self-end rounded-2xl rounded-br-sm';
+    if(sender==='vendor')return'bg-blue-500 text-white self-start rounded-2xl rounded-bl-sm';
+    return'bg-slate-100 text-slate-700 self-start rounded-2xl rounded-bl-sm border border-slate-200';
+  };
+  const senderLabel=(sender)=>sender==='buyer'?'You':sender==='vendor'?'Vendor':'Sapot Lokal';
+
+  return(
+    <motion.div initial={{opacity:0,y:'100%'}} animate={{opacity:1,y:0}} exit={{opacity:0,y:'100%'}}
+      className="fixed inset-0 z-[900] bg-white flex flex-col">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-100 px-4 py-3 flex items-center gap-3 flex-shrink-0">
+        <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 active:scale-95">←</button>
+        <div className="flex-1 min-w-0">
+          <p className="font-black text-slate-900 text-sm truncate">💬 Enquiry Chat</p>
+          <p className="text-slate-400 text-[10px]">Ref: {enquiryRef}</p>
+        </div>
+        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"/>
+      </div>
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-slate-50">
+        {msgs.map(m=>(
+          <div key={m.id} className={`flex flex-col max-w-[80%] ${m.sender==='buyer'?'self-end items-end ml-auto':'self-start items-start'}`}>
+            <p className="text-slate-400 text-[8px] font-black uppercase tracking-wide mb-0.5 px-1">{senderLabel(m.sender)}</p>
+            <div className={`px-3.5 py-2.5 text-sm leading-relaxed ${bubbleStyle(m.sender)}`}>
+              {m.text}
+            </div>
+            <p className="text-slate-300 text-[8px] mt-0.5 px-1">{new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</p>
+          </div>
+        ))}
+        <div ref={bottomRef}/>
+      </div>
+      {/* Input */}
+      <div className="bg-white border-t border-slate-100 px-3 py-3 flex gap-2 flex-shrink-0">
+        <input value={draft} onChange={e=>setDraft(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}
+          placeholder="Type a message..."
+          className="flex-1 bg-slate-100 rounded-2xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-400"/>
+        <button onClick={send} disabled={!draft.trim()}
+          className="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-black text-sm disabled:opacity-30 active:scale-95 transition-all flex-shrink-0">
+          ↑
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── DEPOSIT PAYMENT MODAL ────────────────────────────────────────────────────
+// Buyer must pay 30% deposit to confirm booking and unlock full contact details.
+function DepositModal({query,type,onPaid,onClose}){
+  const [stage,setStage]=useState('confirm'); // confirm | paying | done
+  const amt=query.quotation?Math.ceil(parseFloat(query.quotation)*DEPOSIT_PCT/100*100)/100:null;
+
+  const handlePay=()=>{
+    setStage('paying');
+    setTimeout(()=>{
+      // Update query status and mark deposit paid
+      const ls=type==='catering'?LS_CATERING_QUERIES:LS_CANOPY_QUERIES;
+      const getFn=type==='catering'?getCateringQueries:getCanopyQueries;
+      const all=getFn();
+      const idx=all.findIndex(x=>x.id===query.id);
+      if(idx>=0){
+        all[idx].status='paid';
+        all[idx].depositPaid=amt;
+        all[idx].depositPaidAt=Date.now();
+        all[idx].contactUnlocked=true; // full details now visible to vendor
+      }
+      localStorage.setItem(ls,JSON.stringify(all));
+      setStage('done');
+      setTimeout(()=>onPaid(),1000);
+    },2200);
+  };
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+      className="fixed inset-0 z-[950] bg-black/70 flex items-end justify-center p-0">
+      <motion.div initial={{y:'100%'}} animate={{y:0}} exit={{y:'100%'}} transition={{type:'spring',damping:25}}
+        className="w-full max-w-md bg-white rounded-t-3xl px-6 pt-5 pb-10">
+        {stage==='done'?(
+          <div className="py-8 text-center">
+            <div className="text-5xl mb-3">✅</div>
+            <p className="font-black text-slate-900 text-lg">Deposit Paid!</p>
+            <p className="text-slate-400 text-sm mt-1">Your booking is confirmed. Full details are now shared with the provider.</p>
+          </div>
+        ):stage==='paying'?(
+          <div className="py-8 text-center">
+            <div className="text-4xl mb-3 animate-bounce">💳</div>
+            <p className="font-black text-slate-900">Processing TNG payment…</p>
+            <p className="text-slate-400 text-xs mt-1">Please wait</p>
+          </div>
+        ):(
+          <>
+            <div className="flex items-center justify-between mb-5">
+              <p className="font-black text-slate-900 text-lg">Confirm Deposit</p>
+              <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-xl text-slate-500 flex items-center justify-center active:scale-95">✕</button>
+            </div>
+            <div className="bg-slate-50 rounded-2xl p-4 mb-5 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Quotation total</span>
+                <span className="font-black text-slate-900">RM{fmtRM(query.quotation)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Deposit ({DEPOSIT_PCT}%)</span>
+                <span className="font-black text-emerald-600">RM{fmtRM(amt)}</span>
+              </div>
+              <div className="flex justify-between text-sm border-t border-slate-200 pt-2">
+                <span className="text-slate-400">Balance on delivery</span>
+                <span className="font-black text-slate-700">RM{fmtRM(parseFloat(query.quotation)-amt)}</span>
+              </div>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5">
+              <p className="text-amber-700 text-xs font-bold">🔒 Paying the deposit confirms your booking and releases your contact details to the provider. Your phone number remains masked until this step.</p>
+            </div>
+            <button onClick={handlePay}
+              className="w-full bg-emerald-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-emerald-100 active:scale-95 transition-all">
+              Pay RM{fmtRM(amt)} via TNG
+            </button>
+            <button onClick={onClose} className="w-full mt-3 text-slate-400 text-xs font-bold py-2">Cancel</button>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function VendorOnboarding({onDone,t}){
   const [form,setForm]=useState({shopName:'',area:'',phone:''});
   const upd=(k,v)=>setForm(p=>({...p,[k]:v}));
@@ -3022,6 +3271,7 @@ function CateringSupplierDash({t}){
   const [quotingId,setQuotingId]=useState(null);
   const [quoteAmt,setQuoteAmt]=useState('');
   const [quoteNote,setQuoteNote]=useState('');
+  const [supplierChatTarget,setSupplierChatTarget]=useState(null);
 
   const refresh=()=>setQueries(getCateringQueries());
   useEffect(()=>{const id=setInterval(refresh,15000);return()=>clearInterval(id);},[]);
@@ -3065,7 +3315,7 @@ function CateringSupplierDash({t}){
     refresh();
   };
 
-  return(
+  return(<>
     <div className="pb-28 px-4 pt-3">
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -3119,7 +3369,7 @@ function CateringSupplierDash({t}){
                 <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} className="overflow-hidden">
                   <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                      <p><span className="text-white/40">Phone:</span> <span className="text-white font-bold">{q.phone}</span></p>
+                      <p><span className="text-white/40">Phone:</span> <span className={`font-bold ${q.contactUnlocked?"text-white":"text-white/30"}`}>{q.contactUnlocked?q.phone:q.maskedPhone||'🔒 Hidden'}</span>{!q.contactUnlocked&&<span className="text-amber-400 text-[8px] font-black ml-1">— deposit pending</span>}</p>
                       <p><span className="text-white/40">Date:</span> <span className="text-white font-bold">{q.date}</span></p>
                       <p><span className="text-white/40">Time:</span> <span className="text-white font-bold">{q.time}</span></p>
                       <p><span className="text-white/40">Pax:</span> <span className="text-white font-bold">{q.pax}</span></p>
@@ -3174,10 +3424,16 @@ function CateringSupplierDash({t}){
                           💳 Mark as Paid
                         </button>
                       )}
-                      <a href={`https://wa.me/${q.phone}?text=${encodeURIComponent('Hi '+q.name+', regarding your catering enquiry ref '+q.id+':')}`} target="_blank" rel="noreferrer"
-                        className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-xs py-2 rounded-xl active:scale-95">
-                        💬 WhatsApp Buyer
-                      </a>
+                      <button onClick={()=>setSupplierChatTarget({id:q.id,ref:q.id,name:q.maskedName||q.name})}
+                        className="flex items-center justify-center gap-2 w-full bg-blue-500/20 border border-blue-500/30 text-blue-300 font-black text-xs py-2 rounded-xl active:scale-95">
+                        💬 Message Buyer {getMessages(q.id).length>0&&`(${getMessages(q.id).length})`}
+                      </button>
+                      {q.contactUnlocked&&(
+                        <a href={`https://wa.me/${q.phone}?text=${encodeURIComponent('Hi '+q.name+', regarding your catering enquiry ref '+q.id+':')}`} target="_blank" rel="noreferrer"
+                          className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-xs py-2 rounded-xl active:scale-95">
+                          💬 WhatsApp (unlocked)
+                        </a>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -3188,7 +3444,11 @@ function CateringSupplierDash({t}){
         </div>
       )}
     </div>
-  );
+      {/* In-app message thread — vendor side */}
+      <AnimatePresence>
+        {supplierChatTarget&&<MessageThread enquiryId={supplierChatTarget.id} enquiryRef={supplierChatTarget.ref} buyerName={supplierChatTarget.name} currentRole="vendor" onClose={()=>setSupplierChatTarget(null)} t={t}/>}
+      </AnimatePresence>
+  </>);
 }
 
 // ─── CANOPY SUPPLIER DASHBOARD ────────────────────────────────────────────────
@@ -3199,6 +3459,7 @@ function CanopySupplierDash({t}){
   const [quotingId,setQuotingId]=useState(null);
   const [quoteAmt,setQuoteAmt]=useState('');
   const [quoteNote,setQuoteNote]=useState('');
+  const [supplierChatTarget,setSupplierChatTarget]=useState(null);
 
   const refresh=()=>setQueries(getCanopyQueries());
   useEffect(()=>{const id=setInterval(refresh,15000);return()=>clearInterval(id);},[]);
@@ -3237,7 +3498,7 @@ function CanopySupplierDash({t}){
   const statusStyle={pending:'bg-amber-100 text-amber-700',quoted:'bg-blue-100 text-blue-700',accepted:'bg-emerald-100 text-emerald-700',paid:'bg-emerald-600 text-white'};
   const statusLabel={pending:t.canopyStatusPending,quoted:t.canopyStatusQuoted,accepted:t.canopyStatusAccepted,paid:t.canopyStatusPaid};
 
-  return(
+  return(<>
     <div className="pb-28 px-4 pt-3">
       <div className="flex items-center justify-between mb-4">
         <div>
@@ -3289,8 +3550,8 @@ function CanopySupplierDash({t}){
                 <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} className="overflow-hidden">
                   <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-                      <p><span className="text-white/40">Name:</span> <span className="text-white font-bold">{q.name}</span></p>
-                      <p><span className="text-white/40">Phone:</span> <span className="text-white font-bold">{q.phone}</span></p>
+                      <p><span className="text-white/40">Name:</span> <span className="text-white font-bold">{q.contactUnlocked?q.name:q.maskedName||'Customer'}</span></p>
+                      <p><span className="text-white/40">Phone:</span> <span className={`font-bold ${q.contactUnlocked?"text-white":"text-white/30"}`}>{q.contactUnlocked?q.phone:q.maskedPhone||'🔒 Hidden'}</span>{!q.contactUnlocked&&<span className="text-amber-400 text-[8px] font-black ml-1">— deposit pending</span>}</p>
                       <p><span className="text-white/40">Date:</span> <span className="text-white font-bold">{q.date}</span></p>
                       <p><span className="text-white/40">Time:</span> <span className="text-white font-bold">{q.time}</span></p>
                       <p className="col-span-2"><span className="text-white/40">Venue:</span> <span className="text-white font-bold">{q.venue}</span></p>
@@ -3344,10 +3605,16 @@ function CanopySupplierDash({t}){
                           💳 Mark as Paid
                         </button>
                       )}
-                      <a href={`https://wa.me/${q.phone}?text=${encodeURIComponent('Hi '+q.name+', regarding your canopy rental enquiry ref '+q.id+':')}`} target="_blank" rel="noreferrer"
-                        className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-xs py-2 rounded-xl active:scale-95">
-                        💬 WhatsApp Buyer
-                      </a>
+                      <button onClick={()=>setSupplierChatTarget({id:q.id,ref:q.id,name:q.maskedName||q.name})}
+                        className="flex items-center justify-center gap-2 w-full bg-blue-500/20 border border-blue-500/30 text-blue-300 font-black text-xs py-2 rounded-xl active:scale-95">
+                        💬 Message Buyer {getMessages(q.id).length>0&&`(${getMessages(q.id).length})`}
+                      </button>
+                      {q.contactUnlocked&&(
+                        <a href={`https://wa.me/${q.phone}?text=${encodeURIComponent('Hi '+q.name+', regarding your canopy rental enquiry ref '+q.id+':')}`} target="_blank" rel="noreferrer"
+                          className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 border border-[#25D366]/20 text-[#4CAF50] font-black text-xs py-2 rounded-xl active:scale-95">
+                          💬 WhatsApp (unlocked)
+                        </a>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -3358,12 +3625,20 @@ function CanopySupplierDash({t}){
         </div>
       )}
     </div>
-  );
+      {/* In-app message thread — vendor side */}
+      <AnimatePresence>
+        {supplierChatTarget&&<MessageThread enquiryId={supplierChatTarget.id} enquiryRef={supplierChatTarget.ref} buyerName={supplierChatTarget.name} currentRole="vendor" onClose={()=>setSupplierChatTarget(null)} t={t}/>}
+      </AnimatePresence>
+  </>);
 }
 
 
 function VendorFlow({onNewListing,onPostDone,vendorMeta,subscription,onShowSubscription,t}){
   const [vendorFlowTab,setVendorFlowTab]=useState("orders"); // "deals" | "menu" | "profile" | "orders" | "catering" | "canopy"
+  const [agreedToTerms,setAgreedToTerms]=useState(()=>!!getVendorAgreement());
+  if(!agreedToTerms){
+    return <VendorAgreementGate onAgreed={()=>setAgreedToTerms(true)} t={t}/>;
+  }
   const [postDealNudge,setPostDealNudge]=useState(false);
   const [step,setStep]=useState(1);
   const [postType,setPostType]=useState(null);
@@ -3929,6 +4204,8 @@ function CateringEnquiry({t}){
   const [myQueries,setMyQueries]=useState(()=>getCateringQueries());
   const [showHistory,setShowHistory]=useState(false);
   const [paying,setPaying]=useState(false);
+  const [depositTarget,setDepositTarget]=useState(null); // query to pay deposit for
+  const [chatTarget,setChatTarget]=useState(null);       // {id, ref, name} for message thread
 
   const PLATFORM_WA='60123456789'; // Platform admin WhatsApp
 
@@ -3940,12 +4217,19 @@ function CateringEnquiry({t}){
     const q={
       id, type:'catering',
       pax, eventType:eventType==='Other ✏️'?eventTypeOther:eventType,
-      date, time, venue, notes, name, phone,
-      status:'pending', // pending | quoted | accepted | paid
+      date, time, venue, notes,
+      name,                          // real name
+      phone,                         // real phone — stored but MASKED until deposit paid
+      maskedPhone: maskPhone(phone),  // vendor sees this until deposit
+      maskedName:  maskName(name),    // vendor sees this until deposit
+      status:'pending',               // pending | quoted | accepted | paid
       quotation:null,
+      contactUnlocked:false,          // flips to true after deposit paid
       submittedAt:Date.now(),
     };
     saveCateringQuery(q);
+    // Seed welcome message
+    saveMessage(id,{sender:'platform',text:`Hi ${name}! 👋 Your catering enquiry *${id}* is received. We'll send a quotation within 24 hours. Track everything in this chat.`});
     setMyQueries(getCateringQueries());
     setSubmittedId(id);
     setStep(3);
@@ -4011,35 +4295,63 @@ function CateringEnquiry({t}){
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
                   <p className="font-black text-slate-800 text-sm">{q.eventType}</p>
-                  <p className="text-slate-400 text-[10px]">{q.date} · {q.pax} pax · {q.venue}</p>
+                  <p className="text-slate-400 text-[10px]">{q.date} · {q.pax} pax</p>
+                  <p className="text-slate-400 text-[10px]">{q.venue}</p>
                 </div>
                 <span className={`text-[9px] font-black px-2 py-1 rounded-full flex-shrink-0 ${statusColor[q.status]||'bg-slate-100 text-slate-500'}`}>{statusLabel(q.status)}</span>
               </div>
               {q.quotation&&(
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 mb-2">
-                  <p className="text-emerald-700 font-black text-xs mb-0.5">💰 Quotation</p>
-                  <p className="text-emerald-800 font-black text-lg">RM {q.quotation}</p>
-                  <p className="text-emerald-600 text-[9px] mt-0.5">{q.quotationNote||''}</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-emerald-700 font-black text-xs">💰 RM {q.quotation}</p>
+                    <p className="text-emerald-600 text-[9px]">Deposit: RM{fmtRM(Math.ceil(parseFloat(q.quotation)*DEPOSIT_PCT/100*100)/100)}</p>
+                  </div>
+                  {q.quotationNote&&<p className="text-emerald-600 text-[9px] mt-0.5">{q.quotationNote}</p>}
                 </div>
               )}
-              <div className="flex gap-2 mt-2">
-                <p className="text-slate-300 text-[9px] flex-1">Ref: {q.id}</p>
-                {(q.status==='accepted')&&(
-                  <button onClick={()=>mockPay(q.id)} disabled={paying===q.id}
-                    className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95 disabled:opacity-60">
-                    {paying===q.id?'Processing...':t.cateringPayNow}
+              {/* Lock notice — contact masked until deposit */}
+              {!q.contactUnlocked&&q.status!=='pending'&&(
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-2">
+                  <span className="text-sm">🔒</span>
+                  <p className="text-amber-700 text-[9px] font-bold">Pay deposit to confirm & share your contact with provider</p>
+                </div>
+              )}
+              {q.contactUnlocked&&(
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 mb-2">
+                  <span className="text-sm">✅</span>
+                  <p className="text-emerald-700 text-[9px] font-bold">Booking confirmed · Contact shared with provider</p>
+                </div>
+              )}
+              <div className="flex gap-2 mt-2 flex-wrap">
+                <p className="text-slate-300 text-[9px] w-full">Ref: {q.id}</p>
+                {/* In-app chat */}
+                <button onClick={()=>setChatTarget({id:q.id,ref:q.id,name:q.name})}
+                  className="flex-1 flex items-center justify-center gap-1 bg-slate-100 text-slate-600 text-[10px] font-black px-3 py-2 rounded-xl active:scale-95">
+                  💬 Chat {getMessages(q.id).length>0&&<span className="bg-emerald-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center">{getMessages(q.id).length}</span>}
+                </button>
+                {/* Deposit payment — only when accepted and not yet paid */}
+                {q.status==='accepted'&&!q.contactUnlocked&&(
+                  <button onClick={()=>setDepositTarget(q)}
+                    className="flex-1 bg-emerald-500 text-white text-[10px] font-black px-3 py-2 rounded-xl active:scale-95 shadow-sm shadow-emerald-200">
+                    🔓 Pay Deposit
                   </button>
                 )}
-                {q.status!=='paid'&&(
-                  <button onClick={()=>openWA(q)} className="bg-[#25D366] text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95">
-                    💬 WA
-                  </button>
+                {q.status==='paid'&&(
+                  <span className="flex-1 text-center text-emerald-600 text-[10px] font-black py-2">✅ Paid · RM{fmtRM(q.depositPaid)} deposit</span>
                 )}
               </div>
             </div>
           ))}
         </motion.div>
       )}
+      </AnimatePresence>
+      {/* Deposit modal */}
+      <AnimatePresence>
+        {depositTarget&&<DepositModal query={depositTarget} type="catering" onPaid={()=>{setDepositTarget(null);setMyQueries(getCateringQueries());}} onClose={()=>setDepositTarget(null)}/>}
+      </AnimatePresence>
+      {/* In-app message thread */}
+      <AnimatePresence>
+        {chatTarget&&<MessageThread enquiryId={chatTarget.id} enquiryRef={chatTarget.ref} buyerName={chatTarget.name} currentRole="buyer" onClose={()=>setChatTarget(null)} t={t}/>}
       </AnimatePresence>
 
       {/* Step progress */}
@@ -4212,6 +4524,8 @@ function CanopyRental({t}){
   const [myQueries,setMyQueries]=useState(()=>getCanopyQueries());
   const [showHistory,setShowHistory]=useState(false);
   const [paying,setPaying]=useState(false);
+  const [depositTarget,setDepositTarget]=useState(null);
+  const [chatTarget,setChatTarget]=useState(null);
 
   const PLATFORM_WA='60123456789';
 
@@ -4238,16 +4552,21 @@ function CanopyRental({t}){
     const id=genQueryId();
     const q={
       id, type:'canopy',
-      date, time, venue, notes, name, phone,
+      date, time, venue, notes,
+      name, phone,
+      maskedPhone: maskPhone(phone),
+      maskedName:  maskName(name),
       qtyCanopy:parseInt(qtyCanopy)||0,
       qtyTable:parseInt(qtyTable)||0,
       qtyChair:parseInt(qtyChair)||0,
       qtyFan:parseInt(qtyFan)||0,
       status:'pending',
       quotation:null,
+      contactUnlocked:false,
       submittedAt:Date.now(),
     };
     saveCanopyQuery(q);
+    saveMessage(id,{sender:'platform',text:`Hi ${name}! ⛺ Your canopy rental enquiry *${id}* is received. We'll confirm availability and pricing within 24 hours.`});
     setMyQueries(getCanopyQueries());
     setSubmittedId(id);
     setStep(3);
@@ -4323,24 +4642,47 @@ function CanopyRental({t}){
                   <p className="text-sky-800 font-black text-lg">RM {q.quotation}</p>
                 </div>
               )}
-              <div className="flex gap-2 mt-2">
-                <p className="text-slate-300 text-[9px] flex-1">Ref: {q.id}</p>
-                {q.status==='accepted'&&(
-                  <button onClick={()=>mockPay(q.id)} disabled={paying===q.id}
-                    className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95 disabled:opacity-60">
-                    {paying===q.id?'Processing...':t.cateringPayNow}
+              {/* Lock notice */}
+              {!q.contactUnlocked&&q.status!=='pending'&&(
+                <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-2">
+                  <span className="text-sm">🔒</span>
+                  <p className="text-amber-700 text-[9px] font-bold">Pay deposit to confirm & share your contact with provider</p>
+                </div>
+              )}
+              {q.contactUnlocked&&(
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 mb-2">
+                  <span className="text-sm">✅</span>
+                  <p className="text-emerald-700 text-[9px] font-bold">Booking confirmed · Contact shared with provider</p>
+                </div>
+              )}
+              <div className="flex gap-2 mt-2 flex-wrap">
+                <p className="text-slate-300 text-[9px] w-full">Ref: {q.id}</p>
+                <button onClick={()=>setChatTarget({id:q.id,ref:q.id,name:q.name})}
+                  className="flex-1 flex items-center justify-center gap-1 bg-slate-100 text-slate-600 text-[10px] font-black px-3 py-2 rounded-xl active:scale-95">
+                  💬 Chat {getMessages(q.id).length>0&&<span className="bg-sky-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center">{getMessages(q.id).length}</span>}
+                </button>
+                {q.status==='accepted'&&!q.contactUnlocked&&(
+                  <button onClick={()=>setDepositTarget(q)}
+                    className="flex-1 bg-emerald-500 text-white text-[10px] font-black px-3 py-2 rounded-xl active:scale-95 shadow-sm shadow-emerald-200">
+                    🔓 Pay Deposit
                   </button>
                 )}
-                {q.status!=='paid'&&(
-                  <button onClick={()=>openWA(q)} className="bg-[#25D366] text-white text-[10px] font-black px-3 py-1.5 rounded-xl active:scale-95">
-                    💬 WA
-                  </button>
+                {q.status==='paid'&&(
+                  <span className="flex-1 text-center text-emerald-600 text-[10px] font-black py-2">✅ Paid · RM{fmtRM(q.depositPaid)} deposit</span>
                 )}
               </div>
             </div>
           ))}
         </motion.div>
       )}
+      </AnimatePresence>
+      {/* Deposit modal */}
+      <AnimatePresence>
+        {depositTarget&&<DepositModal query={depositTarget} type="canopy" onPaid={()=>{setDepositTarget(null);setMyQueries(getCanopyQueries());}} onClose={()=>setDepositTarget(null)}/>}
+      </AnimatePresence>
+      {/* In-app message thread */}
+      <AnimatePresence>
+        {chatTarget&&<MessageThread enquiryId={chatTarget.id} enquiryRef={chatTarget.ref} buyerName={chatTarget.name} currentRole="buyer" onClose={()=>setChatTarget(null)} t={t}/>}
       </AnimatePresence>
 
       {/* Step progress */}
