@@ -5480,6 +5480,55 @@ function useIsDesktop(){
   return isDesktop;
 }
 
+
+// ─── PWA INSTALL BANNER ───────────────────────────────────────────────────────
+// Shows "Add to Home Screen" prompt when browser fires beforeinstallprompt
+function PWAInstallBanner(){
+  const [show,setShow]=useState(false);
+  const [installed,setInstalled]=useState(false);
+
+  useEffect(()=>{
+    // Already installed as standalone?
+    if(window.matchMedia('(display-mode: standalone)').matches){
+      setInstalled(true);return;
+    }
+    const onInstallable=()=>setShow(true);
+    window.addEventListener('pwa-installable',onInstallable);
+    // If prompt already fired before component mounted
+    if((window as any).__pwaInstallPrompt)setShow(true);
+    return()=>window.removeEventListener('pwa-installable',onInstallable);
+  },[]);
+
+  const handleInstall=async()=>{
+    const prompt=(window as any).__pwaInstallPrompt;
+    if(!prompt)return;
+    prompt.prompt();
+    const result=await prompt.userChoice;
+    if(result.outcome==='accepted'){setInstalled(true);}
+    setShow(false);
+    (window as any).__pwaInstallPrompt=null;
+  };
+
+  if(!show||installed)return null;
+  return(
+    <motion.div initial={{y:80,opacity:0}} animate={{y:0,opacity:1}} exit={{y:80,opacity:0}}
+      className="fixed bottom-20 left-3 right-3 z-[999] bg-slate-900 rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3">
+      <img src="/icons/icon-192.png" alt="Sapot Lokal" className="w-10 h-10 rounded-xl object-contain flex-shrink-0"/>
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-black text-sm">Add to Home Screen</p>
+        <p className="text-white/40 text-[10px]">Install Sapot Lokal for quick access</p>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <button onClick={()=>setShow(false)} className="text-white/30 text-xs px-2 py-1">✕</button>
+        <button onClick={handleInstall}
+          className="bg-emerald-500 text-white text-xs font-black px-3 py-2 rounded-xl active:scale-95 transition-all">
+          Install
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 function AppInner(){
   const [lang,setLang]=useState("en");
   const [tab,setTab]=useState("deals");
@@ -5518,11 +5567,9 @@ function AppInner(){
 
       <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-4 py-2 flex items-center justify-between relative">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-xl">🛒</span>
-          </div>
+          <img src="/icons/icon-192.png" alt="Sapot Lokal" className="w-9 h-9 rounded-xl object-contain flex-shrink-0"/>
           <div>
-            <h1 className="font-black text-emerald-800 text-base leading-none">Sapot Lokal</h1>
+            <h1 className="font-black text-slate-900 text-base leading-none">Sapot <span className="text-green-500">Lokal</span></h1>
             <p className="text-slate-400 text-[10px] font-bold">
               {locationHook.status==='requesting'?'📍 Finding you...':locationHook.loc?.area?`📍 ${locationHook.loc.area}`:'📍 Tap to set area'}
             </p>
@@ -5719,7 +5766,12 @@ export default function App(){
       </div>
     );
   }
-  return <AppInner/>;
+  return(
+    <>
+      <AppInner/>
+      <AnimatePresence><PWAInstallBanner/></AnimatePresence>
+    </>
+  );
 }
 
 // ── PRINT STYLES injected once ────────────────────────────────────────────────
