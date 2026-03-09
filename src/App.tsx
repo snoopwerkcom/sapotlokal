@@ -4583,86 +4583,108 @@ function BuyerFeed({vendorListings,activeTab,userLocation,locationHook,t,onVendo
         <p className="text-amber-700 text-[10px] font-bold">{t.halalSelfDeclared}</p>
       </div>
 
-      {/* ── STICKY NAV BAR — always rendered, controls all buyer tabs ── */}
-      <div className="bg-white border-b border-slate-100 px-3 pt-2 pb-2 sticky top-[60px] z-40">
-        {/* Search bar — only on food/deal/menu tabs, not services */}
-        {!isStudentMode&&buyerTab!=="catering"&&buyerTab!=="canopy"&&(
-          <div className="relative mb-2">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🔍</span>
-            <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
-              placeholder={t.searchPlaceholder}
-              className="w-full bg-slate-100 rounded-xl pl-8 pr-4 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
-            {search&&<button onClick={()=>setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">✕</button>}
+      {/* ── STICKY NAV BAR — single compact row with inline dropdowns ── */}
+      {(()=>{
+        const CAT_OPTS=[
+          {id:"all",emoji:"🍽️",label:"All"},
+          {id:"Food",emoji:"🍛",label:t.catFood},
+          {id:"Drink",emoji:"🧋",label:t.catDrink},
+          {id:"Bakery",emoji:"🥐",label:t.catBakery},
+          {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
+          {id:"TongSui",emoji:"🍮",label:t.catTongSui||"Tong Sui"},
+          {id:"Fruit",emoji:"🍉",label:t.catFruit},
+          {id:"Other",emoji:"📦",label:t.catOther},
+        ];
+        const DEAL_OPTS=[
+          {id:"all",label:"All Deals"},
+          {id:"promo",label:"Promotion"},
+          {id:"limited",label:"Limited"},
+          {id:"surplus",label:"Surplus"},
+          {id:"special",label:"Special"},
+        ];
+        const activeCat=CAT_OPTS.find(c=>c.id===catFilter)||CAT_OPTS[0];
+        const activeDeal=DEAL_OPTS.find(d=>d.id===dealFilter)||DEAL_OPTS[0];
+        return(
+          <div className="bg-white border-b border-slate-100 px-3 py-2 sticky top-[60px] z-40">
+            <div className="flex items-center gap-2">
+              {/* Search icon — expands on food/deal/menu tabs */}
+              {!isStudentMode&&buyerTab!=="catering"&&buyerTab!=="canopy"&&(
+                <div className="relative flex-1">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                  <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+                    placeholder="Search..."
+                    className="w-full bg-slate-100 rounded-xl pl-7 pr-7 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-400"/>
+                  {search&&<button onClick={()=>setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">✕</button>}
+                </div>
+              )}
+
+              {/* ── TAB SELECTOR — native select styled as pill ── */}
+              <div className="relative flex-shrink-0">
+                <select
+                  value={buyerTab}
+                  onChange={e=>{setBuyerTab(e.target.value);setCatFilter("all");setDealFilter("all");}}
+                  className={`appearance-none pl-2.5 pr-6 py-2 rounded-xl text-[11px] font-black border-0 outline-none cursor-pointer transition-all ${
+                    buyerTab==="foods"?"bg-emerald-500 text-white":
+                    buyerTab==="deals"?"bg-orange-500 text-white":
+                    buyerTab==="cook"?"bg-purple-500 text-white":
+                    buyerTab==="catering"?"bg-rose-500 text-white":
+                    buyerTab==="canopy"?"bg-sky-500 text-white":
+                    "bg-slate-100 text-slate-600"
+                  }`}>
+                  {!isStudentMode&&<option value="foods">🍽️ All Foods</option>}
+                  {!isStudentMode&&<option value="deals">🔖 Deals</option>}
+                  {!isStudentMode&&<option value="cook">📋 Menu</option>}
+                  <option value="catering">🎂 Catering</option>
+                  <option value="canopy">⛺ Canopy</option>
+                </select>
+                <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-white/80">▼</span>
+              </div>
+
+              {/* ── CATEGORY DROPDOWN — only on All Foods tab ── */}
+              {!isStudentMode&&buyerTab==="foods"&&(
+                <div className="relative flex-shrink-0">
+                  <select
+                    value={catFilter}
+                    onChange={e=>setCatFilter(e.target.value)}
+                    className="appearance-none bg-slate-100 text-slate-700 pl-2.5 pr-6 py-2 rounded-xl text-[11px] font-black border-0 outline-none cursor-pointer">
+                    {CAT_OPTS.map(c=><option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-slate-400">▼</span>
+                </div>
+              )}
+
+              {/* ── DEAL TYPE DROPDOWN — only on Deals tab ── */}
+              {!isStudentMode&&buyerTab==="deals"&&(
+                <div className="relative flex-shrink-0">
+                  <select
+                    value={dealFilter}
+                    onChange={e=>setDealFilter(e.target.value)}
+                    className="appearance-none bg-slate-100 text-slate-700 pl-2.5 pr-6 py-2 rounded-xl text-[11px] font-black border-0 outline-none cursor-pointer">
+                    {DEAL_OPTS.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}
+                  </select>
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[8px] text-slate-400">▼</span>
+                </div>
+              )}
+
+              {/* ── CANOPY QUICK-TAP — visible when on Catering tab ── */}
+              {buyerTab==="catering"&&(
+                <button onClick={()=>setBuyerTab("canopy")}
+                  className="flex-shrink-0 flex items-center gap-1 bg-sky-50 border border-sky-200 text-sky-600 px-3 py-2 rounded-xl text-[11px] font-black active:scale-95 transition-all whitespace-nowrap">
+                  ⛺ Canopy
+                </button>
+              )}
+
+              {/* ── CATERING QUICK-TAP — visible when on Canopy tab ── */}
+              {buyerTab==="canopy"&&(
+                <button onClick={()=>setBuyerTab("catering")}
+                  className="flex-shrink-0 flex items-center gap-1 bg-rose-50 border border-rose-200 text-rose-500 px-3 py-2 rounded-xl text-[11px] font-black active:scale-95 transition-all whitespace-nowrap">
+                  🎂 Catering
+                </button>
+              )}
+            </div>
           </div>
-        )}
-        {/* Tab bar — ALWAYS visible on all buyer sub-tabs including student */}
-        <div className="flex gap-1.5 mb-1 overflow-x-auto no-scrollbar">
-          {!isStudentMode&&(<>
-            <button onClick={()=>setBuyerTab("foods")}
-              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="foods"?"bg-emerald-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-              🍽️ All Foods
-            </button>
-            <button onClick={()=>setBuyerTab("deals")}
-              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="deals"?"bg-orange-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-              🔖 Deals
-            </button>
-            <button onClick={()=>setBuyerTab("cook")}
-              className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all ${buyerTab==="cook"?"bg-purple-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-              📋 Menu
-            </button>
-          </>)}
-          <button onClick={()=>setBuyerTab("catering")}
-            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="catering"?"bg-rose-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-            🎂 Catering
-          </button>
-          <button onClick={()=>setBuyerTab("canopy")}
-            className={`flex-shrink-0 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wide transition-all whitespace-nowrap ${buyerTab==="canopy"?"bg-sky-500 text-white shadow-sm":"bg-slate-100 text-slate-500"}`}>
-            ⛺ Canopy
-          </button>
-        </div>
-        {/* Sub-filters only on food/deal tabs */}
-        {!isStudentMode&&buyerTab==="foods"&&(
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
-            {[
-              {id:"all",emoji:"🍽️",label:"All"},
-              {id:"Food",emoji:"🍛",label:t.catFood},
-              {id:"Drink",emoji:"🧋",label:t.catDrink},
-              {id:"Bakery",emoji:"🥐",label:t.catBakery},
-              {id:"Dessert",emoji:"🍡",label:t.catDessert||"Dessert"},
-              {id:"TongSui",emoji:"🍮",label:t.catTongSui||"Tong Sui"},
-              {id:"Fruit",emoji:"🍉",label:t.catFruit},
-              {id:"Other",emoji:"📦",label:t.catOther},
-            ].map(cat=>(
-              <button key={cat.id} onClick={()=>setCatFilter(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
-                  catFilter===cat.id?"bg-emerald-600 text-white border-emerald-600":"bg-white text-slate-600 border-slate-200"
-                }`}>
-                <span className="text-sm leading-none">{cat.emoji}</span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {!isStudentMode&&buyerTab==="deals"&&(
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-0.5 mt-1">
-            {[
-              {id:"all",emoji:"🔖",label:"All Deals",color:"bg-slate-900"},
-              {id:"promo",emoji:"⚡",label:"Promotion",color:"bg-blue-500"},
-              {id:"limited",emoji:"🔥",label:"Limited",color:"bg-orange-500"},
-              {id:"surplus",emoji:"💰",label:"Surplus",color:"bg-emerald-600"},
-              {id:"special",emoji:"🌟",label:"Special",color:"bg-purple-500"},
-            ].map(d=>(
-              <button key={d.id} onClick={()=>setDealFilter(d.id)}
-                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black transition-all active:scale-95 border ${
-                  dealFilter===d.id?`${d.color} text-white border-transparent`:"bg-white text-slate-600 border-slate-200"
-                }`}>
-                <span className="text-sm leading-none">{d.emoji}</span>
-                <span>{d.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* ── ORDER TO COOK TAB — always mounted ── */}
       <div style={{display:(buyerTab==="cook"&&!isStudentMode)?"block":"none"}}>
